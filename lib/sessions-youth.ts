@@ -417,5 +417,9 @@ export const SESSIONS_BY_WEEK = SESSIONS.reduce((acc, s) => {
   return acc
 }, {} as Record<number, PracticeSession[]>)
 
-export const YOUTH_SESSIONS = SESSIONS
-export const YOUTH_SESSIONS_BY_WEEK = SESSIONS_BY_WEEK
+export const YOUTH_SESSIONS = SESSIONS.map(s => ({ ...s }))
+export const YOUTH_SESSIONS_BY_WEEK = YOUTH_SESSIONS.reduce((acc, s) => {
+  if (!acc[s.week]) acc[s.week] = []
+  acc[s.week].push(s)
+  return acc
+}, {} as Record<number, PracticeSession[]>)

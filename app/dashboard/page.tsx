@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { SESSIONS, SESSIONS_BY_WEEK } from '@/lib/sessions'
 import { EN_SESSIONS, EN_SESSIONS_BY_WEEK } from '@/lib/sessions-en'
+import { YOUTH_SESSIONS, YOUTH_SESSIONS_BY_WEEK } from '@/lib/sessions-youth'
 import DashboardClient from '@/components/DashboardClient'
 
 export const dynamic = 'force-dynamic'
@@ -27,8 +28,8 @@ export default async function Dashboard() {
     .eq('user_id', user.id)
     .eq('version', currentVersion)
 
-  const sessionList = currentVersion === 'en' ? EN_SESSIONS : SESSIONS
-  const sessionsByWeek = currentVersion === 'en' ? EN_SESSIONS_BY_WEEK : SESSIONS_BY_WEEK
+  const sessionList = currentVersion === 'en' ? EN_SESSIONS : currentVersion === 'youth' ? YOUTH_SESSIONS : SESSIONS
+  const sessionsByWeek = currentVersion === 'en' ? EN_SESSIONS_BY_WEEK : currentVersion === 'youth' ? YOUTH_SESSIONS_BY_WEEK : SESSIONS_BY_WEEK
 
   const completedIds = new Set((records || []).filter(r => r.completed).map(r => r.session_id))
   const totalCompleted = completedIds.size

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import { SESSIONS } from '@/lib/sessions'
 import { EN_SESSIONS } from '@/lib/sessions-en'
 import SessionClient from '@/components/SessionClient'
+import { YOUTH_SESSIONS } from '@/lib/sessions-youth'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +26,7 @@ export default async function SessionPage({ params }: Props) {
 
   const currentVersion = goalData?.version ?? 'adult'
 
-  const sessionList = currentVersion === 'en' ? EN_SESSIONS : SESSIONS
+  const sessionList = currentVersion === 'en' ? EN_SESSIONS : currentVersion === 'youth' ? YOUTH_SESSIONS : SESSIONS
   const session = sessionList.find(s => s.id === id)
   if (!session) notFound()
 
