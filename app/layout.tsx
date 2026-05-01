@@ -5,6 +5,18 @@ export const metadata: Metadata = {
   title: '이로움 · EALOWM',
   description: '지혜의 씨앗으로 자비의 연꽃 피우기 — 12단계 자기돌봄 프로그램',
   icons: { icon: '/favicon.ico' },
+  manifest: '/manifest.json',
+  themeColor: '#d94f88',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '이로움',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

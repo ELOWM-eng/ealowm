@@ -1,0 +1,22 @@
+{
+  "name": "이로움 · EALOWM",
+  "short_name": "이로움",
+  "description": "지혜의 씨앗으로 자비의 연꽃 피우기 · 12단계 자기돌봄 프로그램",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf8f0",
+  "theme_color": "#d94f88",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
