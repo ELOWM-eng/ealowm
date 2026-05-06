@@ -48,7 +48,7 @@ export default function AuthForm() {
       </h2>
 
       <div>
-        <label className="block text-xs text-stone-500 mb-1">이메일</label>
+        <label className="block text-xs text-stone-500 mb-1">이메일 · Email</label>
         <input
           type="email"
           value={email}
@@ -61,7 +61,7 @@ export default function AuthForm() {
       </div>
 
       <div>
-        <label className="block text-xs text-stone-500 mb-1">비밀번호</label>
+        <label className="block text-xs text-stone-500 mb-1">비밀번호 · Password</label>
         <input
           type="password"
           value={password}
@@ -70,7 +70,7 @@ export default function AuthForm() {
           minLength={6}
           className="w-full px-3 py-2.5 text-sm rounded-lg border border-stone-200 bg-stone-50
             focus:outline-none focus:border-pink-300 focus:bg-white transition-colors"
-          placeholder="6자리 이상"
+          placeholder="6자리 이상 · 6+ characters"
         />
       </div>
 
