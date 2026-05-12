@@ -244,6 +244,7 @@ export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
   const activeQuestions = isEn ? Q_EN : isYouth ? Q_TEEN : track === 'teen' ? Q_TEEN : Q_ADULT
 
   async function startCheck() {
+    if (!isEn && !isYouth) setTrack('adult')
     setScreen('questions')
     setCurrent(0)
     setAnswers({})
@@ -391,39 +392,11 @@ export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
               </p>
             </div>
 
-            {!isEn && !isYouth && (
-              <div>
-                <p className="text-xs text-stone-400 mb-3 font-medium uppercase tracking-wider">
-                  {isEn ? 'Select Track' : '트랙 선택'}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setTrack('adult')}
-                    className={clsx(
-                      'p-5 rounded-2xl border-2 text-left transition-all',
-                      track === 'adult' ? 'border-teal-400 bg-teal-50' : 'border-stone-100 bg-white hover:border-teal-200'
-                    )}>
-                    <div className="text-2xl mb-2">🌿</div>
-                    <div className="text-sm font-bold text-stone-800 mb-1">성인 트랙</div>
-                    <div className="text-xs text-stone-500 leading-relaxed">직장·일상 생활 맥락의 질문으로 구성됩니다</div>
-                  </button>
-                  <button
-                    onClick={() => setTrack('teen')}
-                    className={clsx(
-                      'p-5 rounded-2xl border-2 text-left transition-all',
-                      track === 'teen' ? 'border-teal-400 bg-teal-50' : 'border-stone-100 bg-white hover:border-teal-200'
-                    )}>
-                    <div className="text-2xl mb-2">🌱</div>
-                    <div className="text-sm font-bold text-stone-800 mb-1">청소년 트랙</div>
-                    <div className="text-xs text-stone-500 leading-relaxed">학교·또래 생활 맥락의 질문으로 구성됩니다</div>
-                  </button>
-                </div>
-              </div>
-            )}
+            
 
             <button
               onClick={startCheck}
-              disabled={!isEn && !isYouth && !track}
+              disabled={false}
               className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-40"
               style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
               {isEn ? 'Start →' : '시작하기 →'}
