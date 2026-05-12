@@ -796,7 +796,15 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
                 {isEn ? 'Check Again' : '다시 살펴보기'}
               </button>
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={async () => {
+                  if (checkPoint === 'end') {
+                    await supabase.from('session_records').delete().eq('user_id', userId)
+                    await supabase.from('awareness_check').delete().eq('user_id', userId)
+                    await supabase.from('user_goals').update({ addiction_goal: '' }).eq('user_id', userId)
+                    await new Promise(resolve => setTimeout(resolve, 500))
+                  }
+                  router.push('/dashboard')
+                }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all"
                 style={{ background: 'linear-gradient(135deg, #e673a8, #d94f88)' }}>
                 {isEn ? 'Go to Dashboard' : '대시보드로 →'}
