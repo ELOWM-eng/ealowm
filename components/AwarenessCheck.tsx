@@ -67,6 +67,17 @@ const Q_ADULT: Question[] = [
     ]
   },
   {
+    axis: '축 2 · 마음 패턴 (세속관) — 미혹',
+    text: '그 행동이 자신에게 좋지 않다는 것을 알면서도 멈추기 어렵나요?',
+    axis_key: 'mi',
+    opts: [
+      { text: '거의 없다. 스스로 판단하고 조절할 수 있다', score: 1 },
+      { text: '가끔, 알면서도 그냥 하게 된다', score: 2 },
+      { text: '자주, 알면서도 멈추기 어렵다', score: 3 },
+      { text: '항상, 왜 하는지도 모르면서 반복된다', score: 4 },
+    ]
+  },
+   {
     axis: '축 3 · 영향 범위 (자비관)',
     text: '습관화된 중독 행동이 나 자신과 주변 사람들에게 어떤 영향을 주나요?',
     axis_key: 'impact',
@@ -136,6 +147,17 @@ const Q_TEEN: Question[] = [
     ]
   },
   {
+    axis: '축 2 · 마음 패턴 (세속관) — 미혹',
+    text: '그 행동이 좋지 않다는 걸 알면서도 멈추기 어렵나요?',
+    axis_key: 'mi',
+    opts: [
+      { text: '거의 없다. 스스로 판단하고 조절할 수 있다', score: 1 },
+      { text: '가끔, 알면서도 그냥 하게 된다', score: 2 },
+      { text: '자주, 알면서도 멈추기 어렵다', score: 3 },
+      { text: '항상, 왜 하는지도 모르면서 반복된다', score: 4 },
+    ]
+  },
+  {
     axis: '축 3 · 영향 범위 (자비관)',
     text: '습관화된 중독 행동이 나 자신과 친구·가족에게 어떤 영향을 주나요?',
     axis_key: 'impact',
@@ -202,6 +224,17 @@ const Q_EN: Question[] = [
       { text: 'Sometimes irritated', score: 2 },
       { text: 'Often — strong irritation or anger arises', score: 3 },
       { text: 'Always — anger that is hard to control', score: 4 },
+    ]
+  },
+  {
+    axis: 'Axis 2 · Mind Pattern (Secular) — Delusion',
+    text: 'Even knowing this behavior is not good for you, do you find it hard to stop?',
+    axis_key: 'mi',
+    opts: [
+      { text: 'Rarely — I can judge and regulate myself', score: 1 },
+      { text: 'Sometimes — I do it even knowing I shouldn\'t', score: 2 },
+      { text: 'Often — I know but can\'t stop', score: 3 },
+      { text: 'Always — I repeat it without knowing why', score: 4 },
     ]
   },
   {
@@ -305,6 +338,7 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
   const tan = scores['tan'] ?? 1
   const jip = scores['jip'] ?? 1
   const hwa = scores['hwa'] ?? 1
+  const mi = scores['mi'] ?? 1
   const impact = scores['impact'] ?? 1
   const aware = scores['aware'] ?? 1
 
@@ -316,13 +350,20 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
   const awarePct = Math.round((aware / 4) * 100)
 
   const dominantMind = (() => {
-    if (tan === jip && jip === hwa) return 3 // 세 개 동률
-    if (tan === jip && tan > hwa) return 4 // 탐냄·집착 동률
-    if (tan === hwa && tan > jip) return 5 // 탐냄·화냄 동률
-    if (jip === hwa && jip > tan) return 6 // 집착·화냄 동률
-    if (tan > jip && tan > hwa) return 0
-    if (jip > hwa) return 1
-    return 2
+    const vals = [tan, jip, hwa, mi]
+    const maxVal = Math.max(...vals)
+    const maxIdxs = vals.map((v, i) => v === maxVal ? i : -1).filter(i => i >= 0)
+    if (maxIdxs.length === 4) return 3 // 전체 균형
+    if (maxIdxs.length === 1) return maxIdxs[0] // 단독 우세
+    // 두 개 동률
+    const pair = maxIdxs.join('-')
+    if (pair === '0-1') return 4 // 탐냄·집착
+    if (pair === '0-2') return 5 // 탐냄·화냄
+    if (pair === '0-3') return 7 // 탐냄·미혹
+    if (pair === '1-2') return 6 // 집착·화냄
+    if (pair === '1-3') return 8 // 집착·미혹
+    if (pair === '2-3') return 9 // 화냄·미혹
+    return 3 // 세 개 이상 동률
   })()
 
   const freqLabel = isEn
@@ -340,10 +381,20 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
   const awareColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][aware - 1]
   const freqColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][freq - 1]
   const impactColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][impact - 1]
-  const dominantColor = ['#3266ad', '#BA7517', '#A32D2D', '#1D9E75', '#6a4ab5', '#7a3a3a', '#8a5a17'][dominantMind]
-  const dominantMindLabel = isEn
-    ? ['Greed', 'Attachment', 'Anger', 'Balanced', 'Greed·Attachment', 'Greed·Anger', 'Attachment·Anger'][dominantMind]
-    : ['탐냄', '집착', '화냄', '균형', '탐냄·집착', '탐냄·화냄', '집착·화냄'][dominantMind]
+  const dominantColor = ({
+    0: '#3266ad', 1: '#BA7517', 2: '#A32D2D', 3: '#1D9E75',
+    4: '#6a4ab5', 5: '#7a3a3a', 6: '#8a5a17',
+    7: '#2a6a8a', 8: '#6a5a17', 9: '#8a3a6a',
+  } as Record<number, string>)[dominantMind] ?? '#1D9E75'
+  const dominantMindLabel = isEn ? {
+    0: 'Greed', 1: 'Attachment', 2: 'Anger', 3: 'Balanced',
+    4: 'Greed·Attachment', 5: 'Greed·Anger', 6: 'Attachment·Anger',
+    7: 'Greed·Delusion', 8: 'Attachment·Delusion', 9: 'Anger·Delusion',
+  }[dominantMind] ?? 'Balanced' : {
+    0: '탐냄', 1: '집착', 2: '화냄', 3: '균형',
+    4: '탐냄·집착', 5: '탐냄·화냄', 6: '집착·화냄',
+    7: '탐냄·미혹', 8: '집착·미혹', 9: '화냄·미혹',
+  }[dominantMind] ?? '균형'
 
   const seedMsg = isEn ? [
     'The seed of awareness is already awake within you.',
@@ -357,24 +408,30 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
     '알아차림의 첫 씨앗이 필요한 자리입니다. 이 도구를 사용하는 것 자체가 첫 걸음입니다.',
   ][aware - 1]
 
-  const mindMsg = isEn ? [
-    '"The wanting mind" is mainly driving this habit. When conditions change, this mind can also change.',
-    '"The fear of losing mind" is holding this habit. Practicing letting go is the key.',
-    '"The mind that rises when things don\'t go as wished" is connected to this habit. Noticing it alone is already one step.',
-    'Three minds are balanced. Each arises in different situations. Observing which one moves most in daily life is the practice.',
-    'Greed and Attachment are moving together. The wanting and the fear of losing are both present. Noticing which one arises first is the practice.',
-    'Greed and Anger are moving together. Wanting more and resisting interruption are both present. A moment of pause between the two is the beginning.',
-    'Attachment and Anger are moving together. The fear of losing and the resistance to change are connected. Observing them gently is the first step.',
-  ][dominantMind] : [
-    '"더 원하는 마음"이 이 습관을 주로 이끌고 있습니다. 조건이 바뀌면 이 마음도 변할 수 있습니다.',
-    '"잃기 싫은 마음"이 이 습관을 붙들고 있습니다. 놓아두는 연습이 열쇠가 됩니다.',
-    '"뜻대로 안 될 때 일어나는 마음"이 이 습관과 연결되어 있습니다. 알아차리는 것만으로도 한 걸음입니다.',
-    '세 가지 마음이 균형 있게 나타나고 있습니다. 각각 다른 상황에서 일어납니다. 일상에서 어느 마음이 가장 자주 움직이는지 관찰하는 것이 실천입니다.',
-    '탐냄과 집착이 함께 움직이고 있습니다. 더 원하는 마음과 잃기 싫은 마음이 동시에 작동합니다. 어느 마음이 먼저 일어나는지 알아차리는 것이 실천입니다.',
-    '탐냄과 화냄이 함께 움직이고 있습니다. 더 원하는 마음과 방해받을 때 올라오는 저항이 연결되어 있습니다. 그 사이에 한 박자 멈추는 것이 시작입니다.',
-    '집착과 화냄이 함께 움직이고 있습니다. 잃기 싫은 마음과 변화에 대한 저항이 연결되어 있습니다. 그 마음을 부드럽게 바라보는 것이 첫 걸음입니다.',
-  ][dominantMind]
-
+  const mindMsgs: Record<number, string> = isEn ? {
+    0: '"The wanting mind" is mainly driving this habit. When conditions change, this mind can also change.',
+    1: '"The fear of losing mind" is holding this habit. Practicing letting go is the key.',
+    2: '"The mind that rises when things don\'t go as wished" is connected to this habit. Noticing it alone is already one step.',
+    3: 'The four minds are balanced. Each arises in different situations. Observing which one moves most in daily life is the practice.',
+    4: 'Greed and Attachment are moving together. The wanting and the fear of losing are both present. Noticing which one arises first is the practice.',
+    5: 'Greed and Anger are moving together. Wanting more and resisting interruption are both present. A moment of pause between the two is the beginning.',
+    6: 'Attachment and Anger are moving together. The fear of losing and the resistance to change are connected. Observing them gently is the first step.',
+    7: 'Greed and Delusion are moving together. Wanting more while not knowing why — this is where the habit deepens. Simply noticing this is already awareness.',
+    8: 'Attachment and Delusion are moving together. Holding on without knowing why — gently asking "what am I holding?" is the beginning.',
+    9: 'Anger and Delusion are moving together. Resistance arising without knowing why — noticing that moment is the first step.',
+  } : {
+    0: '"더 원하는 마음"이 이 습관을 주로 이끌고 있습니다. 조건이 바뀌면 이 마음도 변할 수 있습니다.',
+    1: '"잃기 싫은 마음"이 이 습관을 붙들고 있습니다. 놓아두는 연습이 열쇠가 됩니다.',
+    2: '"뜻대로 안 될 때 일어나는 마음"이 이 습관과 연결되어 있습니다. 알아차리는 것만으로도 한 걸음입니다.',
+    3: '네 가지 마음이 균형 있게 나타나고 있습니다. 각각 다른 상황에서 일어납니다. 일상에서 어느 마음이 가장 자주 움직이는지 관찰하는 것이 실천입니다.',
+    4: '탐냄과 집착이 함께 움직이고 있습니다. 더 원하는 마음과 잃기 싫은 마음이 동시에 작동합니다. 어느 마음이 먼저 일어나는지 알아차리는 것이 실천입니다.',
+    5: '탐냄과 화냄이 함께 움직이고 있습니다. 더 원하는 마음과 방해받을 때 올라오는 저항이 연결되어 있습니다. 그 사이에 한 박자 멈추는 것이 시작입니다.',
+    6: '집착과 화냄이 함께 움직이고 있습니다. 잃기 싫은 마음과 변화에 대한 저항이 연결되어 있습니다. 그 마음을 부드럽게 바라보는 것이 첫 걸음입니다.',
+    7: '탐냄과 미혹이 함께 움직이고 있습니다. 왜 하는지도 모르면서 더 원하는 마음 — 이 자리에서 습관이 깊어집니다. 그것을 알아차리는 것만으로도 이미 깨어 있는 것입니다.',
+    8: '집착과 미혹이 함께 움직이고 있습니다. 왜 붙들고 있는지도 모르면서 놓지 못하는 마음 — "무엇을 붙들고 있는가"를 부드럽게 물어보는 것이 시작입니다.',
+    9: '화냄과 미혹이 함께 움직이고 있습니다. 왜 화가 나는지도 모르면서 올라오는 저항 — 그 순간을 알아차리는 것이 첫 걸음입니다.',
+  }
+  const mindMsg = mindMsgs[dominantMind] ?? mindMsgs[3]
   const pct = Math.round((current / activeQuestions.length) * 100)
 
   return (
@@ -535,6 +592,7 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
                     { label: isEn ? 'Greed' : '탐냄', val: tan, pct: tanPct, color: '#3266ad' },
                     { label: isEn ? 'Attachment' : '집착', val: jip, pct: jipPct, color: '#BA7517' },
                     { label: isEn ? 'Anger' : '화냄', val: hwa, pct: hwaPct, color: '#A32D2D' },
+                    { label: isEn ? 'Delusion' : '미혹', val: mi, pct: Math.round((mi / 4) * 100), color: '#2a6a8a' },
                   ].map(m => (
                     <div key={m.label} className="flex items-center gap-2">
                       <span className="text-xs text-stone-400 w-14 flex-shrink-0">{m.label}</span>
