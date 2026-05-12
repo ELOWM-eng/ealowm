@@ -308,13 +308,33 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
       scores[q.axis_key] += q.opts[answers[i]].score
     })
 
-    await supabase.from('awareness_check').insert({
-      user_id: userId,
-      version,
-      track: isEn ? 'en' : (track ?? 'adult'),
-      scores,
-      check_point: checkPoint,
-    })
+    // start일 때는 기존 데이터가 없을 때만 저장
+    if (checkPoint === 'start') {
+      const { data: existing } = await supabase
+        .from('awareness_check')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('version', version)
+        .eq('check_point', 'start')
+        .single()
+      if (!existing) {
+        await supabase.from('awareness_check').insert({
+          user_id: userId,
+          version,
+          track: isEn ? 'en' : (track ?? 'adult'),
+          scores,
+          check_point: 'start',
+        })
+      }
+    } else {
+      await supabase.from('awareness_check').insert({
+        user_id: userId,
+        version,
+        track: isEn ? 'en' : (track ?? 'adult'),
+        scores,
+        check_point: checkPoint,
+      })
+    }
     setSaving(false)
     setScreen('result')
   }
