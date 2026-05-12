@@ -317,9 +317,9 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
 
   const dominantMind = (() => {
     if (tan === jip && jip === hwa) return 3 // 세 개 동률
-    if (tan === jip && tan > hwa) return 3 // 탐냄·집착 동률
-    if (tan === hwa && tan > jip) return 3 // 탐냄·화냄 동률
-    if (jip === hwa && jip > tan) return 3 // 집착·화냄 동률
+    if (tan === jip && tan > hwa) return 0 // 탐냄·집착 동률 → 탐냄
+    if (tan === hwa && tan > jip) return 0 // 탐냄·화냄 동률 → 탐냄
+    if (jip === hwa && jip > tan) return 1 // 집착·화냄 동률 → 집착
     if (tan > jip && tan > hwa) return 0
     if (jip > hwa) return 1
     return 2
