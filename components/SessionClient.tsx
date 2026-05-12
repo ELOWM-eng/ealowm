@@ -668,8 +668,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                   onClick={async () => {
   await supabase.from('session_records').delete().eq('user_id', userId).eq('version', version)
   await new Promise(resolve => setTimeout(resolve, 500))
-  router.push('/dashboard')
-  router.refresh()
+  router.push('/awareness?point=restart')
 }}
                   className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                   style={{ background: 'linear-gradient(135deg, #e673a8, #d94f88)' }}>
@@ -683,7 +682,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
               </div>
             ) : (
               <button
-                onClick={async () => { await saveData(true); router.push('/dashboard'); router.refresh() }}
+                onClick={async () => { await saveData(true); router.push('/awareness?point=end') }}
                 className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                 style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
                 {isEn ? '✓ Return to Session List' : '✓ 회기 목록으로 돌아가기'}

@@ -184,7 +184,25 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
             </button>
           </div>
         </div>
-
+{/* 습관 패턴 알아차리기 버튼 */}
+        <div className="mb-6 animate-fade-up">
+          <button
+            onClick={() => router.push('/awareness?point=start')}
+            className="w-full p-4 rounded-2xl border border-teal-200 bg-teal-50 text-left hover:bg-teal-100 transition-all">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🪷</span>
+              <div>
+                <p className="text-sm font-bold text-teal-700" style={{ fontFamily: 'var(--font-gowun)' }}>
+                  {isEn ? 'Awareness Check' : '나의 습관 패턴 알아차리기'}
+                </p>
+                <p className="text-xs text-teal-500 mt-0.5">
+                  {isEn ? 'See the flow of your mind as it is' : '지금 내 안에서 움직이는 마음의 흐름을 바라보세요'}
+                </p>
+              </div>
+              <span className="ml-auto text-teal-400">→</span>
+            </div>
+          </button>
+        </div>
         {/* 진행률 */}
         <div className="mb-8 animate-fade-up">
           <div className="bg-white rounded-2xl p-6 border border-pink-50 shadow-sm">
