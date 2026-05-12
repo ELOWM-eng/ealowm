@@ -652,66 +652,131 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
 {checkPoint === 'end' && firstResult && (() => {
               const fs = firstResult.scores
               const axes = [
-                { key: 'freq', label: isEn ? 'Frequency' : '빈도', labels: isEn ? ['Occasional','Regular','Repetitive','Automatic'] : ['간헐적','규칙적','반복적','자동적'] },
-                { key: 'aware', label: isEn ? 'Awareness' : '알아차림', labels: isEn ? ['Aware before','Aware at start','Aware during','Aware after'] : ['행동 전','시작 시','행동 중','사후'] },
-                { key: 'impact', label: isEn ? 'Impact' : '영향 범위', labels: isEn ? ['Internal','Indirect','Noticed','Affecting'] : ['자기 내부','간접적','주변 표현','관계 영향'] },
+                { key: 'freq', label: isEn ? 'Frequency' : '빈도', labels: isEn ? ['Occasional','Regular','Repetitive','Automatic'] : ['간헐적','규칙적','반복적','자동적'], colors: ['#1D9E75','#639922','#BA7517','#A32D2D'] },
+                { key: 'aware', label: isEn ? 'Awareness' : '알아차림', labels: isEn ? ['Before','At start','During','After'] : ['행동 전','시작 시','행동 중','사후'], colors: ['#1D9E75','#639922','#BA7517','#A32D2D'] },
+                { key: 'impact', label: isEn ? 'Impact' : '영향 범위', labels: isEn ? ['Internal','Indirect','Noticed','Affecting'] : ['자기 내부','간접적','주변 표현','관계 영향'], colors: ['#1D9E75','#639922','#BA7517','#A32D2D'] },
               ]
-              const mindKeys = ['tan', 'jip', 'hwa']
-              const firstDominant = mindKeys.reduce((a, b) => (fs[a] ?? 0) >= (fs[b] ?? 0) ? a : b)
-              const nowDominant = ['tan','jip','hwa'].reduce((a, b) => scores[a] >= scores[b] ? a : b)
-              const mindLabels: Record<string, string> = isEn
-                ? { tan: 'Greed', jip: 'Attachment', hwa: 'Anger' }
-                : { tan: '탐냄', jip: '집착', hwa: '화냄' }
+              const mindKeys = ['tan','jip','hwa','mi']
+              const mindLabelMap: Record<string, string> = isEn
+                ? { tan: 'Greed', jip: 'Attachment', hwa: 'Anger', mi: 'Delusion' }
+                : { tan: '탐냄', jip: '집착', hwa: '화냄', mi: '미혹' }
+              const mindColors: Record<string, string> = { tan: '#3266ad', jip: '#BA7517', hwa: '#A32D2D', mi: '#2a6a8a' }
+
+              const firstDominantKey = mindKeys.reduce((a, b) => (fs[a] ?? 0) >= (fs[b] ?? 0) ? a : b)
+              const nowDominantKey = mindKeys.reduce((a, b) => (scores[a] ?? 0) >= (scores[b] ?? 0) ? a : b)
+
+              // 변화 분석
+              const awareChange = (fs['aware'] ?? 1) - (scores['aware'] ?? 1)
+              const freqChange = (fs['freq'] ?? 1) - (scores['freq'] ?? 1)
+              const impactChange = (fs['impact'] ?? 1) - (scores['impact'] ?? 1)
+
+              const getChangeMsg = () => {
+                const msgs = []
+                if (awareChange > 0) msgs.push(isEn ? `Awareness improved by ${awareChange} level${awareChange > 1 ? 's' : ''} — noticing earlier than before.` : `알아차림이 ${awareChange}단계 빨라졌습니다. 이전보다 더 일찍 알아차리고 있습니다.`)
+                else if (awareChange < 0) msgs.push(isEn ? `Awareness shifted later by ${Math.abs(awareChange)} level${Math.abs(awareChange) > 1 ? 's' : ''} — this is also information worth observing.` : `알아차림이 ${Math.abs(awareChange)}단계 늦어졌습니다. 이것도 바라볼 가치 있는 정보입니다.`)
+                else msgs.push(isEn ? 'Awareness level remains the same — the practice of noticing continues.' : '알아차림 수준이 같습니다. 바라보는 실천이 이어지고 있습니다.')
+
+                if (freqChange > 0) msgs.push(isEn ? `Frequency decreased by ${freqChange} level${freqChange > 1 ? 's' : ''} — the habit is occurring less often.` : `빈도가 ${freqChange}단계 줄었습니다. 습관이 덜 자주 일어나고 있습니다.`)
+                else if (freqChange < 0) msgs.push(isEn ? `Frequency increased by ${Math.abs(freqChange)} level${Math.abs(freqChange) > 1 ? 's' : ''} — observing what conditions are behind this is the practice.` : `빈도가 ${Math.abs(freqChange)}단계 늘었습니다. 어떤 조건이 작용하는지 관찰하는 것이 실천입니다.`)
+                else msgs.push(isEn ? 'Frequency is unchanged — notice what situations trigger it.' : '빈도는 변화 없습니다. 어떤 상황에서 일어나는지 알아차려 보세요.')
+
+                if (firstDominantKey !== nowDominantKey) msgs.push(isEn
+                  ? `The dominant mind pattern shifted from ${mindLabelMap[firstDominantKey]} to ${mindLabelMap[nowDominantKey]}. This shift itself is a sign of change.`
+                  : `주된 마음 패턴이 ${mindLabelMap[firstDominantKey]}에서 ${mindLabelMap[nowDominantKey]}으로 변화했습니다. 이 변화 자체가 움직임의 신호입니다.`)
+                else msgs.push(isEn
+                  ? `The dominant mind pattern remains ${mindLabelMap[nowDominantKey]}. Continuing to observe this mind is the practice.`
+                  : `주된 마음 패턴이 여전히 ${mindLabelMap[nowDominantKey]}입니다. 이 마음을 계속 바라보는 것이 실천입니다.`)
+
+                return msgs
+              }
 
               return (
                 <div className="space-y-4">
                   <p className="text-xs text-stone-400 font-medium uppercase tracking-wider">
-                    {isEn ? 'Change from First Check' : '처음과 지금의 변화'}
+                    {isEn ? '12-Week Change: Before & After' : '12주 여정 전후 변화'}
                   </p>
-                  <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
+
+                  {/* 축별 비교 */}
+                  <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-5">
                     {axes.map(ax => {
                       const before = fs[ax.key] ?? 1
                       const after = scores[ax.key] ?? 1
-                      const diff = after - before
-                      const beforePct = Math.round((before / 4) * 100)
-                      const afterPct = Math.round((after / 4) * 100)
-                      const colors = ['#1D9E75','#639922','#BA7517','#A32D2D']
+                      const diff = before - after
                       return (
                         <div key={ax.key}>
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-xs text-stone-500 font-medium">{ax.label}</p>
-                            <span className={`text-xs font-bold ${diff < 0 ? 'text-teal-600' : diff > 0 ? 'text-red-400' : 'text-stone-400'}`}>
-                              {diff < 0 ? `▼ ${Math.abs(diff)}` : diff > 0 ? `▲ ${diff}` : '─'}
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-xs font-medium text-stone-600">{ax.label}</p>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                              diff > 0 ? 'bg-teal-50 text-teal-600' :
+                              diff < 0 ? 'bg-red-50 text-red-400' :
+                              'bg-stone-50 text-stone-400'
+                            }`}>
+                              {diff > 0 ? `▼ ${diff} ${isEn ? 'improved' : '개선'}` :
+                               diff < 0 ? `▲ ${Math.abs(diff)} ${isEn ? 'increased' : '증가'}` :
+                               (isEn ? '─ unchanged' : '─ 변화없음')}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-stone-300 w-10">{isEn ? 'Start' : '처음'}</span>
-                            <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full opacity-40" style={{ width: `${beforePct}%`, background: colors[before - 1] }} />
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-stone-300 w-8 flex-shrink-0">{isEn ? 'Start' : '처음'}</span>
+                              <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full opacity-40" style={{ width: `${Math.round((before/4)*100)}%`, background: ax.colors[before-1] }} />
+                              </div>
+                              <span className="text-xs text-stone-400 w-16 text-right flex-shrink-0">{ax.labels[before-1]}</span>
                             </div>
-                            <span className="text-xs text-stone-400 w-16 text-right">{ax.labels[before - 1]}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-stone-500 w-10 font-medium">{isEn ? 'Now' : '지금'}</span>
-                            <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full" style={{ width: `${afterPct}%`, background: colors[after - 1] }} />
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-stone-600 w-8 flex-shrink-0">{isEn ? 'Now' : '지금'}</span>
+                              <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: `${Math.round((after/4)*100)}%`, background: ax.colors[after-1] }} />
+                              </div>
+                              <span className="text-xs font-medium w-16 text-right flex-shrink-0" style={{ color: ax.colors[after-1] }}>{ax.labels[after-1]}</span>
                             </div>
-                            <span className="text-xs font-medium w-16 text-right" style={{ color: colors[after - 1] }}>{ax.labels[after - 1]}</span>
                           </div>
                         </div>
                       )
                     })}
-                    <div className="pt-2 border-t border-stone-100">
-                      <p className="text-xs text-stone-500 font-medium mb-1">{isEn ? 'Mind Pattern' : '주된 마음 패턴'}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-stone-300">{isEn ? 'Start' : '처음'}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-stone-100 text-stone-500">{mindLabels[firstDominant]}</span>
-                        <span className="text-stone-300">→</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 font-medium">{mindLabels[nowDominant]}</span>
-                        <span className="text-xs text-stone-500">{isEn ? 'Now' : '지금'}</span>
-                      </div>
+
+                    {/* 마음 패턴 비교 */}
+                    <div className="pt-3 border-t border-stone-100">
+                      <p className="text-xs font-medium text-stone-600 mb-3">{isEn ? 'Mind Pattern' : '마음 패턴'}</p>
+                      {mindKeys.map(k => {
+                        const before = fs[k] ?? 1
+                        const after = scores[k] ?? 1
+                        const diff = before - after
+                        return (
+                          <div key={k} className="flex items-center gap-2 mb-2">
+                            <span className="text-xs text-stone-400 w-10 flex-shrink-0">{mindLabelMap[k]}</span>
+                            <div className="flex-1 flex items-center gap-1">
+                              <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full opacity-40" style={{ width: `${Math.round((before/4)*100)}%`, background: mindColors[k] }} />
+                              </div>
+                              <span className="text-xs text-stone-300 w-3 text-center">→</span>
+                              <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: `${Math.round((after/4)*100)}%`, background: mindColors[k] }} />
+                              </div>
+                            </div>
+                            <span className={`text-xs font-medium w-8 text-right flex-shrink-0 ${diff > 0 ? 'text-teal-600' : diff < 0 ? 'text-red-400' : 'text-stone-300'}`}>
+                              {diff > 0 ? `▼${diff}` : diff < 0 ? `▲${Math.abs(diff)}` : '─'}
+                            </span>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
+
+                  {/* 변화 분석 메시지 */}
+                  <div className="space-y-2">
+                    <p className="text-xs text-stone-400 font-medium uppercase tracking-wider">
+                      {isEn ? 'Analysis' : '변화 분석'}
+                    </p>
+                    {getChangeMsg().map((msg, i) => (
+                      <div key={i} className="bg-white rounded-xl border border-stone-100 p-4">
+                        <p className="text-sm text-stone-700 leading-relaxed">{msg}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 마무리 메시지 */}
                   <div className="bg-gradient-to-br from-pink-50 to-amber-50 rounded-2xl p-5 border border-pink-100">
                     <p className="text-xs text-stone-400 mb-2">{isEn ? '12-Week Journey' : '12주 여정을 마치며'}</p>
                     <p className="text-sm text-stone-700 leading-relaxed" style={{ fontFamily: 'var(--font-gowun)' }}>
