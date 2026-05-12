@@ -675,14 +675,14 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                   {isEn ? '🪷 Start Again from Session 1' : '🪷 1회기부터 다시 시작하기'}
                 </button>
              <button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={async () => { await saveData(true); router.push('/awareness?point=end') }}
                   className="w-full py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all">
                   {isEn ? 'Session List' : '회기 목록으로'}
                 </button>
               </div>
             ) : (
               <button
-                onClick={async () => { await saveData(true); router.push('/awareness?point=end') }}
+                onClick={async () => { await saveData(true); router.push('/dashboard') }}
                 className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                 style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
                 {isEn ? '✓ Return to Session List' : '✓ 회기 목록으로 돌아가기'}
