@@ -172,7 +172,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                 text-stone-700 placeholder:text-stone-300"
             />
             <button
-              onClick={saveGoal}
+              onClick={async () => { await saveGoal(); router.push('/awareness?point=start') }}
               disabled={goalSaving}
               className="mt-3 w-full py-2.5 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #EF9F27, #BA7517)' }}>
