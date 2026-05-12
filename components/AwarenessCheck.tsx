@@ -295,12 +295,11 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
 
   // 결과 계산
   const scores: Record<string, number> = {}
-  if (screen === 'result') {
-    activeQuestions.forEach((q, i) => {
-      if (!scores[q.axis_key]) scores[q.axis_key] = 0
-      scores[q.axis_key] += q.opts[answers[i]]?.score ?? 1
-    })
-  }
+  activeQuestions.forEach((q, i) => {
+    if (answers[i] === undefined) return
+    if (!scores[q.axis_key]) scores[q.axis_key] = 0
+    scores[q.axis_key] += q.opts[answers[i]]?.score ?? 1
+  })
 
   const freq = scores['freq'] ?? 1
   const tan = scores['tan'] ?? 1
