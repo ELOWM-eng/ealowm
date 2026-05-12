@@ -317,9 +317,9 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
 
   const dominantMind = (() => {
     if (tan === jip && jip === hwa) return 3 // 세 개 동률
-    if (tan === jip && tan > hwa) return 0 // 탐냄·집착 동률 → 탐냄
-    if (tan === hwa && tan > jip) return 0 // 탐냄·화냄 동률 → 탐냄
-    if (jip === hwa && jip > tan) return 1 // 집착·화냄 동률 → 집착
+    if (tan === jip && tan > hwa) return 4 // 탐냄·집착 동률
+    if (tan === hwa && tan > jip) return 5 // 탐냄·화냄 동률
+    if (jip === hwa && jip > tan) return 6 // 집착·화냄 동률
     if (tan > jip && tan > hwa) return 0
     if (jip > hwa) return 1
     return 2
@@ -340,10 +340,10 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
   const awareColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][aware - 1]
   const freqColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][freq - 1]
   const impactColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][impact - 1]
-  const dominantColor = ['#3266ad', '#BA7517', '#A32D2D', '#1D9E75'][dominantMind]
+  const dominantColor = ['#3266ad', '#BA7517', '#A32D2D', '#1D9E75', '#6a4ab5', '#7a3a3a', '#8a5a17'][dominantMind]
   const dominantMindLabel = isEn
-    ? ['Greed', 'Attachment', 'Anger', 'Balanced'][dominantMind]
-    : ['탐냄', '집착', '화냄', '균형'][dominantMind]
+    ? ['Greed', 'Attachment', 'Anger', 'Balanced', 'Greed·Attachment', 'Greed·Anger', 'Attachment·Anger'][dominantMind]
+    : ['탐냄', '집착', '화냄', '균형', '탐냄·집착', '탐냄·화냄', '집착·화냄'][dominantMind]
 
   const seedMsg = isEn ? [
     'The seed of awareness is already awake within you.',
@@ -362,11 +362,17 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
     '"The fear of losing mind" is holding this habit. Practicing letting go is the key.',
     '"The mind that rises when things don\'t go as wished" is connected to this habit. Noticing it alone is already one step.',
     'Three minds are balanced. Each arises in different situations. Observing which one moves most in daily life is the practice.',
+    'Greed and Attachment are moving together. The wanting and the fear of losing are both present. Noticing which one arises first is the practice.',
+    'Greed and Anger are moving together. Wanting more and resisting interruption are both present. A moment of pause between the two is the beginning.',
+    'Attachment and Anger are moving together. The fear of losing and the resistance to change are connected. Observing them gently is the first step.',
   ][dominantMind] : [
     '"더 원하는 마음"이 이 습관을 주로 이끌고 있습니다. 조건이 바뀌면 이 마음도 변할 수 있습니다.',
     '"잃기 싫은 마음"이 이 습관을 붙들고 있습니다. 놓아두는 연습이 열쇠가 됩니다.',
     '"뜻대로 안 될 때 일어나는 마음"이 이 습관과 연결되어 있습니다. 알아차리는 것만으로도 한 걸음입니다.',
     '세 가지 마음이 균형 있게 나타나고 있습니다. 각각 다른 상황에서 일어납니다. 일상에서 어느 마음이 가장 자주 움직이는지 관찰하는 것이 실천입니다.',
+    '탐냄과 집착이 함께 움직이고 있습니다. 더 원하는 마음과 잃기 싫은 마음이 동시에 작동합니다. 어느 마음이 먼저 일어나는지 알아차리는 것이 실천입니다.',
+    '탐냄과 화냄이 함께 움직이고 있습니다. 더 원하는 마음과 방해받을 때 올라오는 저항이 연결되어 있습니다. 그 사이에 한 박자 멈추는 것이 시작입니다.',
+    '집착과 화냄이 함께 움직이고 있습니다. 잃기 싫은 마음과 변화에 대한 저항이 연결되어 있습니다. 그 마음을 부드럽게 바라보는 것이 첫 걸음입니다.',
   ][dominantMind]
 
   const pct = Math.round((current / activeQuestions.length) * 100)
@@ -520,8 +526,8 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
               <div className="bg-white rounded-2xl border border-stone-100 p-4">
                 <p className="text-xs text-stone-400 mb-1">{isEn ? 'Mind Pattern (Secular)' : '주된 마음 패턴 (세속관)'}</p>
                 <p className="text-sm font-bold mb-2" style={{ color: dominantColor }}>
-                  {dominantMind === 3
-                    ? (isEn ? 'Balanced' : '균형')
+                  {dominantMind >= 3
+                    ? dominantMindLabel
                     : `${dominantMindLabel}${isEn ? ' dominant' : '이 우세'}`}
                 </p>
                 <div className="space-y-1.5">
