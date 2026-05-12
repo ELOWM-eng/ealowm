@@ -184,7 +184,31 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
             </button>
           </div>
         </div>
-
+{/* 12회기 완료 후 다시 시작하기 */}
+        {totalCompleted === totalSessions && (
+          <div className="mb-6 animate-fade-up">
+            <div className="bg-gradient-to-br from-pink-50 to-amber-50 rounded-2xl p-5 border border-pink-100 text-center space-y-3">
+              <p className="text-2xl">🪷</p>
+              <p className="text-sm text-stone-600 leading-relaxed" style={{ fontFamily: 'var(--font-gowun)' }}>
+                {isEn
+                  ? 'You have completed all 12 sessions.\nWould you like to begin anew?'
+                  : '12회기를 모두 마쳤습니다.\n새롭게 다시 시작하시겠습니까?'}
+              </p>
+              <button
+                onClick={async () => {
+                  await supabase.from('session_records').delete().eq('user_id', userId)
+                  await supabase.from('awareness_check').delete().eq('user_id', userId)
+                  await supabase.from('user_goals').update({ addiction_goal: '' }).eq('user_id', userId)
+                  await new Promise(resolve => setTimeout(resolve, 500))
+                  router.push('/awareness?point=start')
+                }}
+                className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
+                style={{ background: 'linear-gradient(135deg, #e673a8, #d94f88)' }}>
+                {isEn ? '🪷 Start Again from Session 1' : '🪷 1회기부터 다시 시작하기'}
+              </button>
+            </div>
+          </div>
+        )}
         {/* 진행률 */}
         <div className="mb-8 animate-fade-up">
           <div className="bg-white rounded-2xl p-6 border border-pink-50 shadow-sm">
