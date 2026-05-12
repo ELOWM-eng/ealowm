@@ -355,15 +355,17 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
     const maxIdxs = vals.map((v, i) => v === maxVal ? i : -1).filter(i => i >= 0)
     if (maxIdxs.length === 4) return 3 // 전체 균형
     if (maxIdxs.length === 1) return maxIdxs[0] // 단독 우세
-    // 두 개 동률
-    const pair = maxIdxs.join('-')
-    if (pair === '0-1') return 4 // 탐냄·집착
-    if (pair === '0-2') return 5 // 탐냄·화냄
-    if (pair === '0-3') return 7 // 탐냄·미혹
-    if (pair === '1-2') return 6 // 집착·화냄
-    if (pair === '1-3') return 8 // 집착·미혹
-    if (pair === '2-3') return 9 // 화냄·미혹
-    return 3 // 세 개 이상 동률
+    if (maxIdxs.length === 2) {
+      const pair = maxIdxs.join('-')
+      if (pair === '0-1') return 4 // 탐냄·집착
+      if (pair === '0-2') return 5 // 탐냄·화냄
+      if (pair === '0-3') return 7 // 탐냄·미혹
+      if (pair === '1-2') return 6 // 집착·화냄
+      if (pair === '1-3') return 8 // 집착·미혹
+      if (pair === '2-3') return 9 // 화냄·미혹
+    }
+    // 3개 동률 → 가장 낮은 것 제외하고 균형
+    return 3
   })()
 
   const freqLabel = isEn
