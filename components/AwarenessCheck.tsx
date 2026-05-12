@@ -302,6 +302,7 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
 
   async function saveAndShowResults() {
     setSaving(true)
+    console.log('checkPoint:', checkPoint)
     const scores: Record<string, number> = {}
     activeQuestions.forEach((q, i) => {
       if (!scores[q.axis_key]) scores[q.axis_key] = 0
