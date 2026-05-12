@@ -389,11 +389,11 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
     7: '#2a6a8a', 8: '#6a5a17', 9: '#8a3a6a',
   } as Record<number, string>)[dominantMind] ?? '#1D9E75'
   const dominantMindLabel = isEn ? {
-    0: 'Greed', 1: 'Attachment', 2: 'Anger', 3: 'Balanced',
+    0: 'Greed', 1: 'Attachment', 2: 'Anger', 3: 'Balanced(mltiple)',
     4: 'Greed·Attachment', 5: 'Greed·Anger', 6: 'Attachment·Anger',
     7: 'Greed·Delusion', 8: 'Attachment·Delusion', 9: 'Anger·Delusion',
   }[dominantMind] ?? 'Balanced' : {
-    0: '탐냄', 1: '집착', 2: '화냄', 3: '균형',
+    0: '탐냄', 1: '집착', 2: '화냄', 3: '균형(복수)',
     4: '탐냄·집착', 5: '탐냄·화냄', 6: '집착·화냄',
     7: '탐냄·미혹', 8: '집착·미혹', 9: '화냄·미혹',
   }[dominantMind] ?? '균형'
@@ -414,7 +414,7 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
     0: '"The wanting mind" is mainly driving this habit. When conditions change, this mind can also change.',
     1: '"The fear of losing mind" is holding this habit. Practicing letting go is the key.',
     2: '"The mind that rises when things don\'t go as wished" is connected to this habit. Noticing it alone is already one step.',
-    3: 'The four minds are balanced. Each arises in different situations. Observing which one moves most in daily life is the practice.',
+    3: 'Three or more minds are balanced. Each arises in different situations. Observing which one moves most in daily life is the practice.',
     4: 'Greed and Attachment are moving together. The wanting and the fear of losing are both present. Noticing which one arises first is the practice.',
     5: 'Greed and Anger are moving together. Wanting more and resisting interruption are both present. A moment of pause between the two is the beginning.',
     6: 'Attachment and Anger are moving together. The fear of losing and the resistance to change are connected. Observing them gently is the first step.',
@@ -425,7 +425,7 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
     0: '"더 원하는 마음"이 이 습관을 주로 이끌고 있습니다. 조건이 바뀌면 이 마음도 변할 수 있습니다.',
     1: '"잃기 싫은 마음"이 이 습관을 붙들고 있습니다. 놓아두는 연습이 열쇠가 됩니다.',
     2: '"뜻대로 안 될 때 일어나는 마음"이 이 습관과 연결되어 있습니다. 알아차리는 것만으로도 한 걸음입니다.',
-    3: '네 가지 마음이 균형 있게 나타나고 있습니다. 각각 다른 상황에서 일어납니다. 일상에서 어느 마음이 가장 자주 움직이는지 관찰하는 것이 실천입니다.',
+    3: '여러 마음이 균형 있게 나타나고 있습니다. 각각 다른 상황에서 일어납니다. 일상에서 어느 마음이 가장 자주 움직이는지 관찰하는 것이 실천입니다.',
     4: '탐냄과 집착이 함께 움직이고 있습니다. 더 원하는 마음과 잃기 싫은 마음이 동시에 작동합니다. 어느 마음이 먼저 일어나는지 알아차리는 것이 실천입니다.',
     5: '탐냄과 화냄이 함께 움직이고 있습니다. 더 원하는 마음과 방해받을 때 올라오는 저항이 연결되어 있습니다. 그 사이에 한 박자 멈추는 것이 시작입니다.',
     6: '집착과 화냄이 함께 움직이고 있습니다. 잃기 싫은 마음과 변화에 대한 저항이 연결되어 있습니다. 그 마음을 부드럽게 바라보는 것이 첫 걸음입니다.',
