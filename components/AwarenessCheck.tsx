@@ -9,6 +9,7 @@ interface Props {
   userId: string
   version: string
   checkPoint: string
+  firstResult?: { scores: Record<string, number>; created_at: string } | null
 }
 
 type Track = 'adult' | 'teen'
@@ -23,7 +24,7 @@ interface Question {
 const Q_ADULT: Question[] = [
   {
     axis: '축 1 · 빈도와 조건 (무상관)',
-    text: '그 습관적 행동이 일어나는 빈도는 어느 정도인가요?',
+    text: '자신의 습관화된 중독 행동이 일어나는 빈도는 어느 정도인가요?',
     axis_key: 'freq',
     opts: [
       { text: '일주일에 1~2번, 특정 상황에서만 일어난다', score: 1 },
@@ -34,7 +35,7 @@ const Q_ADULT: Question[] = [
   },
   {
     axis: '축 2 · 마음 패턴 (세속관) — 탐냄',
-    text: '그 행동을 하기 전, "더 원한다"거나 "충분하지 않다"는 느낌이 드나요?',
+    text: '습관화된 중독 행동을 하기 전, "더 원한다"거나 "충분하지 않다"는 느낌이 드나요?',
     axis_key: 'tan',
     opts: [
       { text: '거의 없다', score: 1 },
@@ -45,7 +46,7 @@ const Q_ADULT: Question[] = [
   },
   {
     axis: '축 2 · 마음 패턴 (세속관) — 집착',
-    text: '그 행동을 못 하거나 멈출 때, "잃을 것 같다"는 두려움이 드나요?',
+    text: '습관화된 중독 행동을 못 하거나 멈출 때, "잃을 것 같다"는 두려움이 드나요?',
     axis_key: 'jip',
     opts: [
       { text: '거의 없다', score: 1 },
@@ -56,7 +57,7 @@ const Q_ADULT: Question[] = [
   },
   {
     axis: '축 2 · 마음 패턴 (세속관) — 화냄',
-    text: '그 행동을 방해받거나 제지당할 때 짜증이나 분노가 일어나나요?',
+    text: '습관화된 중독 행동을 방해받거나 제지당할 때 짜증이나 분노가 일어나나요?',
     axis_key: 'hwa',
     opts: [
       { text: '거의 없다', score: 1 },
@@ -67,7 +68,7 @@ const Q_ADULT: Question[] = [
   },
   {
     axis: '축 3 · 영향 범위 (자비관)',
-    text: '그 행동이 나 자신과 주변 사람들에게 어떤 영향을 주나요?',
+    text: '습관화된 중독 행동이 나 자신과 주변 사람들에게 어떤 영향을 주나요?',
     axis_key: 'impact',
     opts: [
       { text: '나 자신에게만 영향을 주고, 타인에게는 거의 영향이 없다', score: 1 },
@@ -78,7 +79,7 @@ const Q_ADULT: Question[] = [
   },
   {
     axis: '축 4 · 알아차림 수준 (생멸관)',
-    text: '그 행동이 일어날 때, 언제 알아차리게 되나요?',
+    text: '습관화된 중독 행동이 일어날 때, 언제 알아차리게 되나요?',
     axis_key: 'aware',
     opts: [
       { text: '행동하기 전에 미리 알아차린다', score: 1 },
@@ -92,7 +93,7 @@ const Q_ADULT: Question[] = [
 const Q_TEEN: Question[] = [
   {
     axis: '축 1 · 빈도와 조건 (무상관)',
-    text: '그 습관적 행동이 얼마나 자주 일어나나요?',
+    text: '자신의 습관화된 중독 행동이 얼마나 자주 일어나나요?',
     axis_key: 'freq',
     opts: [
       { text: '일주일에 1~2번, 특별한 상황에서만 한다', score: 1 },
@@ -103,7 +104,7 @@ const Q_TEEN: Question[] = [
   },
   {
     axis: '축 2 · 마음 패턴 (세속관) — 탐냄',
-    text: '그 행동을 하기 전, "더 하고 싶다"거나 "아직 부족하다"는 느낌이 드나요?',
+    text: '습관화된 중독 행동을 하기 전, "더 하고 싶다"거나 "아직 부족하다"는 느낌이 드나요?',
     axis_key: 'tan',
     opts: [
       { text: '거의 없다', score: 1 },
@@ -114,7 +115,7 @@ const Q_TEEN: Question[] = [
   },
   {
     axis: '축 2 · 마음 패턴 (세속관) — 집착',
-    text: '그 행동을 못 하거나 멈출 때, 불안하거나 뭔가 잃은 느낌이 드나요?',
+    text: '습관화된 중독 행동을 못 하거나 멈출 때, 불안하거나 뭔가 잃은 느낌이 드나요?',
     axis_key: 'jip',
     opts: [
       { text: '거의 없다', score: 1 },
@@ -125,7 +126,7 @@ const Q_TEEN: Question[] = [
   },
   {
     axis: '축 2 · 마음 패턴 (세속관) — 화냄',
-    text: '그 행동을 방해받거나 못 하게 될 때 짜증이나 화가 나나요?',
+    text: '습관화된 중독 행동을 방해받거나 못 하게 될 때 짜증이나 화가 나나요?',
     axis_key: 'hwa',
     opts: [
       { text: '거의 없다', score: 1 },
@@ -136,7 +137,7 @@ const Q_TEEN: Question[] = [
   },
   {
     axis: '축 3 · 영향 범위 (자비관)',
-    text: '그 행동이 나 자신과 친구·가족에게 어떤 영향을 주나요?',
+    text: '습관화된 중독 행동이 나 자신과 친구·가족에게 어떤 영향을 주나요?',
     axis_key: 'impact',
     opts: [
       { text: '나 자신에게만 영향을 주고, 다른 사람에게는 거의 없다', score: 1 },
@@ -147,7 +148,7 @@ const Q_TEEN: Question[] = [
   },
   {
     axis: '축 4 · 알아차림 수준 (생멸관)',
-    text: '그 행동이 일어날 때, 언제 알아차리게 되나요?',
+    text: '습관화된 중독 행동이 일어날 때, 언제 알아차리게 되나요?',
     axis_key: 'aware',
     opts: [
       { text: '행동하기 전에 미리 알아차린다', score: 1 },
@@ -161,7 +162,7 @@ const Q_TEEN: Question[] = [
 const Q_EN: Question[] = [
   {
     axis: 'Axis 1 · Frequency & Condition (Formless)',
-    text: 'How often does this habitual behavior occur?',
+    text: 'How often does this habitual addictive behavior occur?',
     axis_key: 'freq',
     opts: [
       { text: '1–2 times a week, only in specific situations', score: 1 },
@@ -172,7 +173,7 @@ const Q_EN: Question[] = [
   },
   {
     axis: 'Axis 2 · Mind Pattern (Secular) — Greed',
-    text: 'Before doing it, do you feel "I want more" or "it\'s not enough"?',
+    text: 'Before doing the havitual addictive behavior, do you feel "I want more" or "it\'s not enough"?',
     axis_key: 'tan',
     opts: [
       { text: 'Rarely', score: 1 },
@@ -183,7 +184,7 @@ const Q_EN: Question[] = [
   },
   {
     axis: 'Axis 2 · Mind Pattern (Secular) — Attachment',
-    text: 'When you can\'t do it or stop, do you feel fear of losing something?',
+    text: 'When you can\'t do the havitual addictive behavior or stop, do you feel fear of losing something?',
     axis_key: 'jip',
     opts: [
       { text: 'Rarely', score: 1 },
@@ -194,7 +195,7 @@ const Q_EN: Question[] = [
   },
   {
     axis: 'Axis 2 · Mind Pattern (Secular) — Anger',
-    text: 'When interrupted or prevented from doing it, do you feel irritation or anger?',
+    text: 'When interrupted or prevented from doing the havitual addictive behavior, do you feel irritation or anger?',
     axis_key: 'hwa',
     opts: [
       { text: 'Rarely', score: 1 },
@@ -205,7 +206,7 @@ const Q_EN: Question[] = [
   },
   {
     axis: 'Axis 3 · Scope of Impact (Compassion)',
-    text: 'How does this behavior affect you and the people around you?',
+    text: 'How does this havitual addictive behavior affect you and the people around you?',
     axis_key: 'impact',
     opts: [
       { text: 'Only affects me — little impact on others', score: 1 },
@@ -216,7 +217,7 @@ const Q_EN: Question[] = [
   },
   {
     axis: 'Axis 4 · Awareness Level (Arising & Ceasing)',
-    text: 'When the behavior occurs, at what point do you become aware of it?',
+    text: 'When the havitual addictive behavior occurs, at what point do you become aware of it?',
     axis_key: 'aware',
     opts: [
       { text: 'I notice it before the behavior happens', score: 1 },
@@ -227,7 +228,7 @@ const Q_EN: Question[] = [
   },
 ]
 
-export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
+export default function AwarenessCheck({ userId, version, checkPoint, firstResult }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const isEn = version === 'en'
@@ -315,7 +316,12 @@ export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
   const impactPct = Math.round((impact / 4) * 100)
   const awarePct = Math.round((aware / 4) * 100)
 
-  const dominantMind = tan >= jip && tan >= hwa ? 0 : jip >= hwa ? 1 : 2
+  const dominantMind = (() => {
+    if (tan === jip && jip === hwa) return 3 // 동률
+    if (tan >= jip && tan >= hwa) return 0
+    if (jip >= hwa) return 1
+    return 2
+  })()
 
   const freqLabel = isEn
     ? ['Occasional', 'Regular', 'Repetitive', 'Automatic'][freq - 1]
@@ -332,10 +338,10 @@ export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
   const awareColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][aware - 1]
   const freqColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][freq - 1]
   const impactColor = ['#1D9E75', '#639922', '#BA7517', '#A32D2D'][impact - 1]
-  const dominantColor = ['#3266ad', '#BA7517', '#A32D2D'][dominantMind]
+  const dominantColor = ['#3266ad', '#BA7517', '#A32D2D', '#1D9E75'][dominantMind]
   const dominantMindLabel = isEn
-    ? ['Greed', 'Attachment', 'Anger'][dominantMind]
-    : ['탐냄', '집착', '화냄'][dominantMind]
+    ? ['Greed', 'Attachment', 'Anger', 'Balanced'][dominantMind]
+    : ['탐냄', '집착', '화냄', '균형'][dominantMind]
 
   const seedMsg = isEn ? [
     'The seed of awareness is already awake within you.',
@@ -353,10 +359,12 @@ export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
     '"The wanting mind" is mainly driving this habit. When conditions change, this mind can also change.',
     '"The fear of losing mind" is holding this habit. Practicing letting go is the key.',
     '"The mind that rises when things don\'t go as wished" is connected to this habit. Noticing it alone is already one step.',
+    'Three minds are balanced. Each arises in different situations. Observing which one moves most in daily life is the practice.',
   ][dominantMind] : [
     '"더 원하는 마음"이 이 습관을 주로 이끌고 있습니다. 조건이 바뀌면 이 마음도 변할 수 있습니다.',
     '"잃기 싫은 마음"이 이 습관을 붙들고 있습니다. 놓아두는 연습이 열쇠가 됩니다.',
     '"뜻대로 안 될 때 일어나는 마음"이 이 습관과 연결되어 있습니다. 알아차리는 것만으로도 한 걸음입니다.',
+    '세 가지 마음이 균형 있게 나타나고 있습니다. 각각 다른 상황에서 일어납니다. 일상에서 어느 마음이 가장 자주 움직이는지 관찰하는 것이 실천입니다.',
   ][dominantMind]
 
   const pct = Math.round((current / activeQuestions.length) * 100)
@@ -510,7 +518,9 @@ export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
               <div className="bg-white rounded-2xl border border-stone-100 p-4">
                 <p className="text-xs text-stone-400 mb-1">{isEn ? 'Mind Pattern (Secular)' : '주된 마음 패턴 (세속관)'}</p>
                 <p className="text-sm font-bold mb-2" style={{ color: dominantColor }}>
-                  {dominantMindLabel}{isEn ? ' dominant' : '이 우세'}
+                  {dominantMind === 3
+                    ? (isEn ? 'Balanced' : '균형')
+                    : `${dominantMindLabel}${isEn ? ' dominant' : '이 우세'}`}
                 </p>
                 <div className="space-y-1.5">
                   {[
@@ -551,7 +561,80 @@ export default function AwarenessCheck({ userId, version, checkPoint }: Props) {
                   : '이 결과는 12주 여정의 출발점을 보여줍니다. 중독은 고정된 나의 일부가 아니라, 조건에 따라 형성된 하나의 현상입니다. 조건이 바뀌면 변할 수 있습니다.'}
               </p>
             </div>
+{checkPoint === 'end' && firstResult && (() => {
+              const fs = firstResult.scores
+              const axes = [
+                { key: 'freq', label: isEn ? 'Frequency' : '빈도', labels: isEn ? ['Occasional','Regular','Repetitive','Automatic'] : ['간헐적','규칙적','반복적','자동적'] },
+                { key: 'aware', label: isEn ? 'Awareness' : '알아차림', labels: isEn ? ['Aware before','Aware at start','Aware during','Aware after'] : ['행동 전','시작 시','행동 중','사후'] },
+                { key: 'impact', label: isEn ? 'Impact' : '영향 범위', labels: isEn ? ['Internal','Indirect','Noticed','Affecting'] : ['자기 내부','간접적','주변 표현','관계 영향'] },
+              ]
+              const mindKeys = ['tan', 'jip', 'hwa']
+              const firstDominant = mindKeys.reduce((a, b) => (fs[a] ?? 0) >= (fs[b] ?? 0) ? a : b)
+              const nowDominant = ['tan','jip','hwa'].reduce((a, b) => scores[a] >= scores[b] ? a : b)
+              const mindLabels: Record<string, string> = isEn
+                ? { tan: 'Greed', jip: 'Attachment', hwa: 'Anger' }
+                : { tan: '탐냄', jip: '집착', hwa: '화냄' }
 
+              return (
+                <div className="space-y-4">
+                  <p className="text-xs text-stone-400 font-medium uppercase tracking-wider">
+                    {isEn ? 'Change from First Check' : '처음과 지금의 변화'}
+                  </p>
+                  <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
+                    {axes.map(ax => {
+                      const before = fs[ax.key] ?? 1
+                      const after = scores[ax.key] ?? 1
+                      const diff = after - before
+                      const beforePct = Math.round((before / 4) * 100)
+                      const afterPct = Math.round((after / 4) * 100)
+                      const colors = ['#1D9E75','#639922','#BA7517','#A32D2D']
+                      return (
+                        <div key={ax.key}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs text-stone-500 font-medium">{ax.label}</p>
+                            <span className={`text-xs font-bold ${diff < 0 ? 'text-teal-600' : diff > 0 ? 'text-red-400' : 'text-stone-400'}`}>
+                              {diff < 0 ? `▼ ${Math.abs(diff)}` : diff > 0 ? `▲ ${diff}` : '─'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs text-stone-300 w-10">{isEn ? 'Start' : '처음'}</span>
+                            <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full opacity-40" style={{ width: `${beforePct}%`, background: colors[before - 1] }} />
+                            </div>
+                            <span className="text-xs text-stone-400 w-16 text-right">{ax.labels[before - 1]}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-stone-500 w-10 font-medium">{isEn ? 'Now' : '지금'}</span>
+                            <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: `${afterPct}%`, background: colors[after - 1] }} />
+                            </div>
+                            <span className="text-xs font-medium w-16 text-right" style={{ color: colors[after - 1] }}>{ax.labels[after - 1]}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <div className="pt-2 border-t border-stone-100">
+                      <p className="text-xs text-stone-500 font-medium mb-1">{isEn ? 'Mind Pattern' : '주된 마음 패턴'}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-stone-300">{isEn ? 'Start' : '처음'}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-stone-100 text-stone-500">{mindLabels[firstDominant]}</span>
+                        <span className="text-stone-300">→</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 font-medium">{mindLabels[nowDominant]}</span>
+                        <span className="text-xs text-stone-500">{isEn ? 'Now' : '지금'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-br from-pink-50 to-amber-50 rounded-2xl p-5 border border-pink-100">
+                    <p className="text-xs text-stone-400 mb-2">{isEn ? '12-Week Journey' : '12주 여정을 마치며'}</p>
+                    <p className="text-sm text-stone-700 leading-relaxed" style={{ fontFamily: 'var(--font-gowun)' }}>
+                      {isEn
+                        ? 'The fact that you have arrived here means the seed of awareness has already sprouted. Whatever the numbers show, the practice of looking within is itself the journey.'
+                        : '여기까지 도착했다는 것 자체가, 알아차림의 씨앗이 이미 싹을 틔웠다는 증거입니다. 숫자가 무엇을 보여주든, 내 안을 바라보는 실천 자체가 이미 여정입니다.'}
+                    </p>
+                  </div>
+                </div>
+              )
+            })()}
             <div className="flex gap-3">
               <button
                 onClick={restart}
