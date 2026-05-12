@@ -666,8 +666,9 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                 </p>
                 <button
                   onClick={async () => {
-  await saveData(true)
-  router.push('/dashboard')
+  await supabase.from('session_records').delete().eq('user_id', userId).eq('version', version)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  router.push('/awareness?point=end')
 }}
                   className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                   style={{ background: 'linear-gradient(135deg, #e673a8, #d94f88)' }}>
