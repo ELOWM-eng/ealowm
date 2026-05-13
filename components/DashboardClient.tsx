@@ -363,7 +363,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
 {/* 워크북 구매 */}
         <div className="mb-6 animate-fade-up">
           <div className="bg-white rounded-2xl border border-stone-100 p-5">
-            <p className="text-xs text-stone-400 font-medium uppercase tracking-wider mb-4">
+            <p className="text-sm font-bold text-stone-700 mb-4" style={{ fontFamily: 'var(--font-gowun)' }}>
               {isEn ? 'Workbook · Purchase' : '워크북 구매'}
             </p>
             <div className="space-y-3">
