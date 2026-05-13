@@ -22,7 +22,7 @@ export default function AuthForm() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
-        setError('이메일 또는 비밀번호를 확인해주세요.')
+        setError('이메일 또는 비밀번호를 확인해주세요. · Invalid email or password.')
       } else {
         window.location.href = '/select-version'
       }
@@ -32,9 +32,9 @@ export default function AuthForm() {
         options: { emailRedirectTo: `${window.location.origin}/dashboard` },
       })
       if (error) {
-        setError('회원가입 중 오류가 발생했습니다.')
+        setError(error.message || '회원가입 중 오류가 발생했습니다. · Sign up failed. Please try again.')
       } else {
-        setMessage('확인 이메일을 발송했습니다. 이메일을 확인해주세요.')
+        setMessage('회원가입이 완료되었습니다. 로그인해주세요. · Sign up complete. Please sign in.')
       }
     }
     setLoading(false)
