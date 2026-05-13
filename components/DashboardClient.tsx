@@ -187,6 +187,60 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
 
         {/* 진행률 */}
         <div className="mb-8 animate-fade-up">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-stone-400 font-medium">
+              {isEn ? 'Progress' : '진행률'}
+            </p>
+            <p className="text-xs text-stone-500 font-medium">
+              {totalCompleted} / {totalSessions} {isEn ? 'sessions' : '회기'}
+            </p>
+          </div>
+
+          {/* 캐릭터 진행률 */}
+          <div className="relative mb-1">
+            <div className="relative h-16">
+              <div
+                className="absolute bottom-0 transition-all duration-700 ease-in-out"
+                style={{
+                  left: `calc(${Math.min((totalCompleted / totalSessions) * 100, 92)}% - 24px)`,
+                  animation: totalCompleted < totalSessions ? 'walkBounce 0.6s ease-in-out infinite alternate' : 'none',
+                }}>
+                <img
+                  src={version === 'youth' ? '/characters/teen.png' : '/characters/adult.png'}
+                  alt="character"
+                  style={{
+                    height: '64px',
+                    width: 'auto',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* 진행률 바 */}
+            <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${(totalCompleted / totalSessions) * 100}%`,
+                  background: version === 'youth'
+                    ? 'linear-gradient(90deg, #5dcaa5, #1D9E75)'
+                    : 'linear-gradient(90deg, #e673a8, #d94f88)',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 완료 메시지 */}
+          {totalCompleted === totalSessions && (
+            <p className="text-xs text-center text-teal-600 mt-2 font-medium">
+              {isEn ? '🪷 All sessions complete!' : '🪷 모든 회기를 완료했습니다!'}
+            </p>
+          )}
+        </div>
+
+        <div className="mb-8 animate-fade-up">
           <div className="bg-white rounded-2xl p-6 border border-pink-50 shadow-sm">
             <div className="flex items-start justify-between mb-4">
               <div>

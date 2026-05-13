@@ -3,7 +3,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@keyframes walkBounce {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-4px); }
+}
 :root {
   --font-gowun: 'Gowun Batang', serif;
   --font-noto: 'Noto Sans KR', sans-serif;
