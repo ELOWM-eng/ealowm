@@ -337,7 +337,42 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
               </div>
             </div>
           </div>
-
+{/* 워크북 구매 */}
+        <div className="mb-6 animate-fade-up">
+          <div className="bg-white rounded-2xl border border-stone-100 p-5">
+            <p className="text-xs text-stone-400 font-medium uppercase tracking-wider mb-4">
+              {isEn ? 'Workbook · Purchase' : '워크북 구매'}
+            </p>
+            <div className="space-y-3">
+              <p className="text-xs text-stone-500 font-medium">{isEn ? '📖 Adult Version' : '📖 성인용'}</p>
+              <div className="flex gap-2">
+                <a href="https://product.kyobobook.co.kr/detail/S000219745212"
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-medium text-center border border-stone-200 text-stone-600 hover:bg-stone-50 transition-all">
+                  📚 {isEn ? 'Kyobo (Paper)' : '교보문고 종이책'}
+                </a>
+                <a href="https://m.yes24.com/goods/detail/187717378"
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-medium text-center border border-stone-200 text-stone-600 hover:bg-stone-50 transition-all">
+                  📱 {isEn ? 'Yes24 (E-book)' : '예스24 전자책'}
+                </a>
+              </div>
+              <p className="text-xs text-stone-500 font-medium mt-2">{isEn ? '📖 Youth Version' : '📖 청소년용'}</p>
+              <div className="flex gap-2">
+                <a href="https://product.kyobobook.co.kr/detail/S000219727370"
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-medium text-center border border-stone-200 text-stone-600 hover:bg-stone-50 transition-all">
+                  📚 {isEn ? 'Kyobo (Paper)' : '교보문고 종이책'}
+                </a>
+                <a href="https://m.yes24.com/goods/detail/187717379"
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-medium text-center border border-stone-200 text-stone-600 hover:bg-stone-50 transition-all">
+                  📱 {isEn ? 'Yes24 (E-book)' : '예스24 전자책'}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
           {/* 문의 */}
           <div className="bg-white rounded-2xl border border-stone-100 p-5 text-center">
             <p className="text-xs text-stone-400 mb-2">{isEn ? 'Contact' : '문의'}</p>
