@@ -686,30 +686,83 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
 
               const getChangeMsg = () => {
                 const msgs = []
-                if (awareChange > 0) msgs.push(isEn ? `Awareness improved by ${awareChange} level${awareChange > 1 ? 's' : ''} — noticing earlier than before.` : `알아차림이 ${awareChange}단계 빨라졌습니다. 이전보다 더 일찍 알아차리고 있습니다.`)
-                else if (awareChange < 0) msgs.push(isEn ? `Awareness shifted later by ${Math.abs(awareChange)} level${Math.abs(awareChange) > 1 ? 's' : ''} — this is also information worth observing.` : `알아차림이 ${Math.abs(awareChange)}단계 늦어졌습니다. 이것도 바라볼 가치 있는 정보입니다.`)
-                else msgs.push(isEn ? 'Awareness level remains the same — the practice of noticing continues.' : '알아차림 수준이 같습니다. 바라보는 실천이 이어지고 있습니다.')
 
-                if (freqChange > 0) msgs.push(isEn ? `Frequency decreased by ${freqChange} level${freqChange > 1 ? 's' : ''} — the habit is occurring less often.` : `빈도가 ${freqChange}단계 줄었습니다. 습관이 덜 자주 일어나고 있습니다.`)
-                else if (freqChange < 0) msgs.push(isEn ? `Frequency increased by ${Math.abs(freqChange)} level${Math.abs(freqChange) > 1 ? 's' : ''} — observing what conditions are behind this is the practice.` : `빈도가 ${Math.abs(freqChange)}단계 늘었습니다. 어떤 조건이 작용하는지 관찰하는 것이 실천입니다.`)
-                else msgs.push(isEn ? 'Frequency is unchanged — notice what situations trigger it.' : '빈도는 변화 없습니다. 어떤 상황에서 일어나는지 알아차려 보세요.')
+                // 알아차림 변화
+                if (awareChange > 0) msgs.push(isEn
+                  ? `Awareness improved by ${awareChange} level${awareChange > 1 ? 's' : ''} — noticing earlier than before.`
+                  : `알아차림이 ${awareChange}단계 빨라졌습니다. 이전보다 더 일찍 알아차리고 있습니다.`)
+                else if (awareChange < 0) msgs.push(isEn
+                  ? `Awareness shifted later by ${Math.abs(awareChange)} level${Math.abs(awareChange) > 1 ? 's' : ''} — this is also information worth observing.`
+                  : `알아차림이 ${Math.abs(awareChange)}단계 늦어졌습니다. 이것도 바라볼 가치 있는 정보입니다.`)
+                else msgs.push(isEn
+                  ? 'Awareness level remains the same — the practice of noticing continues.'
+                  : '알아차림 수준이 같습니다. 바라보는 실천이 이어지고 있습니다.')
 
+                // 빈도 변화
+                if (freqChange > 0) msgs.push(isEn
+                  ? `Frequency decreased by ${freqChange} level${freqChange > 1 ? 's' : ''} — the habit is occurring less often.`
+                  : `빈도가 ${freqChange}단계 줄었습니다. 습관이 덜 자주 일어나고 있습니다.`)
+                else if (freqChange < 0) msgs.push(isEn
+                  ? `Frequency increased by ${Math.abs(freqChange)} level${Math.abs(freqChange) > 1 ? 's' : ''} — observing what conditions are behind this is the practice.`
+                  : `빈도가 ${Math.abs(freqChange)}단계 늘었습니다. 어떤 조건이 작용하는지 관찰하는 것이 실천입니다.`)
+                else msgs.push(isEn
+                  ? 'Frequency is unchanged — notice what situations trigger it.'
+                  : '빈도는 변화 없습니다. 어떤 상황에서 일어나는지 알아차려 보세요.')
+
+                // 마음 패턴 상세 분석
+                const mindChanges = mindKeys.map(k => ({
+                  key: k,
+                  label: mindLabelMap[k],
+                  before: fs[k] ?? 0,
+                  after: scores[k] ?? 0,
+                  diff: (fs[k] ?? 0) - (scores[k] ?? 0),
+                }))
+
+                const decreased = mindChanges.filter(m => m.diff > 0)
+                const increased = mindChanges.filter(m => m.diff < 0)
+                const unchanged = mindChanges.filter(m => m.diff === 0)
+
+                let mindDetail = ''
+                if (isEn) {
+                  if (decreased.length > 0)
+                    mindDetail += `${decreased.map(m => `${m.label}(${m.before}→${m.after})`).join(', ')} decreased. `
+                  if (increased.length > 0)
+                    mindDetail += `${increased.map(m => `${m.label}(${m.before}→${m.after})`).join(', ')} increased. `
+                  if (unchanged.length > 0)
+                    mindDetail += `${unchanged.map(m => m.label).join(', ')} unchanged. `
+                } else {
+                  if (decreased.length > 0)
+                    mindDetail += `${decreased.map(m => `${m.label}(${m.before}→${m.after})`).join(', ')}이 줄었습니다. `
+                  if (increased.length > 0)
+                    mindDetail += `${increased.map(m => `${m.label}(${m.before}→${m.after})`).join(', ')}이 늘었습니다. `
+                  if (unchanged.length > 0)
+                    mindDetail += `${unchanged.map(m => m.label).join(', ')}은 변화 없습니다. `
+                }
+
+                // 주된 마음 변화
                 const balancedLabel = isEn ? 'Balanced' : '균형'
                 const firstLabel = firstDominantKey === 'balanced' ? balancedLabel : mindLabelMap[firstDominantKey]
                 const nowLabel = nowDominantKey === 'balanced' ? balancedLabel : mindLabelMap[nowDominantKey]
 
-                if (firstDominantKey === 'balanced' && nowDominantKey === 'balanced') msgs.push(isEn
-                  ? 'The mind pattern remains balanced across all four. Observing which one arises first in daily life is the practice.'
-                  : '네 가지 마음이 처음과 마찬가지로 균형 있게 나타나고 있습니다. 일상에서 어느 마음이 먼저 일어나는지 관찰하는 것이 실천입니다.')
-                else if (firstDominantKey !== nowDominantKey) msgs.push(isEn
-                  ? `The dominant mind pattern shifted from ${firstLabel} to ${nowLabel}. This shift itself is a sign of change.`
-                  : `주된 마음 패턴이 ${firstLabel}에서 ${nowLabel}으로 변화했습니다. 이 변화 자체가 움직임의 신호입니다.`)
-                else msgs.push(isEn
-                  ? `The dominant mind pattern remains ${nowLabel}. Continuing to observe this mind is the practice.`
-                  : `주된 마음 패턴이 여전히 ${nowLabel}입니다. 이 마음을 계속 바라보는 것이 실천입니다.`)
+                let mindMsg = ''
+                if (firstDominantKey === 'balanced' && nowDominantKey === 'balanced') {
+                  mindMsg = isEn
+                    ? 'The mind pattern remains balanced across all. Observing which one arises first in daily life is the practice.'
+                    : '마음 패턴이 처음과 마찬가지로 균형 있게 나타나고 있습니다. 일상에서 어느 마음이 먼저 일어나는지 관찰하는 것이 실천입니다.'
+                } else if (firstDominantKey !== nowDominantKey) {
+                  mindMsg = isEn
+                    ? `The dominant mind shifted from ${firstLabel} to ${nowLabel}. ${mindDetail}This shift itself is a sign of change.`
+                    : `주된 마음이 ${firstLabel}에서 ${nowLabel}으로 변화했습니다. ${mindDetail}이 변화 자체가 움직임의 신호입니다.`
+                } else {
+                  mindMsg = isEn
+                    ? `The dominant mind remains ${nowLabel}. ${mindDetail}Continuing to observe this mind is the practice.`
+                    : `주된 마음이 여전히 ${nowLabel}입니다. ${mindDetail}이 마음을 계속 바라보는 것이 실천입니다.`
+                }
+                msgs.push(mindMsg)
 
                 return msgs
               }
+                
 
               return (
                 <div className="space-y-4">
