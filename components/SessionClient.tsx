@@ -198,7 +198,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                   controls
                   playsInline
                   className="w-full"
-                  style={{ maxHeight: '480px', objectFit: 'contain', background: '#000' }}
+                  style={{ maxHeight: '480px', objectFit: 'contain', background: '#fff' }}
                 />
               </div>
             )}
