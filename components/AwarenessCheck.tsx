@@ -663,8 +663,8 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
                 : { tan: '탐냄', jip: '집착', hwa: '화냄', mi: '미혹' }
               const mindColors: Record<string, string> = { tan: '#3266ad', jip: '#BA7517', hwa: '#A32D2D', mi: '#2a6a8a' }
 
-              const firstDominantKey = mindKeys.reduce((a, b) => (fs[a] ?? 0) >= (fs[b] ?? 0) ? a : b)
-              const nowDominantKey = mindKeys.reduce((a, b) => (scores[a] ?? 0) >= (scores[b] ?? 0) ? a : b)
+              const firstDominantKey = mindKeys.reduce((a, b) => (fs[b] ?? 0) > (fs[a] ?? 0) ? b : a)
+              const nowDominantKey = mindKeys.reduce((a, b) => (scores[b] ?? 0) > (scores[a] ?? 0) ? b : a)
 
               // 변화 분석
               const awareChange = (fs['aware'] ?? 1) - (scores['aware'] ?? 1)
