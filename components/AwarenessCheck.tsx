@@ -663,8 +663,13 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
                 : { tan: '탐냄', jip: '집착', hwa: '화냄', mi: '미혹' }
               const mindColors: Record<string, string> = { tan: '#3266ad', jip: '#BA7517', hwa: '#A32D2D', mi: '#2a6a8a' }
 
-              const firstDominantKey = mindKeys.reduce((a, b) => (fs[b] ?? 0) > (fs[a] ?? 0) ? b : a)
-              const nowDominantKey = mindKeys.reduce((a, b) => (scores[b] ?? 0) > (scores[a] ?? 0) ? b : a)
+              const getTopKey = (src: Record<string, number>) => {
+                const maxVal = Math.max(...mindKeys.map(k => src[k] ?? 0))
+                const topKeys = mindKeys.filter(k => (src[k] ?? 0) === maxVal)
+                return topKeys.length === 1 ? topKeys[0] : 'balanced'
+              }
+              const firstDominantKey = getTopKey(fs)
+              const nowDominantKey = getTopKey(scores)
 
               // 변화 분석
               const awareChange = (fs['aware'] ?? 1) - (scores['aware'] ?? 1)
@@ -681,12 +686,19 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
                 else if (freqChange < 0) msgs.push(isEn ? `Frequency increased by ${Math.abs(freqChange)} level${Math.abs(freqChange) > 1 ? 's' : ''} — observing what conditions are behind this is the practice.` : `빈도가 ${Math.abs(freqChange)}단계 늘었습니다. 어떤 조건이 작용하는지 관찰하는 것이 실천입니다.`)
                 else msgs.push(isEn ? 'Frequency is unchanged — notice what situations trigger it.' : '빈도는 변화 없습니다. 어떤 상황에서 일어나는지 알아차려 보세요.')
 
-                if (firstDominantKey !== nowDominantKey) msgs.push(isEn
-                  ? `The dominant mind pattern shifted from ${mindLabelMap[firstDominantKey]} to ${mindLabelMap[nowDominantKey]}. This shift itself is a sign of change.`
-                  : `주된 마음 패턴이 ${mindLabelMap[firstDominantKey]}에서 ${mindLabelMap[nowDominantKey]}으로 변화했습니다. 이 변화 자체가 움직임의 신호입니다.`)
+                const balancedLabel = isEn ? 'Balanced' : '균형'
+                const firstLabel = firstDominantKey === 'balanced' ? balancedLabel : mindLabelMap[firstDominantKey]
+                const nowLabel = nowDominantKey === 'balanced' ? balancedLabel : mindLabelMap[nowDominantKey]
+
+                if (firstDominantKey === 'balanced' && nowDominantKey === 'balanced') msgs.push(isEn
+                  ? 'The mind pattern remains balanced across all four. Observing which one arises first in daily life is the practice.'
+                  : '네 가지 마음이 처음과 마찬가지로 균형 있게 나타나고 있습니다. 일상에서 어느 마음이 먼저 일어나는지 관찰하는 것이 실천입니다.')
+                else if (firstDominantKey !== nowDominantKey) msgs.push(isEn
+                  ? `The dominant mind pattern shifted from ${firstLabel} to ${nowLabel}. This shift itself is a sign of change.`
+                  : `주된 마음 패턴이 ${firstLabel}에서 ${nowLabel}으로 변화했습니다. 이 변화 자체가 움직임의 신호입니다.`)
                 else msgs.push(isEn
-                  ? `The dominant mind pattern remains ${mindLabelMap[nowDominantKey]}. Continuing to observe this mind is the practice.`
-                  : `주된 마음 패턴이 여전히 ${mindLabelMap[nowDominantKey]}입니다. 이 마음을 계속 바라보는 것이 실천입니다.`)
+                  ? `The dominant mind pattern remains ${nowLabel}. Continuing to observe this mind is the practice.`
+                  : `주된 마음 패턴이 여전히 ${nowLabel}입니다. 이 마음을 계속 바라보는 것이 실천입니다.`)
 
                 return msgs
               }
