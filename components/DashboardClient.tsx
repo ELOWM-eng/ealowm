@@ -165,7 +165,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
               onChange={e => setGoal(e.target.value)}
               placeholder={isEn
                 ? 'e.g. smartphone addiction, overeating, gaming, alcohol...'
-                : '스마트폰 중독, 과식, 게임, 음주 등 자신이 벗어나고 싶은 습관화된 중독 행동을 자유롭게 적어보세요.'}
+                : '스마트폰, 과식, 게임, 음주 등 자신이 벗어나고 싶은 습관화된 중독 행동을 자유롭게 적어보세요.'}
               rows={3}
               className="w-full p-3 text-sm rounded-xl border border-stone-200 bg-stone-50
                 focus:outline-none focus:border-amber-300 resize-none transition-colors
