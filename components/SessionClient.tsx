@@ -187,6 +187,32 @@ export default function SessionClient({ session, userId, initialData }: Props) {
         {/* 생각해보기 */}
         {activeTab === 'think' && (
           <div className="animate-fade-up space-y-5">
+            {/* 테마곡 플레이어 */}
+            {(version === 'adult' || version === 'youth') && (
+              <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
+                <p className="text-xs text-stone-400 px-4 pt-4 pb-2 font-medium">
+                  🎵 {session.id}회기 테마곡
+                </p>
+                <video
+                  src={`/videos/${session.id}.mp4`}
+                  controls
+                  playsInline
+                  className="w-full"
+                  style={{ maxHeight: '480px', objectFit: 'contain', background: '#000' }}
+                />
+              </div>
+            )}
+            {version === 'en' && (
+              <div className="bg-white rounded-2xl border border-stone-100 p-4">
+                <p className="text-xs text-stone-400 mb-2 font-medium">🎵 Theme Song</p>
+                <audio
+                  src={`/audio/${session.id}.mp3`}
+                  controls
+                  className="w-full"
+                  style={{ height: '40px' }}
+                />
+              </div>
+            )}
             <div className="bg-purple-50 rounded-xl p-4 border-l-4 border-purple-300">
               <p className="text-sm text-purple-700 leading-relaxed">{session.think.note}</p>
             </div>
