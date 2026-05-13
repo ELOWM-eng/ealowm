@@ -191,7 +191,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
             {(version === 'adult' || version === 'youth') && (
               <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
                 <p className="text-xs text-stone-400 px-4 pt-4 pb-2 font-medium">
-                  🎵 {session.id}회기 테마곡
+                  🎵 {session.id.replace('s', '')}회기 테마곡
                 </p>
                 <video
                   src={`/videos/${session.id}.mp4`}
