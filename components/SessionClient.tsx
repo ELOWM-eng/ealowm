@@ -213,7 +213,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                 </div>
               </div>
             )}
-            
+
             {version === 'en' && (
               <div className="bg-white rounded-2xl border border-stone-100 p-4">
                 <p className="text-xs text-stone-400 mb-2 font-medium">🎵 Theme Song</p>
