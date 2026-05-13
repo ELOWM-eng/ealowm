@@ -189,17 +189,28 @@ export default function SessionClient({ session, userId, initialData }: Props) {
           <div className="animate-fade-up space-y-5">
             {/* 테마곡 플레이어 */}
             {(version === 'adult' || version === 'youth') && (
-              <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
-                <p className="text-xs text-stone-400 px-4 pt-4 pb-2 font-medium">
-                  🎵 {session.id.replace('s', '')}회기 테마곡
-                </p>
-                <video
-                  src={`/videos/${session.id}.mp4`}
-                  controls
-                  playsInline
-                  className="w-full"
-                  style={{ maxHeight: '480px', objectFit: 'contain', background: '#fff' }}
-                />
+              <div className="space-y-3">
+                <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
+                  <p className="text-xs text-stone-400 px-4 pt-4 pb-2 font-medium">
+                    🎵 {session.id.replace('s', '')}회기 테마곡
+                  </p>
+                  <video
+                    src={`/videos/${session.id}.mp4`}
+                    controls
+                    playsInline
+                    className="w-full"
+                    style={{ maxHeight: '480px', objectFit: 'contain', background: '#fff' }}
+                  />
+                </div>
+                <div className="bg-white rounded-2xl border border-stone-100 p-4">
+                  <p className="text-xs text-stone-400 mb-2 font-medium">🎵 {session.id.replace('s', '')}회기 테마곡 · 음원</p>
+                  <audio
+                    src={`/audio/${session.id}.mp3`}
+                    controls
+                    className="w-full"
+                    style={{ height: '40px' }}
+                  />
+                </div>
               </div>
             )}
             
