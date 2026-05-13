@@ -645,9 +645,13 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
 
             <div className="bg-teal-50 border-l-4 border-teal-400 rounded-r-xl p-4">
               <p className="text-xs text-teal-700 leading-relaxed">
-                {isEn
-                  ? 'This result shows the starting point of your 12-week journey. Addiction is not a fixed part of you — it is a phenomenon formed by conditions. When conditions change, it can change too.'
-                  : '이 결과는 12주 여정의 출발점을 보여줍니다. 중독은 고정된 나의 일부가 아니라, 조건에 따라 형성된 하나의 현상입니다. 조건이 바뀌면 변할 수 있습니다.'}
+                {checkPoint === 'end'
+                  ? (isEn
+                    ? 'You have completed the 12-week journey. Addiction is not a fixed part of you — it is a phenomenon formed by conditions. The practice of looking within continues.'
+                    : '12주 여정을 마쳤습니다. 중독은 고정된 나의 일부가 아니라, 조건에 따라 형성된 하나의 현상입니다. 내 안을 바라보는 실천은 계속됩니다.')
+                  : (isEn
+                    ? 'This result shows the starting point of your 12-week journey. Addiction is not a fixed part of you — it is a phenomenon formed by conditions. When conditions change, it can change too.'
+                    : '이 결과는 12주 여정의 출발점을 보여줍니다. 중독은 고정된 나의 일부가 아니라, 조건에 따라 형성된 하나의 현상입니다. 조건이 바뀌면 변할 수 있습니다.')}
               </p>
             </div>
 {checkPoint === 'end' && firstResult && (() => {
@@ -664,12 +668,16 @@ export default function AwarenessCheck({ userId, version, checkPoint, firstResul
               const mindColors: Record<string, string> = { tan: '#3266ad', jip: '#BA7517', hwa: '#A32D2D', mi: '#2a6a8a' }
 
               const getTopKey = (src: Record<string, number>) => {
-                const maxVal = Math.max(...mindKeys.map(k => src[k] ?? 0))
+                const vals = mindKeys.map(k => src[k] ?? 0)
+                const maxVal = Math.max(...vals)
+                if (maxVal === 0) return 'balanced'
                 const topKeys = mindKeys.filter(k => (src[k] ?? 0) === maxVal)
                 return topKeys.length === 1 ? topKeys[0] : 'balanced'
               }
               const firstDominantKey = getTopKey(fs)
               const nowDominantKey = getTopKey(scores)
+              console.log('fs:', fs, 'firstDominant:', firstDominantKey)
+              console.log('scores:', scores, 'nowDominant:', nowDominantKey)
 
               // 변화 분석
               const awareChange = (fs['aware'] ?? 1) - (scores['aware'] ?? 1)
