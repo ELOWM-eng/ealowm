@@ -202,24 +202,19 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                 />
               </div>
             )}
+            
             {version === 'en' && (
               <div className="bg-white rounded-2xl border border-stone-100 p-4">
                 <p className="text-xs text-stone-400 mb-2 font-medium">🎵 Theme Song</p>
                 <audio
-                  src={`/audio/${session.id}.mp3`}
+                  src={`/audio-en/${session.id}.mp3`}
                   controls
                   className="w-full"
                   style={{ height: '40px' }}
                 />
               </div>
             )}
-            <div className="bg-purple-50 rounded-xl p-4 border-l-4 border-purple-300">
-              <p className="text-sm text-purple-700 leading-relaxed">{session.think.note}</p>
-            </div>
-            <div className="bg-white rounded-xl p-4 border border-stone-100">
-              <p className="text-xs text-stone-400 mb-1">Q.</p>
-              <p className="text-sm text-stone-700 leading-relaxed">{session.think.q}</p>
-            </div>
+            
 
             {session.think.inputType === 'readonly' ? (
               <div className="space-y-4">
