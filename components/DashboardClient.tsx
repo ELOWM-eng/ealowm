@@ -239,38 +239,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
             </p>
           )}
         </div>
-
-        <div className="mb-8 animate-fade-up">
-          <div className="bg-white rounded-2xl p-6 border border-pink-50 shadow-sm">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-xs text-stone-400 mb-1">
-                  {isEn ? 'Journey of the Wisdom Seed' : '지혜의 씨앗 여정'}
-                </p>
-                <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-gowun)', color: '#d94f88' }}>
-                  {totalCompleted}
-                  <span className="text-sm font-normal text-stone-400 ml-1">
-                    / {totalSessions} {isEn ? 'Sessions' : '회기'}
-                  </span>
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-stone-700">{pct}%</p>
-                <p className="text-xs text-stone-400">{isEn ? 'Completed' : '완료'}</p>
-              </div>
-            </div>
-            <div className="h-2 bg-pink-50 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #f9d3e8, #d94f88)' }} />
-            </div>
-            <div className="flex gap-1.5 mt-3">
-              {Array.from({ length: totalSessions }, (_, i) => (
-                <div key={i} className={clsx('flex-1 h-1 rounded-full transition-colors duration-300',
-                  i < totalCompleted ? 'bg-pink-400' : 'bg-pink-100')} />
-              ))}
-            </div>
-          </div>
-        </div>
+          
 
         {/* 주차 선택 */}
         <div className="grid grid-cols-4 gap-2 mb-6 animate-fade-up" style={{ animationDelay: '0.05s' }}>
