@@ -180,7 +180,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                 ? (isEn ? 'Saving...' : '저장 중...')
                 : goalSaved
                 ? (isEn ? 'Saved ✓' : '저장됨 ✓')
-                : (isEn ? 'Save & Start Week 1' : '저장하고 1주차 시작하기')}
+                : (isEn ? 'Save & Start Aareness Check' : '저장하고 나의 습관 패턴 알아차리기')}
             </button>
           </div>
         </div>
