@@ -409,14 +409,14 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                                 next[idx] = e.target.value
                                 return next
                               })}
-                              placeholder={`"${stage}"을 따라 입력해보세요...`}
+                              placeholder={isEn ? `Type "${stage}" here...` : `"${stage}"을 따라 입력해보세요...`}
                               className={clsx(
                                 'w-full px-3 py-2 text-sm rounded-lg border transition-colors text-stone-700 placeholder:text-stone-300 focus:outline-none',
                                 isCorrect ? 'border-teal-300 bg-teal-50 focus:border-teal-400' : 'border-stone-200 bg-stone-50 focus:border-amber-300'
                               )}
                             />
                             {value.length > 0 && !isCorrect && (
-                              <p className="text-xs text-red-400 mt-1">"{stage}"을 정확히 입력해주세요</p>
+                              <p className="text-xs text-red-400 mt-1">{isEn ? `Please type "${stage}" exactly.` : `"${stage}"을 정확히 입력해주세요`}</p>
                             )}
                           </div>
                         )
