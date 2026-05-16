@@ -301,7 +301,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
           })}
         </div>
 {/* 소개 영상 */}
-          <div className="mt-12 mb-4 animate-fade-up">
+          {!isEn && <div className="mt-12 mb-4 animate-fade-up">
             <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
               <p className="text-xs text-stone-400 px-4 pt-4 pb-2 font-medium" style={{ fontFamily: 'var(--font-gowun)' }}>
                 {isEn ? '🪷 Introduction' : '🪷 이로움 소개'}
@@ -314,7 +314,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                 style={{ maxHeight: '600px', objectFit: 'contain', background: '#fff' }}
               />
             </div>
-          </div>
+          </div>}
         {/* 프로그램 소개 */}
         <div className="mt-12 space-y-4">
           <div className="bg-white rounded-2xl border border-stone-100 p-5 text-center">
