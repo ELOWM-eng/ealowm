@@ -303,8 +303,8 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
 {/* 소개 영상 */}
           {!isEn && <div className="mt-12 mb-4 animate-fade-up">
             <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
-              <p className="text-xs text-stone-400 px-4 pt-4 pb-2 font-medium" style={{ fontFamily: 'var(--font-gowun)' }}>
-                {isEn ? '🪷 Introduction' : '🪷 이로움 소개'}
+              <p className="text-sm font-bold text-stone-700 px-4 pt-4 pb-2" style={{ fontFamily: 'var(--font-gowun)' }}>
+                {isEn ? 'Introduction' : '이로움 소개'}
               </p>
               <video
                 src="/intro.mp4"
