@@ -551,7 +551,164 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                 </ul>
               </>
             )}
+{/* 4, 5, 10회기 실천 예시 */}
+            {(['s4','s5','s10'].includes(session.id)) && checks.some(v => v === true) && (() => {
+              const checkedIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
 
+              const practiceExamples: Record<string, { title: string; examples: string[] }[]> = {
+                s4: [
+                  {
+                    title: '재시(財施) · 물질·시간·재능 나눔',
+                    examples: [
+                      '오늘 집에서 안 쓰는 물건 하나를 필요한 사람에게 나눠보세요',
+                      '누군가의 일을 10분만 도와주세요 — 짐 들기, 자료 찾기 등',
+                      '내가 잘하는 것(요리, 글쓰기, IT 등)을 한 번 가르쳐주세요',
+                      '지인에게 작은 선물이나 음식을 건네보세요',
+                    ]
+                  },
+                  {
+                    title: '무외시(無畏施) · 정서적 지지와 안전감',
+                    examples: [
+                      '힘들어 보이는 사람에게 "괜찮아?"라고 먼저 물어보세요',
+                      '누군가의 이야기를 끝까지 듣고 "그랬구나"라고 말해주세요',
+                      '불안해하는 사람 옆에 그냥 함께 있어주세요',
+                      '응원의 문자 한 통을 보내보세요',
+                    ]
+                  },
+                  {
+                    title: '법시(法施) · 바른 가르침 전하기',
+                    examples: [
+                      '내가 유익하게 읽은 글이나 영상을 공유해보세요',
+                      '누군가의 고민에 내 경험을 솔직하게 나눠주세요',
+                      '좋은 말 한마디 — "잘하고 있어", "네가 해낼 수 있어"',
+                      '이 프로그램에서 배운 것을 주변에 조용히 나눠보세요',
+                    ]
+                  },
+                ],
+                s5: [
+                  {
+                    title: '생명 소중히 여기기',
+                    examples: [
+                      '오늘 하루 동안 화가 날 때 한 번만 멈추고 심호흡해보세요',
+                      '길가의 식물이나 동물에게 잠깐 시선을 주세요',
+                      '나 자신의 몸을 돌보는 시간을 10분만 가져보세요',
+                      '주변 사람에게 "고마워"라고 한 번 말해보세요',
+                    ]
+                  },
+                  {
+                    title: '탐내지 않기',
+                    examples: [
+                      '오늘 하루 온라인 쇼핑을 한 번만 참아보세요',
+                      '남의 것을 부러워하는 마음이 들 때 "지금 내게 있는 것"을 떠올려보세요',
+                      '필요하지 않은 것을 사고 싶을 때 하루 기다려보세요',
+                      '소비 전에 "정말 필요한가?"라고 한 번 물어보세요',
+                    ]
+                  },
+                  {
+                    title: '그릇된 행동 삼가기',
+                    examples: [
+                      '오늘 하루 후회할 것 같은 행동을 하기 전에 3초 멈춰보세요',
+                      '습관적으로 하는 중독 행동 전에 "지금 왜 하려는가?" 물어보세요',
+                      '충동이 올 때 자리를 바꾸거나 물 한 잔 마셔보세요',
+                    ]
+                  },
+                  {
+                    title: '바른말 실천하기',
+                    examples: [
+                      '오늘 하루 험담이나 불평을 한 번만 줄여보세요',
+                      '거짓말 대신 "모르겠어요"라고 솔직하게 말해보세요',
+                      '누군가를 칭찬하는 말을 한 마디 해보세요',
+                      '말하기 전에 "이 말이 도움이 되는가?" 잠깐 생각해보세요',
+                    ]
+                  },
+                  {
+                    title: '정신 흐리게 하는 것 멀리하기',
+                    examples: [
+                      '오늘 스마트폰 사용 시간을 30분만 줄여보세요',
+                      '자기 전 1시간은 화면 없이 지내보세요',
+                      '술이나 카페인을 하루만 줄여보세요',
+                      '무의식적으로 켜는 유튜브나 SNS를 오늘 한 번만 참아보세요',
+                    ]
+                  },
+                ],
+                s10: [
+                  {
+                    title: '어려움을 두려워하지 않는 의지',
+                    examples: [
+                      '오늘 미뤄왔던 일 하나를 5분만 시작해보세요',
+                      '실패했던 일을 다시 한 번 작은 크기로 시도해보세요',
+                      '"할 수 없어"라는 말 대신 "아직은 어렵지만"이라고 바꿔보세요',
+                    ]
+                  },
+                  {
+                    title: '이미 생긴 나쁜 습관 끊기',
+                    examples: [
+                      '오늘 그 습관 행동을 한 번만 멈추고 5분 기다려보세요',
+                      '중독 행동이 일어나기 직전 신호(감정, 장소, 시간)를 기록해보세요',
+                      '그 행동 대신 할 수 있는 것 하나를 정해보세요 (산책, 물 마시기 등)',
+                    ]
+                  },
+                  {
+                    title: '나쁜 습관이 생기기 전에 막기',
+                    examples: [
+                      '중독 행동이 자주 일어나는 상황이나 장소를 오늘 한 번 피해보세요',
+                      '스트레스를 느끼기 전에 미리 산책이나 스트레칭을 해보세요',
+                      '충동이 오기 쉬운 시간대에 다른 활동을 미리 계획해보세요',
+                    ]
+                  },
+                  {
+                    title: '좋은 마음 새롭게 일으키기',
+                    examples: [
+                      '오늘 하루 감사한 것 3가지를 저녁에 적어보세요',
+                      '누군가를 응원하는 말을 한 번 해보세요',
+                      '새로운 좋은 습관을 딱 하나만 오늘 시작해보세요 (5분 명상, 일기 등)',
+                    ]
+                  },
+                  {
+                    title: '좋은 습관 더 늘리기',
+                    examples: [
+                      '이미 잘 하고 있는 좋은 습관을 오늘 한 번 더 해보세요',
+                      '지금까지 잘 해온 것 하나를 스스로 인정해주세요',
+                      '좋은 습관을 함께 할 사람을 한 명 찾아보세요',
+                    ]
+                  },
+                  {
+                    title: '지혜와 자비 나누기',
+                    examples: [
+                      '이 프로그램에서 배운 것 중 하나를 주변 사람에게 나눠보세요',
+                      '힘들어 보이는 사람에게 오늘 먼저 말을 걸어보세요',
+                      '내 경험을 솔직하게 나누는 것 자체가 나눔이에요',
+                    ]
+                  },
+                ],
+              }
+
+              const sessionExamples = practiceExamples[session.id] ?? []
+              const selectedExamples = sessionExamples.filter((_, i) => checkedIdxs.includes(i))
+
+              if (selectedExamples.length === 0) return null
+
+              return (
+                <div className="space-y-3 animate-fade-up">
+                  <p className="text-xs text-orange-400 font-medium">
+                    🌱 선택하신 항목의 실천 예시
+                  </p>
+                  {selectedExamples.map((ex, i) => (
+                    <div key={i} className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-4">
+                      <p className="text-xs font-bold text-orange-600 mb-2">{ex.title}</p>
+                      <ul className="space-y-1.5">
+                        {ex.examples.map((e, j) => (
+                          <li key={j} className="flex items-start gap-2">
+                            <span className="text-orange-300 flex-shrink-0 mt-0.5">•</span>
+                            <p className="text-sm text-stone-600 leading-relaxed">{e}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
             {/* 회기별 체크 분석 */}
             {(['s1','s3','s9'].includes(session.id)) && checks.some(v => v !== null) && (() => {
               const getAnalysis = () => {
