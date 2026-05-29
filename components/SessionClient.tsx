@@ -970,6 +970,91 @@ export default function SessionClient({ session, userId, initialData }: Props) {
             {/* 회기별 체크 분석 */}
             {(['s1','s3','s9'].includes(session.id)) && checks.some(v => v !== null) && (() => {
               const getAnalysis = () => {
+                if (isEn) {
+                  // English version analysis
+                  if (session.id === 's1') {
+                    const yesIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
+                    const noIdxs = checks.map((v,i) => v === false ? i : -1).filter(i => i >= 0)
+                    const shouldBeYes = [1,2,5,6,9]
+                    const shouldBeNo = [0,3,4,7,8]
+                    const correctYes = shouldBeYes.filter(i => yesIdxs.includes(i)).length
+                    const correctNo = shouldBeNo.filter(i => noIdxs.includes(i)).length
+                    const totalCorrect = correctYes + correctNo
+                    const totalAnswered = checks.filter(v => v !== null).length
+                    const fixedMind = yesIdxs.includes(3)
+                    const eternalLife = yesIdxs.includes(0)
+                    const eternalOwn = yesIdxs.includes(8)
+                    const sameAs5 = yesIdxs.includes(7)
+                    const oldWorry = yesIdxs.includes(4)
+                    const changeAware = yesIdxs.includes(1) && yesIdxs.includes(2)
+                    const allChangeAware = yesIdxs.includes(5) && yesIdxs.includes(6) && yesIdxs.includes(9)
+                    if (totalAnswered < 5) return 'Some questions are still unanswered. Please take your time and review all the questions before checking again.'
+                    if (totalCorrect >= 9) return 'You have a very deep understanding of Formless Contemplation! 🌸 Everything changes and nothing is fixed — this awareness is already well rooted in you. This session will connect that understanding directly to your habit patterns.'
+                    if (totalCorrect >= 7) return 'Your understanding of Formless Contemplation is quite deep. In a few areas, the view of "fixed" still remains over "change." Let\'s explore those parts a little more through this session.'
+                    if (fixedMind) return 'You feel that "addiction is a fixed part of me that I cannot escape." I fully understand how heavy that feels. But what Formless Contemplation says is exactly this — nothing is permanently fixed. Your current habits were formed by conditions, and when conditions change, they can change too.'
+                    if (eternalLife) return 'You feel that you "can live forever." We often put off change when life feels endless. Formless Contemplation guides us from that very point — to look at the limits of life and choose change in this very moment.'
+                    if (eternalOwn) return 'You feel there are things you "can own forever." What we cling to will eventually change or disappear. Through this session, let\'s gently examine that belief.'
+                    if (sameAs5) return 'You feel you are the same person as you were at age 5. We are connected to our past, yet we change every moment. Who I am now is not the same as who I was — and growth lives in that change.'
+                    if (oldWorry) return 'Concerns from around age 10 still remain with you. It may feel like those worries are still unresolved. Formless Contemplation says those worries are not permanent either — when conditions change, they can too.'
+                    if (changeAware && allChangeAware) return 'Your understanding of change and impermanence is already deep. You know that emotions, situations, and even objects all change. This awareness is a solid starting point for the 12-week journey.'
+                    return 'You have your own perspective on change. Formless Contemplation is the process of understanding that "nothing stays the same — so your current habits can also change." Let\'s feel that gradually through this session.'
+                  }
+
+                  if (session.id === 's3') {
+                    const yesIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
+                    const selfYes = yesIdxs.filter(i => i <= 4).length
+                    const otherYes = yesIdxs.filter(i => i >= 5).length
+                    const totalYes = yesIdxs.length
+                    const totalAnswered = checks.filter(v => v !== null).length
+                    const selfLevel = selfYes >= 4 ? 'high' : selfYes >= 2 ? 'medium' : 'low'
+                    const otherLevel = otherYes >= 4 ? 'high' : otherYes >= 2 ? 'medium' : 'low'
+                    if (totalAnswered < 5) return 'Some questions are still unanswered. Please take your time and review all the questions before checking again.'
+                    if (totalYes >= 9) return `Your compassion for both yourself and others is very deep! 🌸 Self-compassion ${selfYes}/5, compassion for others ${otherYes}/5 — this warmth will be the strongest foundation for breaking free from addictive patterns.`
+                    if (selfYes > otherYes) return `Your self-compassion (${selfYes}/5) is higher than your compassion for others (${otherYes}/5). You have the ability to look at yourself with warmth. In this session, we will practice letting that warmth flow naturally toward those around you.`
+                    if (otherYes > selfYes) return `Your compassion for others (${otherYes}/5) is higher than your self-compassion (${selfYes}/5). You are warm toward others — but perhaps strict with yourself? Compassion Contemplation begins with giving that same warmth to yourself.`
+                    if (selfYes === otherYes && totalYes >= 6) return `You have balanced compassion for both yourself (${selfYes}/5) and others (${otherYes}/5). This session is about connecting that compassion to your habit patterns. Your habits too can be seen with that warm gaze.`
+                    if (selfLevel === 'low' && otherLevel === 'low') return `It seems difficult right now to extend compassion to both yourself (${selfYes}/5) and others (${otherYes}/5). Compassion doesn\'t have to be grand. "Observing uncomfortable emotions without judgment" — that is enough compassion. Let\'s start with the smallest compassion through this session.`
+                    return `Self-compassion ${selfYes}/5, compassion for others ${otherYes}/5. Compassion Contemplation is the practice of looking at both yourself and others with warmth. Where you feel lacking right now is the seed of compassion that will grow through this session.`
+                  }
+
+                  if (session.id === 's9') {
+                    const checkedIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
+                    const count = checkedIdxs.length
+                    const items = [
+                      'Having someone nearby who can help me when I am in difficulty',
+                      'Acting sincerely with words and actions aligned',
+                      'Understanding others\' emotions and managing relationships well',
+                      'Thinking of new ideas and solving problems creatively',
+                      'Trying to live life with energy',
+                      'Cooperating and taking responsibility for a group or community',
+                      'Trying to learn what I don\'t know and understand it deeply',
+                      'Making deep judgments based on life experience and insight',
+                      'Choosing what is right even in the face of fear',
+                      'Not giving up and moving toward goals even in difficulty',
+                      'Treating all people fairly without prejudice',
+                      'Leading others well and fostering cooperation',
+                      'Being able to regulate my impulses, emotions, and actions',
+                      'Feeling and expressing gratitude for what I have received',
+                      'Forming deep relationships and approaching others warmly',
+                      'Showing warm actions by caring for and helping others',
+                    ]
+                    const relationStrengths = checkedIdxs.filter(i => [0,2,5,11,14,15].includes(i))
+                    const innerStrengths = checkedIdxs.filter(i => [1,7,8,9,12].includes(i))
+                    const growthStrengths = checkedIdxs.filter(i => [3,6,10].includes(i))
+                    const lifeStrengths = checkedIdxs.filter(i => [4,13].includes(i))
+                    const dominant = [
+                      { label: 'Connection & Relationships', count: relationStrengths.length },
+                      { label: 'Inner Strength', count: innerStrengths.length },
+                      { label: 'Learning & Growth', count: growthStrengths.length },
+                      { label: 'Life Energy', count: lifeStrengths.length },
+                    ].sort((a,b) => b.count - a.count)[0]
+                    if (count === 0) return 'It\'s okay if your strengths aren\'t visible right now. Boundless Contemplation begins with believing "I already have infinite potential within me." Let\'s find those seeds through this session.'
+                    if (count <= 3) return `${items[checkedIdxs[0]]} — you\'ve discovered a precious strength. Choosing fewer isn\'t a lack — it\'s honesty with yourself. These strengths will guide your 12-week journey.`
+                    if (count <= 8) return `Your strengths stand out most in the area of ${dominant.label}. ${count} strengths — these are real resources you can actually use to break free from addictive patterns.`
+                    return `You selected ${count} strengths! Among them, ${dominant.label} is your strongest area. These abundant strengths will be the solid foundation of your journey.`
+                  }
+                  return ''
+                }
                 if (session.id === 's1') {
                   const yesIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
                   const noIdxs = checks.map((v,i) => v === false ? i : -1).filter(i => i >= 0)
