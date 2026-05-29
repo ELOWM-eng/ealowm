@@ -949,7 +949,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
               return (
                 <div className="space-y-3 animate-fade-up">
                   <p className="text-xs text-orange-400 font-medium">
-                    🌱 선택하신 항목의 실천 예시
+                    🌱 {isEn ? 'Practice Examples for Your Selections' : '선택하신 항목의 실천 예시'}
                   </p>
                   {selectedExamples.map((ex, i) => (
                     <div key={i} className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-4">
@@ -1195,7 +1195,9 @@ export default function SessionClient({ session, userId, initialData }: Props) {
               return (
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 p-5 animate-fade-up">
                   <p className="text-xs text-purple-400 font-medium mb-2">
-                    🪷 {session.id === 's1' ? '무상관' : session.id === 's3' ? '자비관' : '무량관'} · 지금 나의 마음
+                    🪷 {isEn
+                      ? (session.id === 's1' ? 'Formless' : session.id === 's3' ? 'Compassion' : 'Infinite') + ' · My Mind Right Now'
+                      : (session.id === 's1' ? '무상관' : session.id === 's3' ? '자비관' : '무량관') + ' · 지금 나의 마음'}
                   </p>
                   <p className="text-sm text-stone-700 leading-relaxed">{analysis}</p>
                 </div>
