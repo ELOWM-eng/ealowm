@@ -715,27 +715,48 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                 if (session.id === 's1') {
                   const yesIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
                   const noIdxs = checks.map((v,i) => v === false ? i : -1).filter(i => i >= 0)
-                  const fixedMind = noIdxs.includes(3) // 중독은 고정된 나의 일부
-                  const changeAware = yesIdxs.includes(1) && yesIdxs.includes(2) // 변화 인식
-                  const eternalBelief = yesIdxs.includes(0) || yesIdxs.includes(8) // 영원 믿음
-                  const sameAs5 = yesIdxs.includes(7) // 5살때와 같다
-                  
+
+                  // 무상관 이해 = 네여야 하는 항목 (인덱스 1,2,5,6,9)
+                  const shouldBeYes = [1,2,5,6,9]
+                  // 무상관 이해 = 아니오여야 하는 항목 (인덱스 0,3,4,7,8)
+                  const shouldBeNo = [0,3,4,7,8]
+
+                  const correctYes = shouldBeYes.filter(i => yesIdxs.includes(i)).length
+                  const correctNo = shouldBeNo.filter(i => noIdxs.includes(i)).length
+                  const totalCorrect = correctYes + correctNo
+                  const totalAnswered = checks.filter(v => v !== null).length
+
+                  // 특정 항목 체크
+                  const fixedMind = yesIdxs.includes(3) // q4 네 → 중독은 고정된 나의 일부
+                  const eternalLife = yesIdxs.includes(0) // q1 네 → 영원히 살 수 있다
+                  const eternalOwn = yesIdxs.includes(8) // q9 네 → 영원히 소유 가능
+                  const sameAs5 = yesIdxs.includes(7) // q8 네 → 5살때와 같다
+                  const oldWorry = yesIdxs.includes(4) // q5 네 → 10살 고민 여전히 있다
+                  const changeAware = yesIdxs.includes(1) && yesIdxs.includes(2) // q2,q3 네
+                  const allChangeAware = yesIdxs.includes(5) && yesIdxs.includes(6) && yesIdxs.includes(9) // q6,q7,q10 네
+
                   let msg = ''
-                  if (fixedMind) {
-                    msg = '지금 "중독은 고정된 나의 일부"라고 느끼고 계시네요. 그 마음이 얼마나 무거운지 충분히 이해해요. 하지만 무상관이 말하는 건 바로 이거예요 — "고정된 건 없다." 지금의 습관도 조건이 만든 것이고, 조건이 바뀌면 달라질 수 있어요.'
-                  } else if (changeAware && !eternalBelief) {
-                    msg = '이미 변화의 흐름을 잘 알고 계시네요. 내 감정도, 상황도, 습관도 변한다는 걸 아는 것 — 그게 무상관의 핵심이에요. 이 앎이 12주 여정의 든든한 출발점이 돼요.'
-                  } else if (eternalBelief) {
-                    msg = '"영원히 소유할 수 있는 것이 있다"고 느끼시는군요. 우리는 자주 변하지 않을 것처럼 느껴지는 것들에 의지해요. 이번 회기를 통해 그 믿음을 조금씩 살펴보게 될 거예요.'
-                  } else if (sameAs5) {
-                    msg = '지금도 5살 때의 나와 같은 존재라고 느끼시는군요. 그 연속성은 소중하지만, 동시에 우리는 매 순간 변화하고 있어요. 무상관은 그 변화를 있는 그대로 바라보는 연습이에요.'
+
+                  if (totalAnswered < 5) {
+                    msg = '아직 답하지 않은 항목이 있어요. 천천히 모든 질문을 살펴보고 나서 다시 확인해보세요.'
+                  } else if (totalCorrect >= 9) {
+                    msg = '무상관을 매우 잘 이해하고 계시네요! 🌸 모든 것은 변하고, 고정된 실체는 없다는 것 — 이 앎이 이미 깊이 자리잡고 있어요. 이번 회기는 그 이해를 중독 패턴에 직접 연결하는 시간이 될 거예요.'
+                  } else if (totalCorrect >= 7) {
+                    msg = '무상관에 대한 이해가 꽤 깊으시네요. 몇 가지 항목에서 아직 "변화"보다 "고정"의 시각이 남아있어요. 이번 회기를 통해 그 부분을 조금 더 살펴보면 좋겠어요.'
+                  } else if (fixedMind) {
+                    msg = '지금 "중독은 고정된 나의 일부라 벗어날 수 없다"고 느끼고 계시는군요. 그 마음이 얼마나 무거운지 충분히 이해해요. 하지만 무상관이 말하는 건 바로 이거예요 — 어떤 것도 영원히 고정되어 있지 않아요. 지금의 습관도 조건이 만든 것이고, 조건이 바뀌면 달라질 수 있어요.'
+                  } else if (eternalLife || eternalOwn) {
+                    msg = eternalLife
+                      ? '"영원히 살 수 있다"고 느끼시는군요. 우리는 종종 삶이 영원할 것처럼 느껴질 때 변화를 미루게 돼요. 무상관은 바로 그 지점에서 — 삶의 유한함을 바라보며 지금 이 순간의 변화를 선택하도록 이끌어요.'
+                      : '"영원히 소유할 수 있는 것이 있다"고 느끼시는군요. 우리가 집착하는 것들도 결국 변하거나 사라져요. 이번 회기를 통해 그 믿음을 조금씩 살펴보게 될 거예요.'
+                  } else if (sameAs5 || oldWorry) {
+                    msg = sameAs5
+                      ? '지금도 5살 때의 나와 같은 존재라고 느끼시는군요. 우리는 이어져 있지만, 동시에 매 순간 변화하고 있어요. 지금의 나는 과거의 나와 같지 않아요 — 그 변화 속에 성장이 있어요.'
+                      : '10살 무렵의 고민이 여전히 남아있으시군요. 그 고민이 아직 해결되지 않은 느낌일 수 있어요. 무상관은 그 고민도 영원하지 않고, 조건이 바뀌면 달라질 수 있다고 말해요.'
+                  } else if (changeAware && allChangeAware) {
+                    msg = '변화와 무상함에 대한 이해가 이미 깊으시네요. 내 감정도, 상황도, 물건도 모두 변한다는 것을 아시는군요. 이 앎이 12주 여정의 든든한 출발점이 돼요.'
                   } else {
-                    const yesCount = yesIdxs.length
-                    if (yesCount >= 6) {
-                      msg = '변화와 무상함에 대한 이해가 이미 깊으시네요. 이번 회기는 그 이해를 중독 패턴에 직접 연결하는 시간이 될 거예요.'
-                    } else {
-                      msg = '변화에 대한 나만의 시각이 있으시군요. 정답은 없어요. 이번 회기를 통해 "변하지 않는 건 없다"는 것을 조금씩 느껴보세요.'
-                    }
+                    msg = '변화에 대한 나만의 시각이 있으시군요. 무상관은 "변하지 않는 건 없다 — 그러니 지금의 습관도 변할 수 있다"는 것을 알아가는 과정이에요. 이번 회기를 통해 조금씩 느껴보세요.'
                   }
                   return msg
                 }
