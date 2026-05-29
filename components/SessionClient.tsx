@@ -763,25 +763,33 @@ export default function SessionClient({ session, userId, initialData }: Props) {
 
                 if (session.id === 's3') {
                   const yesIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
-                  const selfCompassion = yesIdxs.includes(1) && yesIdxs.includes(2) // 나에 대한 자비
-                  const noSelfCompassion = !yesIdxs.includes(1) || !yesIdxs.includes(2)
-                  const otherCompassion = yesIdxs.includes(5) && yesIdxs.includes(9) // 타인에 대한 자비
-                  const forgiveness = yesIdxs.includes(6) || yesIdxs.includes(7) // 용서
-                  const connection = yesIdxs.includes(8) && yesIdxs.includes(9) // 연결감
                   
+                  // 자신에 대한 자비 (q1~q5, 인덱스 0~4)
+                  const selfYes = yesIdxs.filter(i => i <= 4).length
+                  // 타인에 대한 자비 (q6~q10, 인덱스 5~9)
+                  const otherYes = yesIdxs.filter(i => i >= 5).length
+                  const totalYes = yesIdxs.length
+                  const totalAnswered = checks.filter(v => v !== null).length
+
+                  const selfLevel = selfYes >= 4 ? '높음' : selfYes >= 2 ? '보통' : '낮음'
+                  const otherLevel = otherYes >= 4 ? '높음' : otherYes >= 2 ? '보통' : '낮음'
+
                   let msg = ''
-                  if (noSelfCompassion && otherCompassion) {
-                    msg = '타인에게는 따뜻한 마음을 내면서, 정작 자신에게는 그 따뜻함을 주기 어려우신가 봐요. 자비관은 바로 그 지점에서 시작해요. 나에게도 따뜻한 사람이 될 수 있어요.'
-                  } else if (selfCompassion && !otherCompassion) {
-                    msg = '자신에 대한 따뜻한 시선이 있으시네요. 이번 회기에서는 그 따뜻함이 주변으로 자연스럽게 흘러가는 연습을 해볼 거예요.'
-                  } else if (forgiveness) {
-                    msg = '나에게 상처를 준 사람을 이해하거나 도울 수 있다는 건 쉽지 않은 마음이에요. 그 넉넉함이 자비관의 핵심과 맞닿아 있어요.'
-                  } else if (connection) {
-                    msg = '우리가 서로 연결되어 있고 영향을 주고받는다는 걸 아시는군요. 자비관은 그 연결 속에서 나와 타인을 함께 따뜻하게 바라보는 실천이에요.'
-                  } else if (selfCompassion && otherCompassion) {
-                    msg = '자신과 타인 모두에게 따뜻한 마음을 낼 수 있으시네요. 이번 회기는 그 자비심을 중독 패턴과 연결하는 시간이에요. 내 습관도 그 따뜻한 시선으로 바라볼 수 있어요.'
+
+                  if (totalAnswered < 5) {
+                    msg = '아직 답하지 않은 항목이 있어요. 천천히 모든 질문을 살펴보고 나서 다시 확인해보세요.'
+                  } else if (totalYes >= 9) {
+                    msg = `자신과 타인 모두에게 자비의 마음이 매우 깊으시네요! 🌸 자신에 대한 자비 ${selfYes}/5, 타인에 대한 자비 ${otherYes}/5 — 이 따뜻한 마음이 중독 패턴을 벗어나는 가장 든든한 힘이 될 거예요.`
+                  } else if (selfYes > otherYes) {
+                    msg = `자신에 대한 자비(${selfYes}/5)가 타인에 대한 자비(${otherYes}/5)보다 높으시네요. 나를 따뜻하게 바라보는 힘이 있으시군요. 이번 회기에서는 그 따뜻함이 주변으로도 자연스럽게 흘러가는 연습을 해볼 거예요.`
+                  } else if (otherYes > selfYes) {
+                    msg = `타인에 대한 자비(${otherYes}/5)가 자신에 대한 자비(${selfYes}/5)보다 높으시네요. 남에게는 따뜻한데 정작 자신에게는 엄격하신가요? 자비관은 나 자신에게도 그 따뜻함을 주는 것에서 시작해요.`
+                  } else if (selfYes === otherYes && totalYes >= 6) {
+                    msg = `자신(${selfYes}/5)과 타인(${otherYes}/5) 모두에게 균형 있는 자비심을 갖고 계시네요. 이번 회기는 그 자비심을 중독 패턴과 연결하는 시간이에요. 내 습관도 그 따뜻한 시선으로 바라볼 수 있어요.`
+                  } else if (selfLevel === '낮음' && otherLevel === '낮음') {
+                    msg = `자신(${selfYes}/5)과 타인(${otherYes}/5) 모두에게 자비의 마음을 내기가 지금은 어려우신가 봐요. 자비는 거창한 것이 아니에요. "불편한 감정을 판단하지 않고 바라보는 것" — 그것도 충분한 자비예요. 이번 회기를 통해 아주 작은 자비부터 시작해보세요.`
                   } else {
-                    msg = '자비는 거창한 것이 아니에요. 불편한 감정을 판단하지 않고 바라보는 것, 그것도 충분한 자비예요. 이번 회기를 통해 나만의 자비를 찾아보세요.'
+                    msg = `자신에 대한 자비 ${selfYes}/5, 타인에 대한 자비 ${otherYes}/5로 나타났어요. 자비관은 나와 타인을 함께 따뜻하게 바라보는 실천이에요. 지금 부족하게 느껴지는 부분이 바로 이번 회기에서 키워갈 자비의 씨앗이에요.`
                   }
                   return msg
                 }
