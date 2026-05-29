@@ -552,6 +552,127 @@ export default function SessionClient({ session, userId, initialData }: Props) {
               </>
             )}
 
+            {/* 회기별 체크 분석 */}
+            {(['s1','s3','s9'].includes(session.id)) && checks.some(v => v !== null) && (() => {
+              const getAnalysis = () => {
+                if (session.id === 's1') {
+                  const yesIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
+                  const noIdxs = checks.map((v,i) => v === false ? i : -1).filter(i => i >= 0)
+                  const fixedMind = noIdxs.includes(3) // 중독은 고정된 나의 일부
+                  const changeAware = yesIdxs.includes(1) && yesIdxs.includes(2) // 변화 인식
+                  const eternalBelief = yesIdxs.includes(0) || yesIdxs.includes(8) // 영원 믿음
+                  const sameAs5 = yesIdxs.includes(7) // 5살때와 같다
+                  
+                  let msg = ''
+                  if (fixedMind) {
+                    msg = '지금 "중독은 고정된 나의 일부"라고 느끼고 계시네요. 그 마음이 얼마나 무거운지 충분히 이해해요. 하지만 무상관이 말하는 건 바로 이거예요 — "고정된 건 없다." 지금의 습관도 조건이 만든 것이고, 조건이 바뀌면 달라질 수 있어요.'
+                  } else if (changeAware && !eternalBelief) {
+                    msg = '이미 변화의 흐름을 잘 알고 계시네요. 내 감정도, 상황도, 습관도 변한다는 걸 아는 것 — 그게 무상관의 핵심이에요. 이 앎이 12주 여정의 든든한 출발점이 돼요.'
+                  } else if (eternalBelief) {
+                    msg = '"영원히 소유할 수 있는 것이 있다"고 느끼시는군요. 우리는 자주 변하지 않을 것처럼 느껴지는 것들에 의지해요. 이번 회기를 통해 그 믿음을 조금씩 살펴보게 될 거예요.'
+                  } else if (sameAs5) {
+                    msg = '지금도 5살 때의 나와 같은 존재라고 느끼시는군요. 그 연속성은 소중하지만, 동시에 우리는 매 순간 변화하고 있어요. 무상관은 그 변화를 있는 그대로 바라보는 연습이에요.'
+                  } else {
+                    const yesCount = yesIdxs.length
+                    if (yesCount >= 6) {
+                      msg = '변화와 무상함에 대한 이해가 이미 깊으시네요. 이번 회기는 그 이해를 중독 패턴에 직접 연결하는 시간이 될 거예요.'
+                    } else {
+                      msg = '변화에 대한 나만의 시각이 있으시군요. 정답은 없어요. 이번 회기를 통해 "변하지 않는 건 없다"는 것을 조금씩 느껴보세요.'
+                    }
+                  }
+                  return msg
+                }
+
+                if (session.id === 's3') {
+                  const yesIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
+                  const selfCompassion = yesIdxs.includes(1) && yesIdxs.includes(2) // 나에 대한 자비
+                  const noSelfCompassion = !yesIdxs.includes(1) || !yesIdxs.includes(2)
+                  const otherCompassion = yesIdxs.includes(5) && yesIdxs.includes(9) // 타인에 대한 자비
+                  const forgiveness = yesIdxs.includes(6) || yesIdxs.includes(7) // 용서
+                  const connection = yesIdxs.includes(8) && yesIdxs.includes(9) // 연결감
+                  
+                  let msg = ''
+                  if (noSelfCompassion && otherCompassion) {
+                    msg = '타인에게는 따뜻한 마음을 내면서, 정작 자신에게는 그 따뜻함을 주기 어려우신가 봐요. 자비관은 바로 그 지점에서 시작해요. 나에게도 따뜻한 사람이 될 수 있어요.'
+                  } else if (selfCompassion && !otherCompassion) {
+                    msg = '자신에 대한 따뜻한 시선이 있으시네요. 이번 회기에서는 그 따뜻함이 주변으로 자연스럽게 흘러가는 연습을 해볼 거예요.'
+                  } else if (forgiveness) {
+                    msg = '나에게 상처를 준 사람을 이해하거나 도울 수 있다는 건 쉽지 않은 마음이에요. 그 넉넉함이 자비관의 핵심과 맞닿아 있어요.'
+                  } else if (connection) {
+                    msg = '우리가 서로 연결되어 있고 영향을 주고받는다는 걸 아시는군요. 자비관은 그 연결 속에서 나와 타인을 함께 따뜻하게 바라보는 실천이에요.'
+                  } else if (selfCompassion && otherCompassion) {
+                    msg = '자신과 타인 모두에게 따뜻한 마음을 낼 수 있으시네요. 이번 회기는 그 자비심을 중독 패턴과 연결하는 시간이에요. 내 습관도 그 따뜻한 시선으로 바라볼 수 있어요.'
+                  } else {
+                    msg = '자비는 거창한 것이 아니에요. 불편한 감정을 판단하지 않고 바라보는 것, 그것도 충분한 자비예요. 이번 회기를 통해 나만의 자비를 찾아보세요.'
+                  }
+                  return msg
+                }
+
+                if (session.id === 's9') {
+                  const checkedIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
+                  const count = checkedIdxs.length
+                  const items = [
+                    '내가 어려울 때 나를 도울 수 있는 사람이 옆에 있음',
+                    '진심으로 행동하고 말과 행동이 일치함',
+                    '타인의 감정과 욕구를 이해하고 관계를 잘 다룸',
+                    '새로운 아이디어를 생각하고 독창적으로 문제를 해결함',
+                    '삶을 에너지 있게 살아가려고 함',
+                    '집단이나 공동체를 위해 협력하고 책임을 다함',
+                    '모르는 것을 배우고 깊이 이해하려고 함',
+                    '삶의 경험과 통찰을 바탕으로 깊이 있는 판단을 내림',
+                    '두려움에도 불구하고 옳은 일을 선택함',
+                    '어려움 속에서도 포기하지 않고 목표를 향해 나아감',
+                    '편견 없이 모든 사람을 공평하게 대함',
+                    '타인을 좋은 방향으로 잘 이끌고 협력함',
+                    '자신의 충동, 감정, 행동을 조절할 수 있음',
+                    '받은 것에 고마움을 느끼고 표현함',
+                    '깊은 관계를 형성하고 타인에게 따뜻하게 다가감',
+                    '타인을 배려하고 돕는 따뜻한 행동을 함',
+                  ]
+                  const selectedItems = checkedIdxs.map(i => items[i])
+                  
+                  // 강점 카테고리 분류
+                  const relationStrengths = checkedIdxs.filter(i => [0,2,5,11,14,15].includes(i))
+                  const innerStrengths = checkedIdxs.filter(i => [1,7,8,9,12].includes(i))
+                  const growthStrengths = checkedIdxs.filter(i => [3,6,10].includes(i))
+                  const lifeStrengths = checkedIdxs.filter(i => [4,13].includes(i))
+
+                  const dominant = [
+                    { label: '관계와 연결', count: relationStrengths.length },
+                    { label: '내면의 힘', count: innerStrengths.length },
+                    { label: '배움과 성장', count: growthStrengths.length },
+                    { label: '삶의 에너지', count: lifeStrengths.length },
+                  ].sort((a,b) => b.count - a.count)[0]
+
+                  let msg = ''
+                  if (count === 0) {
+                    msg = '지금 당장 강점이 잘 보이지 않아도 괜찮아요. 무량관은 "내 안에 이미 무한한 가능성이 있다"는 것을 믿는 것부터 시작해요. 이 회기를 통해 그 씨앗을 찾아볼게요.'
+                  } else if (count <= 3) {
+                    msg = `${selectedItems.slice(0,2).join(', ')} — 소중한 강점을 발견하셨네요. 적게 고른 것이 아니라, 자신에게 솔직한 거예요. 이 강점들이 12주 여정을 이끌어 줄 거예요.`
+                  } else if (count <= 8) {
+                    msg = `${dominant.label} 영역에서 강점이 두드러지네요. ${count}가지 강점 — 이것들이 바로 중독 패턴을 벗어나는 데 실제로 쓰일 수 있는 자원이에요.`
+                  } else {
+                    msg = `${count}가지나 선택하셨네요! 그 중에서도 ${dominant.label} 영역이 가장 강해요. 이 풍부한 강점들이 여정의 든든한 토대가 될 거예요.`
+                  }
+                  return msg
+                }
+
+                return ''
+              }
+
+              const analysis = getAnalysis()
+              if (!analysis) return null
+
+              return (
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 p-5 animate-fade-up">
+                  <p className="text-xs text-purple-400 font-medium mb-2">
+                    🪷 {session.id === 's1' ? '무상관' : session.id === 's3' ? '자비관' : '무량관'} · 지금 나의 마음
+                  </p>
+                  <p className="text-sm text-stone-700 leading-relaxed">{analysis}</p>
+                </div>
+              )
+            })()}
+
             <button
               onClick={async () => { await saveData(); setActiveTab('practice') }}
               className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
