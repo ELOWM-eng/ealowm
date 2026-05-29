@@ -811,7 +811,135 @@ export default function SessionClient({ session, userId, initialData }: Props) {
                 ],
               }
 
-              const practiceExamples = version === 'youth' ? practiceExamples_youth : practiceExamples_adult
+              const practiceExamples_en: Record<string, { title: string; examples: string[] }[]> = {
+                s4: [
+                  {
+                    title: 'Material Giving · Sharing possessions, time & talents',
+                    examples: [
+                      'Give away one item at home you no longer use to someone who needs it',
+                      'Help someone with a task for just 10 minutes — carrying things, finding info, etc.',
+                      'Teach someone something you are good at (cooking, writing, tech, etc.)',
+                      'Bring a small gift or snack to someone you know',
+                    ]
+                  },
+                  {
+                    title: 'Fearlessness Giving · Emotional support & safety',
+                    examples: [
+                      'Ask someone who looks troubled, "Are you okay?" first',
+                      'Listen to someone all the way through and say "I see, that must have been hard"',
+                      'Simply sit beside someone who is anxious — just being there matters',
+                      'Send one message of encouragement today',
+                    ]
+                  },
+                  {
+                    title: 'Dharma Giving · Sharing wisdom & guidance',
+                    examples: [
+                      'Share an article or video you found helpful with someone',
+                      'Honestly share your own experience with someone who is struggling',
+                      'Say one kind word — "You\'re doing great", "I believe in you"',
+                      'Quietly share something you\'ve learned from this program with those around you',
+                    ]
+                  },
+                ],
+                s5: [
+                  {
+                    title: 'Respecting Life',
+                    examples: [
+                      'When you feel angry today, stop just once and take a deep breath',
+                      'Pause for a moment to notice a plant or animal on the street',
+                      'Take 10 minutes to care for your own body today',
+                      'Say "thank you" to someone around you at least once',
+                    ]
+                  },
+                  {
+                    title: 'Non-Greed',
+                    examples: [
+                      'Resist the urge to online shop just once today',
+                      'When you feel envious of others, recall what you already have',
+                      'When you want something, wait one day before deciding',
+                      'Ask yourself "Do I really need this?" before buying',
+                    ]
+                  },
+                  {
+                    title: 'Avoiding Harmful Actions',
+                    examples: [
+                      'Before doing something you might regret, pause for 3 seconds',
+                      'Before your habitual behavior, ask "Why do I want to do this right now?"',
+                      'When an impulse comes, change your location or drink a glass of water',
+                    ]
+                  },
+                  {
+                    title: 'Speaking Truthfully',
+                    examples: [
+                      'Reduce gossip or complaints by just once today',
+                      'Instead of a small lie, honestly say "I\'m not sure"',
+                      'Say one word of praise to someone today',
+                      'Before speaking, pause briefly: "Will this be helpful?"',
+                    ]
+                  },
+                  {
+                    title: 'Avoiding Mind-Clouding Substances & Behaviors',
+                    examples: [
+                      'Reduce your screen time by 30 minutes today',
+                      'Stay screen-free for 1 hour before bed',
+                      'Reduce alcohol or caffeine intake for just one day',
+                      'Resist the habit of mindlessly opening YouTube or social media once today',
+                    ]
+                  },
+                ],
+                s10: [
+                  {
+                    title: 'Courage to Face Difficulty',
+                    examples: [
+                      'Start something you\'ve been putting off — just 5 minutes today',
+                      'Try something you failed at before, in a smaller way',
+                      'Replace "I can\'t do this" with "It\'s hard for now, but I\'ll try"',
+                    ]
+                  },
+                  {
+                    title: 'Ending Harmful Habits Already Present',
+                    examples: [
+                      'Stop the habitual behavior once today and wait 5 minutes',
+                      'Note down what emotion triggered it just before it happened',
+                      'Choose one thing to do instead (walk, drink water, etc.)',
+                    ]
+                  },
+                  {
+                    title: 'Preventing New Harmful Habits',
+                    examples: [
+                      'Avoid one situation or place where the habit often occurs',
+                      'Take a walk or stretch before stress builds up',
+                      'Plan a different activity for the time when impulses are most likely',
+                    ]
+                  },
+                  {
+                    title: 'Cultivating New Positive Intentions',
+                    examples: [
+                      'Write down 3 things you are grateful for before bed tonight',
+                      'Say one word of encouragement to someone today',
+                      'Start just one new good habit today (5-min meditation, journaling, etc.)',
+                    ]
+                  },
+                  {
+                    title: 'Growing Existing Good Habits',
+                    examples: [
+                      'Do a good habit you already practice — one more time today',
+                      'Acknowledge one thing you\'ve been doing well',
+                      'Find one person to share a good habit with',
+                    ]
+                  },
+                  {
+                    title: 'Sharing Wisdom & Compassion',
+                    examples: [
+                      'Share one thing you\'ve learned from this program with someone',
+                      'Reach out first to someone who seems to be struggling',
+                      'Sharing your honest experience is itself an act of giving',
+                    ]
+                  },
+                ],
+              }
+
+              const practiceExamples = version === 'youth' ? practiceExamples_youth : version === 'en' ? practiceExamples_en : practiceExamples_adult
 
               const sessionExamples = practiceExamples[session.id] ?? []
               const selectedExamples = sessionExamples.filter((_, i) => checkedIdxs.includes(i))
