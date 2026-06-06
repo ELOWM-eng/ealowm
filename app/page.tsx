@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import AuthForm from '@/components/AuthForm'
+import InstallGuide from '@/components/InstallGuide'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -106,7 +107,7 @@ export default async function Home() {
           A 12-step addiction prevention & mind-healing program
         </p>
       </section>
-
+<InstallGuide />
     </main>
   )
 }
