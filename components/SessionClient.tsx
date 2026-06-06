@@ -45,6 +45,9 @@ export default function SessionClient({ session, userId, initialData }: Props) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [completed, setCompleted] = useState(initialData.completed)
+  const [showCard, setShowCard] = useState(false)
+  const [cardDay, setCardDay] = useState(0)
+  const [isFlipped, setIsFlipped] = useState(false)
   
   const version = initialData.version
   const isEn = version === 'en'
@@ -129,9 +132,137 @@ export default function SessionClient({ session, userId, initialData }: Props) {
   }, [checks, practiceTexts, reflectTexts, saveData]) // eslint-disable-line
 
   const checkedCount = checks.filter(v => v !== null && v !== undefined).length
+const versionPrefix = version === 'youth' ? 'youth' : 'adult'
+  const cardFrontSrc = `/daycards/${versionPrefix}_${session.id}_day${cardDay}_front.png`
+  const cardBackSrc = `/daycards/${versionPrefix}_${session.id}_day${cardDay}_back.png`
 
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% -30%, #fdf2f8 0%, #fdf8f0 70%)' }}>
+
+      {/* 데이 카드 팝업 */}
+      {showCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.7)' }}
+          onClick={() => {
+            if (isFlipped) {
+              setShowCard(false)
+              setIsFlipped(false)
+              if (cardDay === 7) setActiveTab('reflect')
+              else setActiveDay(prev => Math.min(prev + 1, 6))
+            }
+          }}>
+          <div
+            className="relative max-w-sm w-full animate-fade-up"
+            onClick={e => e.stopPropagation()}>
+
+            {/* 카드 헤더 */}
+            <div className="bg-white rounded-t-3xl px-5 py-4 flex items-center justify-between border-b border-orange-100">
+              <div>
+                <p className="text-xs text-orange-400 font-medium">
+                  {session.title} · DAY {cardDay}
+                </p>
+                <p className="text-sm font-bold text-stone-700" style={{ fontFamily: 'var(--font-gowun)' }}>
+                  {isFlipped
+                    ? (isEn ? "Today's Practice Card" : '오늘의 실천 카드')
+                    : (isEn ? 'Tap the card to flip!' : '카드를 눌러 뒤집어보세요!')}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowCard(false)
+                  setIsFlipped(false)
+                  if (cardDay === 7) setActiveTab('reflect')
+                  else setActiveDay(prev => Math.min(prev + 1, 6))
+                }}
+                className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 hover:bg-stone-200 transition-all">
+                ✕
+              </button>
+            </div>
+
+            {/* 카드 플립 영역 */}
+            <div className="bg-white px-4 py-4">
+              <style>{`
+                .card-flip-container { perspective: 1000px; width: 100%; }
+                .card-flip-inner { position: relative; width: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+                .card-flip-inner.flipped { transform: rotateY(180deg); }
+                .card-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; overflow: hidden; width: 100%; }
+                .card-face-back { position: absolute; top: 0; left: 0; transform: rotateY(180deg); }
+              `}</style>
+
+              <div className="card-flip-container">
+                <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`} style={{ minHeight: '300px' }}>
+
+                  {/* 앞면 */}
+                  <div className="card-face cursor-pointer relative" onClick={() => !isFlipped && setIsFlipped(true)}>
+                    <img
+                      src={cardFrontSrc}
+                      alt={`DAY ${cardDay} 앞면`}
+                      className="w-full rounded-2xl"
+                      onError={e => {
+                        const t = e.target as HTMLImageElement
+                        t.style.display = 'none'
+                        const p = t.parentElement
+                        if (p) { p.style.cssText = 'background:linear-gradient(135deg,#fdf2f8,#fdf8f0);min-height:300px;display:flex;align-items:center;justify-content:center;border-radius:16px'; p.innerHTML = `<div style="text-align:center;padding:40px"><div style="font-size:48px">🪷</div><p style="font-size:14px;color:#78716c;margin-top:12px">${session.title} · DAY ${cardDay}</p></div>` }
+                      }}
+                    />
+                    {!isFlipped && (
+                      <div className="absolute inset-0 flex items-end justify-center pb-4 rounded-2xl" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 50%)' }}>
+                        <p className="text-white text-xs font-medium animate-pulse">
+                          {isEn ? '👆 Tap to flip' : '👆 눌러서 뒤집기'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 뒷면 */}
+                  <div className="card-face card-face-back">
+                    <img
+                      src={cardBackSrc}
+                      alt={`DAY ${cardDay} 뒷면`}
+                      className="w-full rounded-2xl"
+                      onError={e => {
+                        const t = e.target as HTMLImageElement
+                        t.style.display = 'none'
+                        const p = t.parentElement
+                        if (p) { p.style.cssText = 'background:linear-gradient(135deg,#e1f5ee,#fdf8f0);min-height:300px;display:flex;align-items:center;justify-content:center;border-radius:16px'; p.innerHTML = `<div style="text-align:center;padding:40px"><div style="font-size:48px">🌱</div><p style="font-size:14px;color:#78716c;margin-top:12px">${isEn ? "Today's practice" : '오늘의 실천'}</p></div>` }
+                      }}
+                    />
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            {/* 하단 버튼 */}
+            <div className="bg-white rounded-b-3xl px-4 pb-5">
+              {!isFlipped ? (
+                <button onClick={() => setIsFlipped(true)}
+                  className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
+                  style={{ background: 'linear-gradient(135deg, #f6a94a, #e07b20)' }}>
+                  {isEn ? '🃏 Flip the Card' : '🃏 카드 뒤집기'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowCard(false)
+                    setIsFlipped(false)
+                    if (cardDay === 7) setActiveTab('reflect')
+                    else setActiveDay(prev => Math.min(prev + 1, 6))
+                  }}
+                  className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
+                  style={{ background: cardDay === 7 ? 'linear-gradient(135deg, #5dcaa5, #1D9E75)' : 'linear-gradient(135deg, #f6a94a, #e07b20)' }}>
+                  {cardDay === 7
+                    ? (isEn ? 'Go to Organizing →' : '정리해보기로 이동 →')
+                    : (isEn ? `Go to DAY ${cardDay + 1} →` : `DAY ${cardDay + 1}로 이동 →`)}
+                </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-pink-50">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <button onClick={() => router.push('/dashboard')}
@@ -1304,12 +1435,20 @@ export default function SessionClient({ session, userId, initialData }: Props) {
 
             <div className="flex gap-2">
               {activeDay < 6 ? (
-                <button onClick={() => setActiveDay(prev => Math.min(prev + 1, 6))}
+                <button onClick={async () => {
+                  await saveData()
+                  setCardDay(activeDay + 1)
+                  setShowCard(true)
+                }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 transition-all">
                   Save & DAY {activeDay + 2} →
                 </button>
               ) : (
-                <button onClick={async () => { await saveData(); setActiveTab('reflect') }}
+                <button onClick={async () => {
+                    await saveData()
+                    setCardDay(7)
+                    setShowCard(true)
+                  }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all"
                   style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
                   {isEn ? 'Save Go to Organizing →' : '저장하기 정리해보기로 이동 →'}
@@ -1446,6 +1585,7 @@ function MbtiSection({ groups, checks, setChecks, isEn }: {
     return { code: sa > sb ? a : b, label: RESULT_LABELS[sa > sb ? a : b], tied: false, colorA: sa > sb ? a : b, colorB: sa > sb ? a : b }
   })
 
+  
   return (
     <div className="space-y-4">
       {groups.map((group, gi) => {
