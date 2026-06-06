@@ -149,7 +149,7 @@ export default function InstallGuide() {
           <div className="flex items-center gap-2">
             <span className="text-lg">📲</span>
             <span className="text-sm font-bold text-stone-700" style={{ fontFamily: 'var(--font-gowun)' }}>
-              {isEn ? 'How to Install the App · 앱 설치 방법' : 'How to Install the App · 앱 설치 방법'}
+              {isEn ? '앱 설치 방법 · How to Install the App · ' : '앱 설치 방법 · How to Install the App'}
             </span>
           </div>
           <span className="text-stone-400 text-sm">{open ? '▲' : '▼'}</span>
