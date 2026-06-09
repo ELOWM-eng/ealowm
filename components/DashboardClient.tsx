@@ -282,6 +282,11 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                       {s.title}
                     </h3>
                     <p className="text-sm text-stone-500 mt-0.5">{s.sub}</p>
+                    <button
+                      onClick={e => { e.stopPropagation(); router.push(`/content/${s.id}`) }}
+                      className="mt-2 inline-flex items-center gap-1 text-xs text-pink-500 hover:text-pink-600 font-medium transition-colors">
+                      🗂️ {isEn ? 'Content' : '콘텐츠 보기'}
+                    </button>
                   </div>
                   <div className="ml-4 flex-shrink-0">
                     {done ? (
