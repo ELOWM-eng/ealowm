@@ -262,7 +262,8 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
           {(sessionsByWeek[activeWeek] || []).map((s, i) => {
             const done = completedSet.has(s.id)
             return (
-              <button key={s.id}
+              <div key={s.id} className="space-y-2">
+              <button
                 onClick={() => router.push(`/session/${s.id}`)}
                 className="w-full text-left bg-white rounded-2xl p-5 border border-stone-100 hover:border-pink-200 hover:shadow-md transition-all duration-200 group"
                 style={{ animationDelay: `${0.1 + i * 0.05}s` }}>
@@ -282,11 +283,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                       {s.title}
                     </h3>
                     <p className="text-sm text-stone-500 mt-0.5">{s.sub}</p>
-                    <button
-                      onClick={e => { e.stopPropagation(); router.push(`/content/${s.id}`) }}
-                      className="mt-2 inline-flex items-center gap-1 text-xs text-pink-500 hover:text-pink-600 font-medium transition-colors">
-                      🗂️ {isEn ? 'Content' : '콘텐츠 보기'}
-                    </button>
+                    
                   </div>
                   <div className="ml-4 flex-shrink-0">
                     {done ? (
@@ -302,6 +299,14 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                   </div>
                 </div>
               </button>
+              {!isEn && (
+                <button
+                  onClick={() => router.push(`/content/${s.id}`)}
+                  className="w-full py-2.5 rounded-xl text-xs font-medium text-pink-500 border border-pink-100 bg-pink-50 hover:bg-pink-100 transition-all">
+                  🗂️ 콘텐츠 보기
+                </button>
+              )}
+              </div>
             )
           })}
         </div>
