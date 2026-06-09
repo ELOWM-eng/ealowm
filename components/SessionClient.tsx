@@ -518,7 +518,7 @@ const versionPrefix = version === 'youth' ? 'youth' : 'adult'
                   <div key={gi} className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
                     {group.image && (
                       <img src={group.image} alt={group.label}
-                        style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                        style={{ width: '100%', objectFit: 'contain' }} />
                     )}
                     <div className="bg-amber-50 px-4 py-3 border-b border-amber-100">
                       <p className="text-sm font-medium text-amber-700">{group.label}</p>
