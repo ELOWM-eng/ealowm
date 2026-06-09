@@ -132,7 +132,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
   }, [checks, practiceTexts, reflectTexts, saveData]) // eslint-disable-line
 
   const checkedCount = checks.filter(v => v !== null && v !== undefined).length
-const versionPrefix = version === 'youth' ? 'youth' : 'adult'
+const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 'adult'
   const cardFrontSrc = `/daycards/${versionPrefix}_${session.id}_day${cardDay}_front.png`
   const cardBackSrc = `/daycards/${versionPrefix}_${session.id}_day${cardDay}_back.png`
 
