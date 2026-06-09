@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import ContentClient from '@/components/ContentClient'
+// content page
 import { CONTENT_ADULT, CONTENT_YOUTH } from '@/lib/content-config'
 
 export const dynamic = 'force-dynamic'
