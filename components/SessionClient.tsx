@@ -622,7 +622,7 @@ const versionPrefix = version === 'youth' ? 'youth' : 'adult'
                     )}>
                     {session.think.images?.[i] && (
                       <img src={session.think.images[i]} alt={item} width={800} height={600}
-                        style={{ width: '100%', aspectRatio: '5/7', objectFit: 'contain' }} />
+                        style={{ width: '100%', objectFit: 'contain' }} />
                     )}
                     <div className={clsx('p-4 flex items-start gap-3 transition-colors',
                       checks[i] === true ? 'bg-pink-50' : 'bg-white')}>
