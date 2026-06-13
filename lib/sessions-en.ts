@@ -18,7 +18,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'I know that my current situation and environment are not permanent.',
         'I know that an object I considered to have a fixed purpose can be used in many different ways.'
       ],
-      note: 'We cherish life, refrain from taking what belongs to others, avoid wrong doings, practice right speech, and stay away from anything that clouds the mind.',
+      note: 'We must break free from habitual addictive behaviors that once felt eternal by understanding that all phenomena have no fixed essence. Let go of the life of addiction and move toward a life of wisdom.',
     },
     practice: {
       q: 'Note any changes in your health and emotions since yesterday.',
@@ -30,7 +30,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Organize your thoughts about how you would like to change and grow.',
         'Write down concrete actions you are ready to take to begin your transformation.',
       ],
-      declaration: '"We, in order to break free from habitual addictive behaviors that once felt eternal, must gain insight into the truth that all phenomena have no fixed essence, let go of the life of addiction, and move toward a life of wisdom."',
+      declaration: 'We must break free from habitual addictive behaviors that once felt eternal by understanding that all phenomena have no fixed essence. Let go of the life of addiction and move toward a life of wisdom.',
     },
   },
   {
@@ -50,7 +50,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'When negative emotions arose, how did you respond or act?',
         'What practices can you begin in order to break free from your habitual addictive behavior?',
       ],
-      note: 'We know that the habitual addictive behaviors rooted within us give rise to thoughts of Greed, Anger, Ignorance, and Attachment, and ultimately leave painful consequences in our lives.',
+      note: 'We know that the habitual addictive behaviors rooted within us give rise to thoughts of Greed, Anger, Ignorance, and Attachment. These ultimately bring suffering into our lives.',
     },
     practice: {
       q: 'What effort did you make today to break free from your habitual addictive behavior? Describe the emotions you felt, the choices you made, and the outcomes you experienced in that moment.',
@@ -62,7 +62,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Take a moment to identify and organize the feelings you experienced throughout the change.',
         'After this change, reflect on and organize the practices you wish to continue.',
       ],
-      declaration: '"We know that the habitual addictive behaviors rooted within us give rise to thoughts of Greed, Anger, Ignorance, and Attachment, and ultimately leave painful consequences in our lives."',
+      declaration: 'We know that the habitual addictive behaviors rooted within us give rise to thoughts of Greed, Anger, Ignorance, and Attachment. These ultimately bring suffering into our lives.',
     },
   },
   {
@@ -82,7 +82,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'I understand that I am interconnected with those around me, and that we continually influence one another.',
         'I acknowledge that I cannot live alone and that I exist within a web of social relationships.',
       ],
-      note: 'We recognize the suffering experienced by ourselves and others as a result of habitual addictive behaviors. In this process, we acknowledge our wrong actions and give rise to a compassionate intention to relieve that suffering.',
+      note: 'We recognize the suffering that we and others experience as a result of habitual addictive behaviors. In this process, we acknowledge our wrong actions and give rise to a com- passionate intention to relieve that suffering.',
     },
     practice: {
       q: 'Write a message to yourself in appreciation for the effort you made today. If someone hurt you today, or if you caused hurt to someone else, take a moment to reflect on how you would like to respond if a similar situation arises again.',
@@ -94,7 +94,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Take a moment to reflect on and organize what you feel grateful for, both about yourself and about others.',
         'Identify and organize specific actions you can take to express your gratitude.',
       ],
-      declaration: '"We recognize the suffering experienced by ourselves and others as a result of habitual addictive behaviors. In this process, we acknowledge our wrong actions and give rise to a compassionate intention to relieve that suffering."',
+      declaration: 'We recognize the suffering that we and others experience as a result of habitual addictive behaviors. In this process, we acknowledge our wrong actions and give rise to a com- passionate intention to relieve that suffering.',
     },
   },
   {
@@ -108,7 +108,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Providing emotional support and a sense of safety to someone in emotional distress',
         'Sharing your wisdom and helping others to live in accordance with them',
       ],
-      note: 'We let go the thoughts of Greed, Anger, Ignorance, and Attachment for the sake of ourselves and others, and through the wholehearted practice of voluntary giving with both body and mind, we walk a path that benefits both self and others.',
+      note: 'We let go of the thoughts of Greed, Anger, Ignorance, and Attachment for the benefit of ourselves and others. Through the wholehearted practice of voluntary giving with both body and mind, we walk a path that brings to both self and others.',
     },
     practice: {
       q: 'Even the smallest act counts. Take a moment to recall a time today when you offered help to someone. What kind of support did you give? Write it down below.',
@@ -120,7 +120,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Reflect on a moment of giving that remains most vivid in your memory. What did you do, and why does it stand out to you.',
         'Take a moment to organize the ways you would like to help others in the future.',
       ],
-      declaration: '"We let go the thoughts of Greed, Anger, Ignorance, and Attachment for the sake of ourselves and others, and through the wholehearted practice of voluntary giving with both body and mind, we walk a path that benefits both self and others."',
+      declaration: 'We let go of the thoughts of Greed, Anger, Ignorance, and Attachment for the benefit of ourselves and others. Through the wholehearted practice of voluntary giving with both body and mind, we walk a path that brings to both self and others.',
     },
   },
   {
@@ -136,7 +136,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Practicing right speech',
         'Avoiding anything that clouds the mind',
       ],
-      note: 'We cherish life, refrain from taking what belongs to others, avoid wrong doings, practice right speech, and stay away from anything that clouds the mind.',
+      note: 'We vow to cherish life. We vow to refrain from taking what belongs to others. We vow to avoid wrong doings. We vow to practice honest speech. We vow to keep our minds clear and unclouded.',
     },
     practice: {
       q: 'Take a moment to reflect on your day. Record the moral and ethical principles you practiced today.',
@@ -148,7 +148,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Organize your thoughts and identify the moral principle that is the most important to you.',
         'Organize and write down specific actions you can take to uphold the principles.',
       ],
-      declaration: '"We cherish life, refrain from taking what belongs to others, avoid wrong doings, practice right speech, and stay away from anything that clouds the mind."',
+      declaration: 'We vow to cherish life. We vow to refrain from taking what belongs to others. We vow to avoid wrong doings. We vow to practice honest speech. We vow to keep our minds clear and unclouded.',
     },
   },
   {
