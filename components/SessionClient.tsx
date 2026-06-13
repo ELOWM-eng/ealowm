@@ -51,6 +51,7 @@ export default function SessionClient({ session, userId, initialData }: Props) {
   
   const version = initialData.version
   const isEn = version === 'en'
+  const isYouth = version === 'youth'
   const [activeDay, setActiveDay] = useState<number>(() => {
     const filled = initialData.practice_texts.filter(t => t && t.trim().length > 0).length
     return Math.min(filled, 6)
@@ -1271,7 +1272,29 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
                 if (session.id === 's9') {
                   const checkedIdxs = checks.map((v,i) => v === true ? i : -1).filter(i => i >= 0)
                   const count = checkedIdxs.length
-                  const items = [
+
+                  // 청소년용 항목 (sessions-youth.ts 기준)
+                  const youthItems = [
+                    '내가 힘들 때 나를 도와줄 수 있는 사람이 옆에 있음',
+                    '진심으로 행동하고 말한 대로 실천함',
+                    '다른 사람의 감정을 이해하고 관계를 잘 이어감',
+                    '새로운 아이디어를 잘 떠올리고 나만의 방식으로 문제를 풀어냄',
+                    '삶을 활기차게 살아가려고 노력함',
+                    '학교에서 모임이나 공동체를 위해 협력하고 맡은 일에 최선을 다함',
+                    '모르는 것을 배우고 깊이 이해하려고 함',
+                    '편견 없이 모든 사람을 공평하게 대함',
+                    '여러 경험을 바탕으로 깊이 있게 생각하고 판단함',
+                    '다른 사람을 좋은 방향으로 잘 이끌고 함께함',
+                    '두려움이 있더라도 옳은 일을 선택함',
+                    '진실한 마음으로 친구와 사귀고 따뜻하게 다가감',
+                    '나의 충동, 감정, 행동을 스스로 조절할 수 있음',
+                    '어려움이 있어도 포기하지 않고 목표를 향해 나아감',
+                    '다른 사람을 배려하고 돕는 따뜻한 행동을 함',
+                    '받은 것에 고마움을 느끼고 표현함',
+                  ]
+
+                  // 성인용 항목
+                  const adultItems = [
                     '내가 어려울 때 나를 도울 수 있는 사람이 옆에 있음',
                     '진심으로 행동하고 말과 행동이 일치함',
                     '타인의 감정과 욕구를 이해하고 관계를 잘 다룸',
@@ -1289,13 +1312,27 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
                     '깊은 관계를 형성하고 타인에게 따뜻하게 다가감',
                     '타인을 배려하고 돕는 따뜻한 행동을 함',
                   ]
+
+                  const items = isYouth ? youthItems : adultItems
                   const selectedItems = checkedIdxs.map(i => items[i])
-                  
-                  // 강점 카테고리 분류
-                  const relationStrengths = checkedIdxs.filter(i => [0,2,5,11,14,15].includes(i))
-                  const innerStrengths = checkedIdxs.filter(i => [1,7,8,9,12].includes(i))
-                  const growthStrengths = checkedIdxs.filter(i => [3,6,10].includes(i))
-                  const lifeStrengths = checkedIdxs.filter(i => [4,13].includes(i))
+
+                  // 청소년 강점 카테고리 (항목 순서 기준)
+                  // 0:도움받음 1:진심 2:공감 3:창의 4:활기 5:협력 6:배움 7:공정 8:판단 9:리더 10:용기 11:우정 12:자기조절 13:끈기 14:배려 15:감사
+                  const youthRelation = checkedIdxs.filter(i => [0,2,5,9,11,14].includes(i))
+                  const youthInner = checkedIdxs.filter(i => [1,8,10,12,13].includes(i))
+                  const youthGrowth = checkedIdxs.filter(i => [3,6,7].includes(i))
+                  const youthLife = checkedIdxs.filter(i => [4,15].includes(i))
+
+                  // 성인 강점 카테고리
+                  const adultRelation = checkedIdxs.filter(i => [0,2,5,11,14,15].includes(i))
+                  const adultInner = checkedIdxs.filter(i => [1,7,8,9,12].includes(i))
+                  const adultGrowth = checkedIdxs.filter(i => [3,6,10].includes(i))
+                  const adultLife = checkedIdxs.filter(i => [4,13].includes(i))
+
+                  const relationStrengths = isYouth ? youthRelation : adultRelation
+                  const innerStrengths = isYouth ? youthInner : adultInner
+                  const growthStrengths = isYouth ? youthGrowth : adultGrowth
+                  const lifeStrengths = isYouth ? youthLife : adultLife
 
                   const dominant = [
                     { label: '관계와 연결', count: relationStrengths.length },
