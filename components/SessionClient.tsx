@@ -359,7 +359,7 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
             )}
 
             <div className="bg-purple-50 rounded-xl p-4 border-l-4 border-purple-300">
-              <p className="text-sm text-purple-700 leading-relaxed">{session.think.note}</p>
+              <p className="text-sm text-purple-700 leading-relaxed whitespace-pre-line">{session.think.note}</p>
             </div>
             <div className="bg-white rounded-xl p-4 border border-stone-100">
               <p className="text-xs text-stone-400 mb-1">Q.</p>
