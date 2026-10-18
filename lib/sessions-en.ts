@@ -191,7 +191,7 @@ export const EN_SESSIONS: PracticeSession[] = [
     },
   },
   {
-    id: 's7', num: 'Session 7', title: 'Four of Form', sub: 'Detachment & Impermanence', type: 'gwan', week: 7,
+    id: 's7', num: 'Session 7', title: 'Four stages of Form', sub: 'Detachment & Impermanence', type: 'gwan', week: 7,
     think: {
       q: 'Take a moment to slowly observe the image. As you become aware of the process of arising, staying, changing, and disappearing, type along with the words.',
       inputType: 'typing' as const,
