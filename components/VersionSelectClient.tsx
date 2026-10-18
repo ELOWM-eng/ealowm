@@ -78,7 +78,7 @@ export default function VersionSelectClient({ userId }: Props) {
         <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: 'var(--font-gowun)', color: '#1a1410' }}>
           이로움 · EALOWM
         </h1>
-        <p className="text-sm text-stone-500">어떤 버전으로 시작하실건가요?</p>
+        <p className="text-sm text-stone-500">어떤 버전으로 시작하실건가요? <br/> Which version would you like to start with?</p>
       </div>
 
       <div className="w-full max-w-sm space-y-3 animate-fade-up" style={{ animationDelay: '0.1s' }}>
@@ -105,7 +105,7 @@ export default function VersionSelectClient({ userId }: Props) {
       </div>
 
       <p className="mt-8 text-xs text-stone-400 text-center animate-fade-up" style={{ animationDelay: '0.2s' }}>
-        버전은 나중에 설정에서 변경할 수 있습니다.
+        버전은 나중에 변경할 수 있습니다. <br/> You can change your version later.
       </p>
     </main>
   )
