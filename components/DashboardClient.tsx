@@ -430,6 +430,15 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
               </svg>
               @16bon_won33
             </a>
+            <div className="mt-3">
+              <a href="mailto:kkkk@kkkkkk"
+                className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-700 font-medium transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                dowook0328@naver.com
+              </a>
+            </div>
           </div>
 
           <p className="text-center text-xs text-stone-400 pb-5 leading-relaxed"
