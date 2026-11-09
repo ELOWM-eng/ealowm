@@ -28,6 +28,7 @@ const STORAGE_KEY = 'ealowm_avatar'
 const ZAZEN_STORAGE_KEY = 'ealowm_zazen_min'
 const ZAZEN_VOL_KEY = 'ealowm_zazen_vol'
 const LOOP_KEY = 'ealowm_loop'
+const ROTATE_HINT_KEY = 'ealowm_rotate_hint' // '1' 이면 가로 화면 안내를 다시 보여주지 않아요
 const ZAZEN_PRESETS = [5, 10, 15, 20, 30, 45]
 
 function fmt(sec: number) {
@@ -53,6 +54,8 @@ export default function PracticeClient({ version }: Props) {
   const [error, setError] = useState(false)
   const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off') // 반복 재생 방식
   const [landscape, setLandscape] = useState(false) // 휴대폰을 옆으로 돌렸는지
+  const [touch, setTouch] = useState(false) // 터치 기기(휴대폰·태블릿)인지
+  const [hintDismissed, setHintDismissed] = useState(true) // 가로 화면 안내를 닫았는지 (불러오기 전에는 숨김)
 
   // 좌선 타이머
   const [zText, setZText] = useState('10')
@@ -83,8 +86,23 @@ export default function PracticeClient({ version }: Props) {
         volRef.current = Number(vol) / 100
       }
     } catch {}
+    let dismissed = false
+    try { dismissed = localStorage.getItem(ROTATE_HINT_KEY) === '1' } catch {}
+    setHintDismissed(dismissed)
+    setTouch(window.matchMedia('(pointer: coarse)').matches)
     setLoaded(true)
   }, [])
+
+  // 이미 휴대폰을 옆으로 돌려 본 사람에게는 안내를 다시 보여주지 않아요
+  useEffect(() => {
+    if (landscape && touch) dismissHint()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [landscape, touch])
+
+  function dismissHint() {
+    setHintDismissed(true)
+    try { localStorage.setItem(ROTATE_HINT_KEY, '1') } catch {}
+  }
 
   // 휴대폰을 옆으로 돌리면 가로 배치로 자동 전환
   // (키보드가 올라와 화면 높이가 줄어드는 경우와 구분하려고 기기의 회전 방향을 우선 확인해요)
@@ -343,6 +361,7 @@ export default function PracticeClient({ version }: Props) {
   const currentAvatar = AVATARS.find(a => a.id === avatar)
   const showChooser = loaded && (!currentAvatar || choosing)
   const alive = playing || zStatus === 'running'
+  const showRotateHint = touch && !landscape && !hintDismissed
   const zActive = zStatus === 'running' || zStatus === 'paused'
   const unit = isEn ? 'min' : '분'
 
@@ -475,6 +494,22 @@ export default function PracticeClient({ version }: Props) {
 
             {/* 오른쪽(가로 보기) 또는 아래쪽(세로 보기): 플레이어·탭·목록 */}
             <div className={landscape ? 'flex-1 min-w-0 space-y-4' : 'space-y-5'}>
+
+            {/* 가로 화면 안내 (세로로 든 터치 기기에서, 닫으면 다시 나오지 않아요) */}
+            {showRotateHint && (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                <span className="text-sm leading-5">📱</span>
+                <p className="flex-1 text-xs text-amber-800/80 leading-5">
+                  {isEn
+                    ? 'Turn your phone sideways to use landscape view (auto-rotate must be on).'
+                    : '휴대폰 자동 회전이 켜져 있으면, 옆으로 돌려 가로 화면으로 볼 수 있어요.'}
+                </p>
+                <button onClick={dismissHint} aria-label={isEn ? 'Close' : '닫기'}
+                  className="text-stone-400 hover:text-stone-600 text-sm leading-5 px-1">
+                  ✕
+                </button>
+              </div>
+            )}
 
             {/* 플레이어 (음성 안내 탭에서만) */}
             {tab !== 'zazen' && (
