@@ -14,7 +14,8 @@ interface Props {
   version: PracticeVersion
 }
 
-type Tab = 'bodyscan' | 'focus' | 'theme'
+type Tab = 'bodyscan' | 'focus' | 'zazen' | 'theme'
+type ZStatus = 'idle' | 'running' | 'paused' | 'done'
 
 const AVATARS = [
   { id: 'girl', src: '/avatars/girl.png' },
@@ -24,6 +25,8 @@ const AVATARS = [
 ]
 
 const STORAGE_KEY = 'ealowm_avatar'
+const ZAZEN_STORAGE_KEY = 'ealowm_zazen_min'
+const ZAZEN_PRESETS = [5, 10, 15, 20, 30, 45]
 
 function fmt(sec: number) {
   if (!isFinite(sec) || sec < 0) return '0:00'
@@ -47,21 +50,172 @@ export default function PracticeClient({ version }: Props) {
   const [dur, setDur] = useState(0)
   const [error, setError] = useState(false)
 
-  // 저장된 아바타 불러오기 (브라우저 저장소가 막혀 있어도 동작하도록 try/catch)
+  // 좌선 타이머
+  const [zText, setZText] = useState('10')
+  const [zStatus, setZStatus] = useState<ZStatus>('idle')
+  const [zRemain, setZRemain] = useState(0)
+  const [zSound, setZSound] = useState(true)
+  const soundRef = useRef(true)
+  const endAtRef = useRef(0)
+  const zTotalRef = useRef(0)
+  const ctxRef = useRef<AudioContext | null>(null)
+  const bellTimersRef = useRef<number[]>([])
+  const wakeRef = useRef<{ release: () => Promise<void> } | null>(null)
+
+  // 저장된 아바타·좌선 시간 불러오기 (브라우저 저장소가 막혀 있어도 동작하도록 try/catch)
   useEffect(() => {
     try {
       const v = localStorage.getItem(STORAGE_KEY)
       if (v && AVATARS.some(a => a.id === v)) setAvatar(v)
+      const z = localStorage.getItem(ZAZEN_STORAGE_KEY)
+      if (z && /^\d+$/.test(z) && Number(z) >= 1 && Number(z) <= 180) setZText(z)
     } catch {}
     setLoaded(true)
   }, [])
 
-  // 화면을 떠날 때 재생 정지
+  // 화면을 떠날 때 정리
   useEffect(() => {
     const a = audioRef.current
-    return () => { a?.pause() }
+    return () => {
+      a?.pause()
+      bellTimersRef.current.forEach(t => window.clearTimeout(t))
+      try { wakeRef.current?.release() } catch {}
+      ctxRef.current?.close().catch(() => {})
+    }
   }, [])
 
+  // ---------- 좌선 타이머 ----------
+  const zValid = /^\d+$/.test(zText) && Number(zText) >= 1 && Number(zText) <= 180
+
+  function getCtx(): AudioContext | null {
+    try {
+      if (!ctxRef.current) {
+        const AC = window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        ctxRef.current = new AC()
+      }
+      if (ctxRef.current.state === 'suspended') ctxRef.current.resume().catch(() => {})
+      return ctxRef.current
+    } catch {
+      return null
+    }
+  }
+
+  function strike(ctx: AudioContext) {
+    const now = ctx.currentTime
+    const master = ctx.createGain()
+    master.gain.setValueAtTime(0.0001, now)
+    master.gain.exponentialRampToValueAtTime(0.45, now + 0.03)
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 7)
+    master.connect(ctx.destination)
+    ;[[1, 0.6], [2.76, 0.25], [5.4, 0.1]].forEach(([mult, gain]) => {
+      const o = ctx.createOscillator()
+      const g = ctx.createGain()
+      o.type = 'sine'
+      o.frequency.value = 280 * mult
+      g.gain.value = gain
+      o.connect(g)
+      g.connect(master)
+      o.start(now)
+      o.stop(now + 7.2)
+    })
+  }
+
+  function ringBell(strikes: number) {
+    if (!soundRef.current) return
+    const ctx = getCtx()
+    if (!ctx) return
+    for (let k = 0; k < strikes; k++) {
+      const t = window.setTimeout(() => strike(ctx), k * 4500)
+      bellTimersRef.current.push(t)
+    }
+  }
+
+  function clearBells() {
+    bellTimersRef.current.forEach(t => window.clearTimeout(t))
+    bellTimersRef.current = []
+  }
+
+  async function lockScreen() {
+    try {
+      const wl = (navigator as unknown as {
+        wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> }
+      }).wakeLock
+      if (wl && !wakeRef.current) wakeRef.current = await wl.request('screen')
+    } catch {}
+  }
+
+  function unlockScreen() {
+    try { wakeRef.current?.release() } catch {}
+    wakeRef.current = null
+  }
+
+  function toggleSound() {
+    soundRef.current = !soundRef.current
+    setZSound(soundRef.current)
+  }
+
+  function startZazen() {
+    if (!zValid) return
+    audioRef.current?.pause()
+    clearBells()
+    const total = Number(zText) * 60
+    zTotalRef.current = total
+    endAtRef.current = Date.now() + total * 1000
+    setZRemain(total)
+    setZStatus('running')
+    lockScreen()
+    ringBell(1)
+    try { localStorage.setItem(ZAZEN_STORAGE_KEY, zText) } catch {}
+  }
+
+  function pauseZazen() {
+    setZStatus('paused')
+    unlockScreen()
+  }
+
+  function resumeZazen() {
+    endAtRef.current = Date.now() + zRemain * 1000
+    setZStatus('running')
+    lockScreen()
+  }
+
+  function stopZazen() {
+    clearBells()
+    unlockScreen()
+    setZStatus('idle')
+    setZRemain(0)
+  }
+
+  // 남은 시간 계산 (시각 기준이라 화면이 잠깐 꺼졌다 켜져도 정확해요)
+  useEffect(() => {
+    if (zStatus !== 'running') return
+    const tick = () => {
+      const rem = Math.max(0, Math.ceil((endAtRef.current - Date.now()) / 1000))
+      setZRemain(rem)
+      if (rem <= 0) {
+        setZStatus('done')
+        unlockScreen()
+        ringBell(3)
+      }
+    }
+    const id = window.setInterval(tick, 250)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        wakeRef.current = null
+        lockScreen()
+        tick()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zStatus])
+
+  // ---------- 음성 안내 ----------
   const set = PRACTICE_TRACKS[version]
   const themeTracks: PracticeTrack[] = THEME_SESSIONS.map(id => {
     const n = id.replace('s', '')
@@ -75,8 +229,9 @@ export default function PracticeClient({ version }: Props) {
 
   const tabs: { key: Tab; label: string; tracks: PracticeTrack[] }[] = [
     { key: 'bodyscan', label: isEn ? 'Body Scan' : '바디스캔', tracks: set.bodyscan },
-    { key: 'focus', label: isEn ? 'Focus Meditation' : '집중명상', tracks: set.focus },
-    { key: 'theme', label: isEn ? 'Theme Songs' : '테마곡', tracks: themeTracks },
+    { key: 'focus', label: isEn ? 'Focus' : '집중명상', tracks: set.focus },
+    { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
+    { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
   ]
   const activeTab = tabs.find(t => t.key === tab) ?? tabs[0]
 
@@ -89,6 +244,7 @@ export default function PracticeClient({ version }: Props) {
   function playTrack(t: PracticeTrack) {
     const a = audioRef.current
     if (!a) return
+    if (zStatus !== 'idle') stopZazen()
     if (track?.id === t.id) {
       if (a.paused) a.play().catch(() => setPlaying(false))
       else a.pause()
@@ -119,6 +275,9 @@ export default function PracticeClient({ version }: Props) {
 
   const currentAvatar = AVATARS.find(a => a.id === avatar)
   const showChooser = loaded && (!currentAvatar || choosing)
+  const alive = playing || zStatus === 'running'
+  const zActive = zStatus === 'running' || zStatus === 'paused'
+  const unit = isEn ? 'min' : '분'
 
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% -20%, #fdf2f8 0%, #fdf8f0 60%)' }}>
@@ -204,7 +363,7 @@ export default function PracticeClient({ version }: Props) {
                   top: '24px', width: '240px', height: '240px', borderRadius: '50%',
                   background: 'radial-gradient(circle, rgba(255,214,150,0.55) 0%, rgba(255,214,150,0) 70%)',
                   animation: 'ealowm-glow 5s ease-in-out infinite',
-                  animationPlayState: playing ? 'running' : 'paused',
+                  animationPlayState: alive ? 'running' : 'paused',
                 }} />
               {/* 방석 */}
               <div className="absolute left-1/2 -translate-x-1/2"
@@ -216,13 +375,17 @@ export default function PracticeClient({ version }: Props) {
                     height: '270px', width: 'auto', objectFit: 'contain',
                     transformOrigin: '50% 100%',
                     animation: 'ealowm-breathe 4s ease-in-out infinite',
-                    animationPlayState: playing ? 'running' : 'paused',
+                    animationPlayState: alive ? 'running' : 'paused',
                   }} />
               </div>
-              {/* 재생 중인 제목 */}
+              {/* 상단 문구 */}
               <div className="absolute top-4 left-0 right-0 text-center px-4">
                 <p className="text-xs text-amber-100/80">
-                  {track ? track.title : (isEn ? 'Choose a practice below' : '아래에서 수행을 선택해보세요')}
+                  {zActive
+                    ? `${isEn ? 'Silent sitting' : '좌선 중'} · ${fmt(zRemain)}`
+                    : track
+                      ? track.title
+                      : (isEn ? 'Choose a practice below' : '아래에서 수행을 선택해보세요')}
                 </p>
               </div>
               <button onClick={() => setChoosing(true)}
@@ -231,41 +394,43 @@ export default function PracticeClient({ version }: Props) {
               </button>
             </div>
 
-            {/* 플레이어 */}
-            <div className="bg-white rounded-2xl border border-stone-100 p-4">
-              <div className="flex items-center gap-3">
-                <button onClick={togglePlay} disabled={!track}
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-white text-lg flex-shrink-0 disabled:opacity-40 transition-all"
-                  style={{ background: 'linear-gradient(135deg, #e673a8, #d94f88)' }}
-                  aria-label={playing ? 'pause' : 'play'}>
-                  {playing ? '❚❚' : '▶'}
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-stone-700 truncate">
-                    {track ? track.title : (isEn ? 'Nothing selected' : '선택된 수행이 없어요')}
-                  </p>
-                  <input type="range" min={0} max={dur || 0} step={1} value={Math.min(cur, dur || 0)}
-                    onChange={e => seek(Number(e.target.value))}
-                    disabled={!track || !dur}
-                    className="w-full mt-1 accent-pink-500" />
-                  <div className="flex justify-between text-xs text-stone-400">
-                    <span>{fmt(cur)}</span>
-                    <span>{fmt(dur)}</span>
+            {/* 플레이어 (음성 안내 탭에서만) */}
+            {tab !== 'zazen' && (
+              <div className="bg-white rounded-2xl border border-stone-100 p-4">
+                <div className="flex items-center gap-3">
+                  <button onClick={togglePlay} disabled={!track}
+                    className="w-11 h-11 rounded-full flex items-center justify-center text-white text-lg flex-shrink-0 disabled:opacity-40 transition-all"
+                    style={{ background: 'linear-gradient(135deg, #e673a8, #d94f88)' }}
+                    aria-label={playing ? 'pause' : 'play'}>
+                    {playing ? '❚❚' : '▶'}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-stone-700 truncate">
+                      {track ? track.title : (isEn ? 'Nothing selected' : '선택된 수행이 없어요')}
+                    </p>
+                    <input type="range" min={0} max={dur || 0} step={1} value={Math.min(cur, dur || 0)}
+                      onChange={e => seek(Number(e.target.value))}
+                      disabled={!track || !dur}
+                      className="w-full mt-1 accent-pink-500" />
+                    <div className="flex justify-between text-xs text-stone-400">
+                      <span>{fmt(cur)}</span>
+                      <span>{fmt(dur)}</span>
+                    </div>
                   </div>
                 </div>
+                {error && (
+                  <p className="text-xs text-red-400 mt-2">
+                    {isEn ? 'The audio could not be loaded. It may not be uploaded yet.' : '음원을 불러오지 못했어요. 아직 준비 중일 수 있어요.'}
+                  </p>
+                )}
               </div>
-              {error && (
-                <p className="text-xs text-red-400 mt-2">
-                  {isEn ? 'The audio could not be loaded. It may not be uploaded yet.' : '음원을 불러오지 못했어요. 아직 준비 중일 수 있어요.'}
-                </p>
-              )}
-            </div>
+            )}
 
             {/* 탭 */}
             <div className="flex border-b border-stone-100">
               {tabs.map(t => (
                 <button key={t.key} onClick={() => setTab(t.key)}
-                  className={`flex-1 py-2.5 text-sm transition-all ${
+                  className={`flex-1 py-2.5 text-xs sm:text-sm whitespace-nowrap transition-all ${
                     tab === t.key
                       ? 'text-pink-600 border-b-2 border-pink-500 font-medium'
                       : 'text-stone-400 hover:text-stone-600'
@@ -275,36 +440,155 @@ export default function PracticeClient({ version }: Props) {
               ))}
             </div>
 
+            {/* 좌선 타이머 */}
+            {tab === 'zazen' && (
+              <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-5">
+
+                {zStatus === 'idle' && (
+                  <>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-stone-700" style={{ fontFamily: 'var(--font-gowun)' }}>
+                        {isEn ? 'Sit quietly for a time you choose' : '시간을 정해 조용히 앉아보세요'}
+                      </p>
+                      <p className="text-xs text-stone-400 mt-1">
+                        {isEn
+                          ? 'A bell rings at the start and when the time is up.'
+                          : '종소리로 시작하고, 시간이 다 되면 종소리로 알려드려요.'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {ZAZEN_PRESETS.map(m => (
+                        <button key={m} onClick={() => setZText(String(m))}
+                          className={`py-2.5 rounded-xl text-sm transition-all ${
+                            zText === String(m)
+                              ? 'bg-pink-500 text-white'
+                              : 'bg-white border border-stone-200 text-stone-500 hover:border-pink-200'
+                          }`}>
+                          {m}{unit}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-xs text-stone-400">{isEn ? 'Custom' : '직접 입력'}</span>
+                      <input type="text" inputMode="numeric" value={zText}
+                        onChange={e => setZText(e.target.value.replace(/[^\d]/g, '').slice(0, 3))}
+                        className="w-20 text-center text-sm py-2 rounded-lg border border-stone-200 bg-stone-50 focus:outline-none focus:border-pink-300" />
+                      <span className="text-xs text-stone-400">{unit}</span>
+                    </div>
+                    {!zValid && (
+                      <p className="text-xs text-red-400 text-center">
+                        {isEn ? 'Enter a number from 1 to 180.' : '1~180 사이의 숫자를 입력해주세요.'}
+                      </p>
+                    )}
+
+                    <button onClick={toggleSound}
+                      className="mx-auto flex items-center gap-2 text-xs text-stone-500">
+                      <span className={`w-9 h-5 rounded-full relative transition-all ${zSound ? 'bg-pink-400' : 'bg-stone-200'}`}>
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${zSound ? 'left-[18px]' : 'left-0.5'}`} />
+                      </span>
+                      {isEn ? 'Bell sound' : '종소리'}
+                    </button>
+
+                    <button onClick={startZazen} disabled={!zValid}
+                      className="w-full py-3 rounded-xl text-sm font-medium text-white disabled:opacity-40 transition-all"
+                      style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
+                      {isEn ? 'Begin' : '좌선 시작'}
+                    </button>
+
+                    <p className="text-xs text-stone-300 text-center">
+                      {isEn ? 'Keep the screen on so the bell can sound.' : '종소리가 울리려면 화면을 켜 둔 채로 해주세요.'}
+                    </p>
+                  </>
+                )}
+
+                {zActive && (
+                  <>
+                    <div className="text-center">
+                      <p className="text-5xl font-light text-stone-700 tabular-nums" style={{ fontFamily: 'var(--font-gowun)' }}>
+                        {fmt(zRemain)}
+                      </p>
+                      <p className="text-xs text-stone-400 mt-2">
+                        {zStatus === 'paused'
+                          ? (isEn ? 'Paused' : '잠시 멈춤')
+                          : (isEn ? 'Sitting in silence' : '조용히 앉아 있는 중')}
+                      </p>
+                    </div>
+                    <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-teal-400 rounded-full transition-all"
+                        style={{ width: `${zTotalRef.current ? Math.round((1 - zRemain / zTotalRef.current) * 100) : 0}%` }} />
+                    </div>
+                    <div className="flex gap-3">
+                      {zStatus === 'running' ? (
+                        <button onClick={pauseZazen}
+                          className="flex-1 py-3 rounded-xl text-sm border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all">
+                          {isEn ? 'Pause' : '잠시 멈춤'}
+                        </button>
+                      ) : (
+                        <button onClick={resumeZazen}
+                          className="flex-1 py-3 rounded-xl text-sm font-medium text-white transition-all"
+                          style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
+                          {isEn ? 'Resume' : '다시 이어서'}
+                        </button>
+                      )}
+                      <button onClick={stopZazen}
+                        className="flex-1 py-3 rounded-xl text-sm border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all">
+                        {isEn ? 'End' : '마치기'}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {zStatus === 'done' && (
+                  <div className="text-center space-y-4">
+                    <p className="text-3xl">🪷</p>
+                    <p className="text-sm text-stone-600 leading-relaxed" style={{ fontFamily: 'var(--font-gowun)' }}>
+                      {isEn
+                        ? <>You sat for {Math.round(zTotalRef.current / 60)} minutes.<br/>Thank you for sitting with yourself.</>
+                        : <>{Math.round(zTotalRef.current / 60)}분 동안 앉아 계셨어요.<br/>수고하셨습니다.</>}
+                    </p>
+                    <button onClick={stopZazen}
+                      className="w-full py-3 rounded-xl text-sm border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all">
+                      {isEn ? 'Sit again' : '다시 하기'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 목록 */}
-            <div className="space-y-2">
-              {activeTab.tracks.length === 0 && (
-                <div className="text-center py-10">
-                  <p className="text-2xl mb-2">🪷</p>
-                  <p className="text-sm text-stone-400">
-                    {isEn ? 'Coming soon.' : '음성 안내를 준비 중이에요.'}
-                  </p>
-                </div>
-              )}
-              {activeTab.tracks.map(t => {
-                const active = track?.id === t.id
-                return (
-                  <button key={t.id} onClick={() => playTrack(t)}
-                    className={`w-full text-left bg-white rounded-xl p-4 border transition-all flex items-center gap-3 ${
-                      active ? 'border-pink-300 shadow-sm' : 'border-stone-100 hover:border-pink-200'
-                    }`}>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                      active ? 'bg-pink-500 text-white' : 'bg-stone-100 text-stone-400'
-                    }`}>
-                      {active && playing ? '❚❚' : '▶'}
-                    </span>
-                    <span className="flex-1 min-w-0">
-                      <span className="block text-sm font-medium text-stone-700">{t.title}</span>
-                      {t.desc && <span className="block text-xs text-stone-400 mt-0.5">{t.desc}</span>}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            {tab !== 'zazen' && (
+              <div className="space-y-2">
+                {activeTab.tracks.length === 0 && (
+                  <div className="text-center py-10">
+                    <p className="text-2xl mb-2">🪷</p>
+                    <p className="text-sm text-stone-400">
+                      {isEn ? 'Coming soon.' : '음성 안내를 준비 중이에요.'}
+                    </p>
+                  </div>
+                )}
+                {activeTab.tracks.map(t => {
+                  const active = track?.id === t.id
+                  return (
+                    <button key={t.id} onClick={() => playTrack(t)}
+                      className={`w-full text-left bg-white rounded-xl p-4 border transition-all flex items-center gap-3 ${
+                        active ? 'border-pink-300 shadow-sm' : 'border-stone-100 hover:border-pink-200'
+                      }`}>
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                        active ? 'bg-pink-500 text-white' : 'bg-stone-100 text-stone-400'
+                      }`}>
+                        {active && playing ? '❚❚' : '▶'}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-medium text-stone-700">{t.title}</span>
+                        {t.desc && <span className="block text-xs text-stone-400 mt-0.5">{t.desc}</span>}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
           </div>
         )}
