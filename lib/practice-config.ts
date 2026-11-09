@@ -32,7 +32,8 @@ export const PRACTICE_TRACKS: Record<PracticeVersion, PracticeSet> = {
       { id: 'y-focus1', title: '집중명상', desc: '호흡에 마음을 모으는 음성 안내', src: '/practice/youth/focus1.mp3' },
     ],
   },
-  // 영문 음원이 없으면 비워두세요. 비어 있으면 대시보드의 '마음 수행' 버튼이 영문 버전에서 숨겨져요.
+  // 영문 음성 안내가 준비되면 아래처럼 한 줄씩 추가하세요. (비어 있으면 'Coming soon.' 으로 표시돼요)
+  // 예: { id: 'e-bodyscan1', title: 'Body Scan', desc: 'A guided scan of the body', src: '/practice/en/bodyscan1.mp3' },
   en: {
     bodyscan: [],
     focus: [],
@@ -57,8 +58,7 @@ export const SESSION_NAMES: Record<string, { ko: string; en: string }> = {
   s12: { ko: '지혜행', en: 'The Wisdom' },
 }
 
-export function hasPractice(version: string): boolean {
-  if (version !== 'en') return true // 성인·청소년은 테마곡이 있으므로 항상 표시
-  const set = PRACTICE_TRACKS.en
-  return set.bodyscan.length + set.focus.length > 0
+// 대시보드의 '마음 수행' 메뉴를 보여줄지 결정 (지금은 모든 버전에서 표시)
+export function hasPractice(_version: string): boolean {
+  return true
 }
