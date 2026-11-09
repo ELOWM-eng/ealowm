@@ -1,5 +1,5 @@
 'use client'
-
+import { hasPractice } from '@/lib/practice-config'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
@@ -240,7 +240,25 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
           )}
         </div>
           
-
+        {hasPractice(version) && (
+          <div className="mb-6 animate-fade-up">
+            <button onClick={() => router.push('/practice')}
+              className="w-full p-4 rounded-2xl border border-pink-100 bg-white text-left hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🧘</span>
+                <div>
+                  <p className="text-sm font-bold text-stone-700" style={{ fontFamily: 'var(--font-gowun)' }}>
+                    {isEn ? 'Mind Practice' : '마음 수행'}
+                  </p>
+                  <p className="text-xs text-stone-400 mt-0.5">
+                    {isEn ? 'Body scan, focus meditation & theme songs' : '바디스캔 · 집중명상 · 테마곡'}
+                  </p>
+                </div>
+                <span className="ml-auto text-stone-300">→</span>
+              </div>
+            </button>
+          </div>
+        )}
         {/* 주차 선택 */}
         <div className="grid grid-cols-4 gap-2 mb-6 animate-fade-up" style={{ animationDelay: '0.05s' }}>
           {weeks.map(w => (
