@@ -26,6 +26,7 @@ const AVATARS = [
 
 const STORAGE_KEY = 'ealowm_avatar'
 const ZAZEN_STORAGE_KEY = 'ealowm_zazen_min'
+const ZAZEN_VOL_KEY = 'ealowm_zazen_vol'
 const ZAZEN_PRESETS = [5, 10, 15, 20, 30, 45]
 
 function fmt(sec: number) {
@@ -56,6 +57,8 @@ export default function PracticeClient({ version }: Props) {
   const [zRemain, setZRemain] = useState(0)
   const [zSound, setZSound] = useState(true)
   const soundRef = useRef(true)
+  const [zVol, setZVol] = useState(80) // 종소리 크기 (0~100)
+  const volRef = useRef(0.8)
   const endAtRef = useRef(0)
   const zTotalRef = useRef(0)
   const ctxRef = useRef<AudioContext | null>(null)
@@ -69,6 +72,11 @@ export default function PracticeClient({ version }: Props) {
       if (v && AVATARS.some(a => a.id === v)) setAvatar(v)
       const z = localStorage.getItem(ZAZEN_STORAGE_KEY)
       if (z && /^\d+$/.test(z) && Number(z) >= 1 && Number(z) <= 180) setZText(z)
+      const vol = localStorage.getItem(ZAZEN_VOL_KEY)
+      if (vol && /^\d+$/.test(vol) && Number(vol) <= 100) {
+        setZVol(Number(vol))
+        volRef.current = Number(vol) / 100
+      }
     } catch {}
     setLoaded(true)
   }, [])
@@ -105,7 +113,7 @@ export default function PracticeClient({ version }: Props) {
     const now = ctx.currentTime
     const master = ctx.createGain()
     master.gain.setValueAtTime(0.0001, now)
-    master.gain.exponentialRampToValueAtTime(0.45, now + 0.03)
+    master.gain.exponentialRampToValueAtTime(Math.max(0.0001, 0.9 * volRef.current), now + 0.03)
     master.gain.exponentialRampToValueAtTime(0.0001, now + 7)
     master.connect(ctx.destination)
     ;[[1, 0.6], [2.76, 0.25], [5.4, 0.1]].forEach(([mult, gain]) => {
@@ -155,6 +163,18 @@ export default function PracticeClient({ version }: Props) {
     setZSound(soundRef.current)
   }
 
+  function changeVolume(v: number) {
+    setZVol(v)
+    volRef.current = v / 100
+    try { localStorage.setItem(ZAZEN_VOL_KEY, String(v)) } catch {}
+  }
+
+  // 종소리 한 번 들어보기
+  function previewBell() {
+    const ctx = getCtx()
+    if (ctx) strike(ctx)
+  }
+
   function startZazen() {
     if (!zValid) return
     audioRef.current?.pause()
@@ -165,7 +185,7 @@ export default function PracticeClient({ version }: Props) {
     setZRemain(total)
     setZStatus('running')
     lockScreen()
-    ringBell(1)
+    ringBell(3)
     try { localStorage.setItem(ZAZEN_STORAGE_KEY, zText) } catch {}
   }
 
@@ -358,13 +378,15 @@ export default function PracticeClient({ version }: Props) {
             <div className="relative rounded-3xl overflow-hidden shadow-sm"
               style={{ height: '360px', background: 'linear-gradient(180deg, #2a1a14 0%, #4a2c1d 62%, #6b4226 62%, #4a2c1d 100%)' }}>
               {/* 은은한 빛 */}
-              <div className="absolute left-1/2 -translate-x-1/2"
-                style={{
-                  top: '24px', width: '240px', height: '240px', borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255,214,150,0.55) 0%, rgba(255,214,150,0) 70%)',
-                  animation: 'ealowm-glow 5s ease-in-out infinite',
-                  animationPlayState: alive ? 'running' : 'paused',
-                }} />
+              <div className="absolute left-0 right-0 flex justify-center" style={{ top: '24px' }}>
+                <div
+                  style={{
+                    width: '240px', height: '240px', borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(255,214,150,0.55) 0%, rgba(255,214,150,0) 70%)',
+                    animation: 'ealowm-glow 5s ease-in-out infinite',
+                    animationPlayState: alive ? 'running' : 'paused',
+                  }} />
+              </div>
               {/* 방석 */}
               <div className="absolute left-1/2 -translate-x-1/2"
                 style={{ bottom: '26px', width: '240px', height: '34px', borderRadius: '50%', background: 'rgba(217,79,136,0.5)', filter: 'blur(1px)' }} />
@@ -452,8 +474,8 @@ export default function PracticeClient({ version }: Props) {
                       </p>
                       <p className="text-xs text-stone-400 mt-1">
                         {isEn
-                          ? 'A bell rings at the start and when the time is up.'
-                          : '종소리로 시작하고, 시간이 다 되면 종소리로 알려드려요.'}
+                          ? 'The bell rings three times at the start and again when the time is up.'
+                          : '시작할 때와 시간이 다 되었을 때, 종소리가 세 번씩 울려요.'}
                       </p>
                     </div>
 
@@ -490,6 +512,19 @@ export default function PracticeClient({ version }: Props) {
                       </span>
                       {isEn ? 'Bell sound' : '종소리'}
                     </button>
+
+                    {zSound && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-stone-400 flex-shrink-0">{isEn ? 'Volume' : '소리 크기'}</span>
+                        <input type="range" min={0} max={100} step={5} value={zVol}
+                          onChange={e => changeVolume(Number(e.target.value))}
+                          className="flex-1 accent-pink-500" />
+                        <button onClick={previewBell}
+                          className="text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-500 hover:bg-stone-50 flex-shrink-0">
+                          ▶ {isEn ? 'Listen' : '들어보기'}
+                        </button>
+                      </div>
+                    )}
 
                     <button onClick={startZazen} disabled={!zValid}
                       className="w-full py-3 rounded-xl text-sm font-medium text-white disabled:opacity-40 transition-all"
