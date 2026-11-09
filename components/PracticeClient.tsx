@@ -52,6 +52,7 @@ export default function PracticeClient({ version }: Props) {
   const [dur, setDur] = useState(0)
   const [error, setError] = useState(false)
   const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off') // 반복 재생 방식
+  const [landscape, setLandscape] = useState(false) // 휴대폰을 옆으로 돌렸는지
 
   // 좌선 타이머
   const [zText, setZText] = useState('10')
@@ -83,6 +84,31 @@ export default function PracticeClient({ version }: Props) {
       }
     } catch {}
     setLoaded(true)
+  }, [])
+
+  // 휴대폰을 옆으로 돌리면 가로 배치로 자동 전환
+  // (키보드가 올라와 화면 높이가 줄어드는 경우와 구분하려고 기기의 회전 방향을 우선 확인해요)
+  useEffect(() => {
+    const check = () => {
+      // 글자를 입력하는 중(키보드가 올라온 상태)에는 배치를 바꾸지 않아요
+      const el = document.activeElement as HTMLInputElement | null
+      if (el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type !== 'range'))) return
+      const so = window.screen.orientation
+      const land = so && so.type
+        ? so.type.startsWith('landscape')
+        : window.innerWidth > window.innerHeight
+      setLandscape(land && window.innerWidth >= 560)
+    }
+    check()
+    window.addEventListener('resize', check)
+    window.addEventListener('orientationchange', check)
+    const so = window.screen.orientation
+    so?.addEventListener?.('change', check)
+    return () => {
+      window.removeEventListener('resize', check)
+      window.removeEventListener('orientationchange', check)
+      so?.removeEventListener?.('change', check)
+    }
   }, [])
 
   // 화면을 떠날 때 정리
@@ -346,7 +372,7 @@ export default function PracticeClient({ version }: Props) {
       />
 
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-pink-50">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div className={`${landscape ? 'max-w-5xl' : 'max-w-2xl'} mx-auto px-4 py-3 flex items-center gap-3`}>
           <button onClick={() => router.push('/dashboard')}
             className="text-stone-400 hover:text-stone-600 transition-colors p-1 -ml-1">
             ← {isEn ? 'Dashboard' : '대시보드'}
@@ -357,7 +383,7 @@ export default function PracticeClient({ version }: Props) {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 pb-24">
+      <main className={`${landscape ? 'max-w-5xl py-4 pb-10' : 'max-w-2xl py-6 pb-24'} mx-auto px-4`}>
 
         {/* 아바타 선택 */}
         {showChooser && (
@@ -371,7 +397,7 @@ export default function PracticeClient({ version }: Props) {
                 {isEn ? 'You can change it anytime.' : '나중에 언제든 바꿀 수 있어요.'}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`grid gap-3 ${landscape ? 'grid-cols-4' : 'grid-cols-2'}`}>
               {AVATARS.map((a, i) => (
                 <button key={a.id}
                   onClick={() => pickAvatar(a.id)}
@@ -379,7 +405,7 @@ export default function PracticeClient({ version }: Props) {
                     avatar === a.id ? 'border-pink-400' : 'border-stone-100'
                   }`}>
                   <img src={a.src} alt={isEn ? `Avatar ${i + 1}` : `아바타 ${i + 1}`}
-                    className="mx-auto" style={{ height: '190px', width: 'auto', objectFit: 'contain' }} />
+                    className="mx-auto" style={{ height: landscape ? '150px' : '190px', width: 'auto', objectFit: 'contain' }} />
                 </button>
               ))}
             </div>
@@ -394,16 +420,23 @@ export default function PracticeClient({ version }: Props) {
 
         {/* 수행 공간 */}
         {loaded && currentAvatar && !choosing && (
-          <div className="animate-fade-up space-y-5">
+          <div className={`animate-fade-up ${landscape ? 'flex gap-5 items-start' : 'space-y-5'}`}>
 
-            {/* 장면 */}
+            {/* 왼쪽(가로 보기) 또는 위쪽(세로 보기): 장면 */}
+            <div className={landscape ? 'w-[44%] flex-shrink-0 sticky top-[4.25rem]' : ''}>
+
+            {/* 장면 — 크기는 --sh 하나로 정해져서 세로·가로 모두 같은 비율로 그려져요 */}
             <div className="relative rounded-3xl overflow-hidden shadow-sm"
-              style={{ height: '360px', background: 'linear-gradient(180deg, #2a1a14 0%, #4a2c1d 62%, #6b4226 62%, #4a2c1d 100%)' }}>
+              style={{
+                '--sh': landscape ? 'clamp(220px, calc(100vh - 100px), 440px)' : '360px',
+                height: 'var(--sh)',
+                background: 'linear-gradient(180deg, #2a1a14 0%, #4a2c1d 62%, #6b4226 62%, #4a2c1d 100%)',
+              } as React.CSSProperties}>
               {/* 은은한 빛 */}
-              <div className="absolute left-0 right-0 flex justify-center" style={{ top: '24px' }}>
+              <div className="absolute left-0 right-0 flex justify-center" style={{ top: 'calc(var(--sh) * 0.067)' }}>
                 <div
                   style={{
-                    width: '240px', height: '240px', borderRadius: '50%',
+                    width: 'calc(var(--sh) * 0.667)', height: 'calc(var(--sh) * 0.667)', borderRadius: '50%',
                     background: 'radial-gradient(circle, rgba(255,214,150,0.55) 0%, rgba(255,214,150,0) 70%)',
                     animation: 'ealowm-glow 5s ease-in-out infinite',
                     animationPlayState: alive ? 'running' : 'paused',
@@ -411,12 +444,12 @@ export default function PracticeClient({ version }: Props) {
               </div>
               {/* 방석 */}
               <div className="absolute left-1/2 -translate-x-1/2"
-                style={{ bottom: '26px', width: '240px', height: '34px', borderRadius: '50%', background: 'rgba(217,79,136,0.5)', filter: 'blur(1px)' }} />
+                style={{ bottom: 'calc(var(--sh) * 0.072)', width: 'calc(var(--sh) * 0.667)', height: 'calc(var(--sh) * 0.094)', borderRadius: '50%', background: 'rgba(217,79,136,0.5)', filter: 'blur(1px)' }} />
               {/* 아바타 (앉은 모습) */}
-              <div className="absolute left-0 right-0 flex justify-center" style={{ bottom: '38px' }}>
+              <div className="absolute left-0 right-0 flex justify-center" style={{ bottom: 'calc(var(--sh) * 0.105)' }}>
                 <img src={currentAvatar.src} alt="avatar"
                   style={{
-                    height: '270px', width: 'auto', objectFit: 'contain',
+                    height: 'calc(var(--sh) * 0.75)', width: 'auto', objectFit: 'contain',
                     transformOrigin: '50% 100%',
                     animation: 'ealowm-breathe 4s ease-in-out infinite',
                     animationPlayState: alive ? 'running' : 'paused',
@@ -437,6 +470,11 @@ export default function PracticeClient({ version }: Props) {
                 {isEn ? 'Change avatar' : '아바타 변경'}
               </button>
             </div>
+
+            </div>
+
+            {/* 오른쪽(가로 보기) 또는 아래쪽(세로 보기): 플레이어·탭·목록 */}
+            <div className={landscape ? 'flex-1 min-w-0 space-y-4' : 'space-y-5'}>
 
             {/* 플레이어 (음성 안내 탭에서만) */}
             {tab !== 'zazen' && (
@@ -660,6 +698,8 @@ export default function PracticeClient({ version }: Props) {
                 })}
               </div>
             )}
+
+            </div>
 
           </div>
         )}
