@@ -61,7 +61,7 @@ export default async function Home() {
             { num: '4회기 · Sesson4', title: '보시행 · The Generosity', sub: '나눔과 이타심 · Sharing & Altruism', type: 'haeng' },
             { num: '5회기 · Sesson5', title: '지계행 · The Ethical Conduct', sub: '도덕과 절제함 · Virtue & Moderation', type: 'haeng' },
             { num: '6회기 · Sesson6', title: '인욕행 · The Forbearance', sub: '인내와 평온함 · Patience & Serenity', type: 'haeng' },
-            { num: '7회기 · Sesson7', title: '사상관 · The Four of Forms', sub: '비움과 덧없음 · Detachment & Impermanence', type: 'gwan' },
+            { num: '7회기 · Sesson7', title: '사상관 · The Four stages of Forms', sub: '비움과 덧없음 · Detachment & Impermanence', type: 'gwan' },
             { num: '8회기 · Sesson8', title: '생멸관 · The Arising and Ceasing', sub: '살핌과 자각함 · Mindfulness & Awareness', type: 'gwan' },
             { num: '9회기 · Sesson9', title: '무량관 · The Infinite', sub: '믿음과 무한함 · Trust & Limitlessness', type: 'gwan' },
             { num: '10회기 · Sesson10', title: '정진행 · The Diligence', sub: '노력과 성장함 · Effort & Growth', type: 'haeng' },
@@ -92,6 +92,15 @@ export default async function Home() {
             </svg>
             @16bon_won33
           </a>
+          <div className="mt-3">
+            <a href="mailto:kkkk@kkkkkk"
+              className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-700 font-medium transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+              </svg>
+              dowook0328@naver.com
+            </a>
+          </div>
         </div>
       </section>
 
