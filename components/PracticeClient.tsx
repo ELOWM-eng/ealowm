@@ -27,6 +27,7 @@ const AVATARS = [
 const STORAGE_KEY = 'ealowm_avatar'
 const ZAZEN_STORAGE_KEY = 'ealowm_zazen_min'
 const ZAZEN_VOL_KEY = 'ealowm_zazen_vol'
+const LOOP_KEY = 'ealowm_loop'
 const ZAZEN_PRESETS = [5, 10, 15, 20, 30, 45]
 
 function fmt(sec: number) {
@@ -50,6 +51,7 @@ export default function PracticeClient({ version }: Props) {
   const [cur, setCur] = useState(0)
   const [dur, setDur] = useState(0)
   const [error, setError] = useState(false)
+  const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off') // 반복 재생 방식
 
   // 좌선 타이머
   const [zText, setZText] = useState('10')
@@ -72,6 +74,8 @@ export default function PracticeClient({ version }: Props) {
       if (v && AVATARS.some(a => a.id === v)) setAvatar(v)
       const z = localStorage.getItem(ZAZEN_STORAGE_KEY)
       if (z && /^\d+$/.test(z) && Number(z) >= 1 && Number(z) <= 180) setZText(z)
+      const rep = localStorage.getItem(LOOP_KEY)
+      if (rep === 'all' || rep === 'one') setRepeat(rep)
       const vol = localStorage.getItem(ZAZEN_VOL_KEY)
       if (vol && /^\d+$/.test(vol) && Number(vol) <= 100) {
         setZVol(Number(vol))
@@ -255,6 +259,23 @@ export default function PracticeClient({ version }: Props) {
   ]
   const activeTab = tabs.find(t => t.key === tab) ?? tabs[0]
 
+  // 반복 안 함 → 전곡 반복 → 한 곡 반복 → (처음으로)
+  function cycleRepeat() {
+    const next = repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off'
+    setRepeat(next)
+    try { localStorage.setItem(LOOP_KEY, next) } catch {}
+  }
+
+  // 곡이 끝났을 때: 전곡 반복이면 같은 목록의 다음 곡을 재생(마지막 곡 다음은 첫 곡)
+  function handleEnded() {
+    setPlaying(false)
+    if (repeat !== 'all' || !track) return
+    const list = tabs.find(t => t.tracks.some(x => x.id === track.id))?.tracks ?? []
+    if (list.length === 0) return
+    const i = list.findIndex(x => x.id === track.id)
+    playTrack(list[(i + 1) % list.length])
+  }
+
   function pickAvatar(id: string) {
     setAvatar(id)
     setChoosing(false)
@@ -314,10 +335,11 @@ export default function PracticeClient({ version }: Props) {
 
       <audio
         ref={audioRef}
+        loop={repeat === 'one'}
         preload="none"
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
+        onEnded={handleEnded}
         onTimeUpdate={e => setCur(e.currentTarget.currentTime)}
         onLoadedMetadata={e => setDur(e.currentTarget.duration)}
         onError={() => { setError(true); setPlaying(false) }}
@@ -427,9 +449,23 @@ export default function PracticeClient({ version }: Props) {
                     {playing ? '❚❚' : '▶'}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-stone-700 truncate">
-                      {track ? track.title : (isEn ? 'Nothing selected' : '선택된 수행이 없어요')}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-stone-700 truncate">
+                        {track ? track.title : (isEn ? 'Nothing selected' : '선택된 수행이 없어요')}
+                      </p>
+                      <button onClick={cycleRepeat} aria-pressed={repeat !== 'off'}
+                        className={`text-xs px-2.5 py-1 rounded-full border flex-shrink-0 transition-all ${
+                          repeat !== 'off'
+                            ? 'bg-pink-50 border-pink-300 text-pink-600 font-medium'
+                            : 'border-stone-200 text-stone-400 hover:bg-stone-50'
+                        }`}>
+                        {repeat === 'one'
+                          ? `🔂 ${isEn ? 'Repeat one' : '한곡 반복'}`
+                          : repeat === 'all'
+                            ? `🔁 ${isEn ? 'Repeat all' : '전곡 반복'}`
+                            : `🔁 ${isEn ? 'Repeat off' : '반복 안 함'}`}
+                      </button>
+                    </div>
                     <input type="range" min={0} max={dur || 0} step={1} value={Math.min(cur, dur || 0)}
                       onChange={e => seek(Number(e.target.value))}
                       disabled={!track || !dur}
