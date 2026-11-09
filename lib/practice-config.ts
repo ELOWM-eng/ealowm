@@ -40,7 +40,7 @@ export const PRACTICE_TRACKS: Record<PracticeVersion, PracticeSet> = {
 }
 
 // 테마곡이 준비된 회기 (새 테마곡을 올리면 여기에 추가)
-export const THEME_SESSIONS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10']
+export const THEME_SESSIONS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 's12']
 
 export const SESSION_NAMES: Record<string, { ko: string; en: string }> = {
   s1: { ko: '무상관', en: 'The Formless' },
