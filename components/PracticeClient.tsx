@@ -14,8 +14,18 @@ interface Props {
   version: PracticeVersion
 }
 
-type Tab = 'bodyscan' | 'focus' | 'zazen' | 'theme'
+type Tab = 'bodyscan' | 'focus' | 'zazen' | 'tea' | 'theme'
 type ZStatus = 'idle' | 'running' | 'paused' | 'done'
+
+// 차 명상 4단계 (그림 파일 이름: /avatars/tea/{아바타}-{key}.webp)
+const TEA_STEPS = [
+  { key: 'look',  ko: '색 관찰',     en: 'Look',   koDo: '차나 커피의 색을 관찰해봐요.',   enDo: 'Look closely at the color of your tea or coffee.' },
+  { key: 'smell', ko: '향 맡기',     en: 'Smell',  koDo: '차나 커피의 향을 맡아봐요.',     enDo: 'Breathe in the aroma of your tea or coffee.' },
+  { key: 'sip',   ko: '맛 마시기',   en: 'Sip',    koDo: '차나 커피의 맛을 마셔봐요.',     enDo: 'Take a sip and taste it.' },
+  { key: 'savor', ko: '맛 음미하기', en: 'Savor',  koDo: '차나 커피의 맛을 음미해봐요.',   enDo: 'Savor the taste of your tea or coffee.' },
+]
+const TEA_SEC_KEY = 'ealowm_tea_sec'
+const TEA_PRESETS = [30, 60, 120, 180] // 한 단계당 시간(초)
 
 const AVATARS = [
   { id: 'girl', src: '/avatars/girl.png' },
@@ -71,6 +81,14 @@ export default function PracticeClient({ version }: Props) {
   const bellTimersRef = useRef<number[]>([])
   const wakeRef = useRef<{ release: () => Promise<void> } | null>(null)
 
+  // 차 명상
+  const [tSec, setTSec] = useState(60) // 한 단계당 시간(초)
+  const [tStatus, setTStatus] = useState<ZStatus>('idle')
+  const [tStep, setTStep] = useState(0)
+  const [tRemain, setTRemain] = useState(0)
+  const tEndRef = useRef(0)
+  const tStepRef = useRef(0)
+
   // 저장된 아바타·좌선 시간 불러오기 (브라우저 저장소가 막혀 있어도 동작하도록 try/catch)
   useEffect(() => {
     try {
@@ -78,6 +96,8 @@ export default function PracticeClient({ version }: Props) {
       if (v && AVATARS.some(a => a.id === v)) setAvatar(v)
       const z = localStorage.getItem(ZAZEN_STORAGE_KEY)
       if (z && /^\d+$/.test(z) && Number(z) >= 1 && Number(z) <= 180) setZText(z)
+      const ts = localStorage.getItem(TEA_SEC_KEY)
+      if (ts && TEA_PRESETS.includes(Number(ts))) setTSec(Number(ts))
       const rep = localStorage.getItem(LOOP_KEY)
       if (rep === 'all' || rep === 'one') setRepeat(rep)
       const vol = localStorage.getItem(ZAZEN_VOL_KEY)
@@ -226,6 +246,7 @@ export default function PracticeClient({ version }: Props) {
   function startZazen() {
     if (!zValid) return
     audioRef.current?.pause()
+    if (tStatus !== 'idle') stopTea()
     clearBells()
     const total = Number(zText) * 60
     zTotalRef.current = total
@@ -254,6 +275,89 @@ export default function PracticeClient({ version }: Props) {
     setZStatus('idle')
     setZRemain(0)
   }
+
+  // ---------- 차 명상 ----------
+  function startTea() {
+    audioRef.current?.pause()
+    if (zStatus !== 'idle') stopZazen()
+    clearBells()
+    tStepRef.current = 0
+    setTStep(0)
+    tEndRef.current = Date.now() + tSec * 1000
+    setTRemain(tSec)
+    setTStatus('running')
+    lockScreen()
+    ringBell(1)
+    try { localStorage.setItem(TEA_SEC_KEY, String(tSec)) } catch {}
+  }
+
+  function finishTea() {
+    setTStatus('done')
+    unlockScreen()
+    ringBell(3)
+  }
+
+  // 이전·다음 단계로 직접 이동
+  function goTeaStep(i: number) {
+    if (i < 0) i = 0
+    if (i > TEA_STEPS.length - 1) { finishTea(); return }
+    tStepRef.current = i
+    setTStep(i)
+    tEndRef.current = Date.now() + tSec * 1000
+    setTRemain(tSec)
+    ringBell(1)
+  }
+
+  function pauseTea() {
+    setTStatus('paused')
+    unlockScreen()
+  }
+
+  function resumeTea() {
+    tEndRef.current = Date.now() + tRemain * 1000
+    setTStatus('running')
+    lockScreen()
+  }
+
+  function stopTea() {
+    clearBells()
+    unlockScreen()
+    setTStatus('idle')
+    setTStep(0)
+    tStepRef.current = 0
+    setTRemain(0)
+  }
+
+  // 단계 시간 계산 (시각 기준이라 화면이 잠깐 꺼졌다 켜져도 맞게 이어져요)
+  useEffect(() => {
+    if (tStatus !== 'running') return
+    const tick = () => {
+      const last = TEA_STEPS.length - 1
+      let changed = false
+      while (Date.now() >= tEndRef.current) {
+        if (tStepRef.current >= last) { finishTea(); return }
+        tStepRef.current += 1
+        tEndRef.current += tSec * 1000
+        changed = true
+      }
+      if (changed) { setTStep(tStepRef.current); ringBell(1) }
+      setTRemain(Math.max(0, Math.ceil((tEndRef.current - Date.now()) / 1000)))
+    }
+    const id = window.setInterval(tick, 250)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        wakeRef.current = null
+        lockScreen()
+        tick()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tStatus])
 
   // 남은 시간 계산 (시각 기준이라 화면이 잠깐 꺼졌다 켜져도 정확해요)
   useEffect(() => {
@@ -299,6 +403,7 @@ export default function PracticeClient({ version }: Props) {
     { key: 'bodyscan', label: isEn ? 'Body Scan' : '바디스캔', tracks: set.bodyscan },
     { key: 'focus', label: isEn ? 'Focus' : '집중명상', tracks: set.focus },
     { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
+    { key: 'tea', label: isEn ? 'Tea' : '차 명상', tracks: [] },
     { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
   ]
   const activeTab = tabs.find(t => t.key === tab) ?? tabs[0]
@@ -330,6 +435,7 @@ export default function PracticeClient({ version }: Props) {
     const a = audioRef.current
     if (!a) return
     if (zStatus !== 'idle') stopZazen()
+    if (tStatus !== 'idle') stopTea()
     if (track?.id === t.id) {
       if (a.paused) a.play().catch(() => setPlaying(false))
       else a.pause()
@@ -360,7 +466,9 @@ export default function PracticeClient({ version }: Props) {
 
   const currentAvatar = AVATARS.find(a => a.id === avatar)
   const showChooser = loaded && (!currentAvatar || choosing)
-  const alive = playing || zStatus === 'running'
+  const alive = playing || zStatus === 'running' || tStatus === 'running'
+  const teaIdx = tStatus === 'done' ? TEA_STEPS.length - 1 : tStep // 지금 보여줄 차 명상 그림
+  const teaStep = TEA_STEPS[teaIdx]
   const showRotateHint = touch && !landscape && !hintDismissed
   const zActive = zStatus === 'running' || zStatus === 'paused'
   const unit = isEn ? 'min' : '분'
@@ -462,23 +570,48 @@ export default function PracticeClient({ version }: Props) {
                   }} />
               </div>
               {/* 방석 */}
-              <div className="absolute left-1/2 -translate-x-1/2"
-                style={{ bottom: 'calc(var(--sh) * 0.072)', width: 'calc(var(--sh) * 0.667)', height: 'calc(var(--sh) * 0.094)', borderRadius: '50%', background: 'rgba(217,79,136,0.5)', filter: 'blur(1px)' }} />
+              {/* (차 명상의 '돗자리 있는 아바타'는 그림에 돗자리가 이미 있어서 방석을 숨겨요) */}
+              {!(tab === 'tea' && currentAvatar.id === 'boy-casual') && (
+                <div className="absolute left-1/2 -translate-x-1/2"
+                  style={{ bottom: 'calc(var(--sh) * 0.072)', width: 'calc(var(--sh) * 0.667)', height: 'calc(var(--sh) * 0.094)', borderRadius: '50%', background: 'rgba(217,79,136,0.5)', filter: 'blur(1px)' }} />
+              )}
               {/* 아바타 (앉은 모습) */}
               <div className="absolute left-0 right-0 flex justify-center" style={{ bottom: 'calc(var(--sh) * 0.105)' }}>
-                <img src={currentAvatar.src} alt="avatar"
-                  style={{
-                    height: 'calc(var(--sh) * 0.75)', width: 'auto', objectFit: 'contain',
-                    transformOrigin: '50% 100%',
-                    animation: 'ealowm-breathe 4s ease-in-out infinite',
-                    animationPlayState: alive ? 'running' : 'paused',
-                  }} />
+                {tab === 'tea' ? (
+                  // 차 명상: 4장을 겹쳐 두고 단계에 맞는 한 장만 보여줘요 (미리 불러와져서 바뀔 때 끊기지 않아요)
+                  <div className="relative"
+                    style={{
+                      height: 'calc(var(--sh) * 0.75)', aspectRatio: '672 / 900',
+                      transformOrigin: '50% 100%',
+                      animation: 'ealowm-breathe 4s ease-in-out infinite',
+                      animationPlayState: alive ? 'running' : 'paused',
+                    }}>
+                    {TEA_STEPS.map((s, i) => (
+                      <img key={s.key} src={`/avatars/tea/${currentAvatar.id}-${s.key}.webp`}
+                        alt={i === teaIdx ? 'avatar' : ''} aria-hidden={i !== teaIdx}
+                        className="absolute inset-0 w-full h-full"
+                        style={{ objectFit: 'contain', opacity: i === teaIdx ? 1 : 0, transition: 'opacity 0.5s ease' }} />
+                    ))}
+                  </div>
+                ) : (
+                  <img src={currentAvatar.src} alt="avatar"
+                    style={{
+                      height: 'calc(var(--sh) * 0.75)', width: 'auto', objectFit: 'contain',
+                      transformOrigin: '50% 100%',
+                      animation: 'ealowm-breathe 4s ease-in-out infinite',
+                      animationPlayState: alive ? 'running' : 'paused',
+                    }} />
+                )}
               </div>
               {/* 상단 문구 */}
               <div className="absolute top-4 left-0 right-0 text-center px-4">
                 <p className="text-xs text-amber-100/80">
                   {zActive
                     ? `${isEn ? 'Silent sitting' : '좌선 중'} · ${fmt(zRemain)}`
+                    : tab === 'tea'
+                      ? (tStatus === 'idle'
+                          ? (isEn ? 'Tea practice' : '차 명상')
+                          : `${isEn ? 'Tea practice' : '차 명상'} · ${isEn ? teaStep.en : teaStep.ko}`)
                     : track
                       ? track.title
                       : (isEn ? 'Choose a practice below' : '아래에서 수행을 선택해보세요')}
@@ -512,7 +645,7 @@ export default function PracticeClient({ version }: Props) {
             )}
 
             {/* 플레이어 (음성 안내 탭에서만) */}
-            {tab !== 'zazen' && (
+            {tab !== 'zazen' && tab !== 'tea' && (
               <div className="bg-white rounded-2xl border border-stone-100 p-4">
                 <div className="flex items-center gap-3">
                   <button onClick={togglePlay} disabled={!track}
@@ -560,7 +693,7 @@ export default function PracticeClient({ version }: Props) {
             {/* 탭 */}
             <div className="flex border-b border-stone-100">
               {tabs.map(t => (
-                <button key={t.key} onClick={() => setTab(t.key)}
+                <button key={t.key} onClick={() => { if (t.key !== 'tea' && tStatus !== 'idle') stopTea(); setTab(t.key) }}
                   className={`flex-1 py-2.5 text-xs sm:text-sm whitespace-nowrap transition-all ${
                     tab === t.key
                       ? 'text-pink-600 border-b-2 border-pink-500 font-medium'
@@ -701,8 +834,142 @@ export default function PracticeClient({ version }: Props) {
               </div>
             )}
 
+            {/* 차 명상 */}
+            {tab === 'tea' && (
+              <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-5">
+
+                {tStatus === 'idle' && (
+                  <>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-stone-700 leading-relaxed" style={{ fontFamily: 'var(--font-gowun)' }}>
+                        {isEn
+                          ? 'Drink tea or coffee together, and turn your attention to yourself.'
+                          : '함께 차나 커피를 마시면서 자신에게 집중해봐요'}
+                      </p>
+                    </div>
+
+                    <ol className="space-y-2">
+                      {TEA_STEPS.map((s, i) => (
+                        <li key={s.key} className="flex items-center gap-3 text-sm text-stone-600">
+                          <span className="w-6 h-6 rounded-full bg-pink-50 text-pink-600 text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                          <span>{isEn ? s.enDo : s.koDo}</span>
+                        </li>
+                      ))}
+                    </ol>
+
+                    <div>
+                      <p className="text-xs text-stone-400 text-center mb-2">{isEn ? 'Time for each step' : '한 단계당 시간'}</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {TEA_PRESETS.map(sec => (
+                          <button key={sec} onClick={() => setTSec(sec)}
+                            className={`py-2.5 rounded-xl text-sm transition-all ${
+                              tSec === sec
+                                ? 'bg-pink-500 text-white'
+                                : 'bg-white border border-stone-200 text-stone-500 hover:border-pink-200'
+                            }`}>
+                            {sec < 60 ? `${sec}${isEn ? 's' : '초'}` : `${sec / 60}${isEn ? ' min' : '분'}`}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-stone-300 text-center mt-2">
+                        {isEn
+                          ? `About ${Math.round((tSec * TEA_STEPS.length) / 60)} min in total (${tSec}s × ${TEA_STEPS.length} steps)`
+                          : `전체 약 ${Math.round((tSec * TEA_STEPS.length) / 60)}분 (${tSec}초 × ${TEA_STEPS.length}단계)`}
+                      </p>
+                    </div>
+
+                    <button onClick={toggleSound}
+                      className="mx-auto flex items-center gap-2 text-xs text-stone-500">
+                      <span className={`w-9 h-5 rounded-full relative transition-all ${zSound ? 'bg-pink-400' : 'bg-stone-200'}`}>
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${zSound ? 'left-[18px]' : 'left-0.5'}`} />
+                      </span>
+                      {isEn ? 'Bell between steps' : '단계가 바뀔 때 종소리'}
+                    </button>
+
+                    <button onClick={startTea}
+                      className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
+                      style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
+                      {isEn ? 'Begin' : '차 명상 시작'}
+                    </button>
+
+                    <p className="text-xs text-stone-300 text-center">
+                      {isEn ? 'Have your tea or coffee ready, and keep the screen on.' : '차나 커피를 미리 준비하고, 화면을 켜 둔 채로 해주세요.'}
+                    </p>
+                  </>
+                )}
+
+                {(tStatus === 'running' || tStatus === 'paused') && (
+                  <>
+                    <div className="flex justify-center gap-2">
+                      {TEA_STEPS.map((s, i) => (
+                        <span key={s.key}
+                          className={`h-1.5 rounded-full transition-all ${i === tStep ? 'w-8 bg-pink-500' : i < tStep ? 'w-4 bg-pink-200' : 'w-4 bg-stone-100'}`} />
+                      ))}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-stone-400">{tStep + 1} / {TEA_STEPS.length}</p>
+                      <p className="text-lg font-medium text-stone-700 mt-1" style={{ fontFamily: 'var(--font-gowun)' }}>
+                        {isEn ? TEA_STEPS[tStep].en : TEA_STEPS[tStep].ko}
+                      </p>
+                      <p className="text-sm text-stone-500 mt-2 leading-relaxed">
+                        {isEn ? TEA_STEPS[tStep].enDo : TEA_STEPS[tStep].koDo}
+                      </p>
+                      <p className="text-3xl font-light text-stone-600 tabular-nums mt-4">{fmt(tRemain)}</p>
+                      {tStatus === 'paused' && (
+                        <p className="text-xs text-stone-400 mt-1">{isEn ? 'Paused' : '잠시 멈춤'}</p>
+                      )}
+                    </div>
+                    <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-teal-400 rounded-full transition-all"
+                        style={{ width: `${tSec ? Math.round((1 - tRemain / tSec) * 100) : 0}%` }} />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => goTeaStep(tStep - 1)} disabled={tStep === 0}
+                        className="flex-1 py-3 rounded-xl text-sm border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-40 transition-all">
+                        ‹ {isEn ? 'Back' : '이전'}
+                      </button>
+                      {tStatus === 'running' ? (
+                        <button onClick={pauseTea}
+                          className="flex-1 py-3 rounded-xl text-sm border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all">
+                          {isEn ? 'Pause' : '잠시 멈춤'}
+                        </button>
+                      ) : (
+                        <button onClick={resumeTea}
+                          className="flex-1 py-3 rounded-xl text-sm font-medium text-white transition-all"
+                          style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
+                          {isEn ? 'Resume' : '이어서'}
+                        </button>
+                      )}
+                      <button onClick={() => goTeaStep(tStep + 1)}
+                        className="flex-1 py-3 rounded-xl text-sm border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all">
+                        {tStep === TEA_STEPS.length - 1 ? (isEn ? 'Finish' : '마치기') : (isEn ? 'Next' : '다음')} ›
+                      </button>
+                    </div>
+                    <button onClick={stopTea} className="mx-auto block text-xs text-stone-400 hover:text-stone-600">
+                      {isEn ? 'End now' : '그만두기'}
+                    </button>
+                  </>
+                )}
+
+                {tStatus === 'done' && (
+                  <div className="text-center space-y-4">
+                    <p className="text-3xl">🪷</p>
+                    <p className="text-sm text-stone-600 leading-relaxed" style={{ fontFamily: 'var(--font-gowun)' }}>
+                      {isEn
+                        ? <>You have finished all four steps.<br/>Thank you for drinking with yourself.</>
+                        : <>네 단계를 모두 마쳤어요.<br/>수고하셨습니다.</>}
+                    </p>
+                    <button onClick={stopTea}
+                      className="w-full py-3 rounded-xl text-sm border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all">
+                      {isEn ? 'Again' : '다시 하기'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 목록 */}
-            {tab !== 'zazen' && (
+            {tab !== 'zazen' && tab !== 'tea' && (
               <div className="space-y-2">
                 {activeTab.tracks.length === 0 && (
                   <div className="text-center py-10">
