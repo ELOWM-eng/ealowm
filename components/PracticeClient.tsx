@@ -401,9 +401,9 @@ export default function PracticeClient({ version }: Props) {
 
   const tabs: { key: Tab; label: string; tracks: PracticeTrack[] }[] = [
     { key: 'bodyscan', label: isEn ? 'Body Scan' : '바디스캔', tracks: set.bodyscan },
-    { key: 'focus', label: isEn ? 'Focus' : '집중명상', tracks: set.focus },
+    { key: 'focus', label: isEn ? 'Focus' : '주의집중 수행', tracks: set.focus },
     { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
-    { key: 'tea', label: isEn ? 'Tea' : '차명상', tracks: [] },
+    { key: 'tea', label: isEn ? 'Tea' : '한 잔 수행', tracks: [] },
     { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
   ]
   const activeTab = tabs.find(t => t.key === tab) ?? tabs[0]

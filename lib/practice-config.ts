@@ -18,18 +18,18 @@ type PracticeSet = {
 export const PRACTICE_TRACKS: Record<PracticeVersion, PracticeSet> = {
   adult: {
     bodyscan: [
-      { id: 'a-bodyscan1', title: '바디스캔', desc: '몸 구석구석을 천천히 살피는 음성 안내', src: '/practice/adult/bodyscan1.mp3' },
+      { id: 'a-bodyscan1', title: '바디스캔', desc: '몸을 천천히 살피는 음성 안내', src: '/practice/adult/bodyscan1.mp3' },
     ],
     focus: [
-      { id: 'a-focus1', title: '집중명상', desc: '마음을 한 곳에 모으는 음성 안내', src: '/practice/adult/focus1.mp3' },
+      { id: 'a-focus1', title: '주의집중 수행', desc: '마음을 한 곳에 모으는 음성 안내', src: '/practice/adult/focus1.mp3' },
     ],
   },
   youth: {
     bodyscan: [
-      { id: 'y-bodyscan1', title: '바디스캔', desc: '몸 구석구석을 천천히 살피는 음성 안내', src: '/practice/youth/bodyscan1.mp3' },
+      { id: 'y-bodyscan1', title: '바디스캔', desc: '몸을 천천히 살피는 음성 안내', src: '/practice/youth/bodyscan1.mp3' },
     ],
     focus: [
-      { id: 'y-focus1', title: '집중명상', desc: '마음을 한 곳에 모으는 음성 안내', src: '/practice/youth/focus1.mp3' },
+      { id: 'y-focus1', title: '주의집중 수행', desc: '마음을 한 곳에 모으는 음성 안내', src: '/practice/youth/focus1.mp3' },
     ],
   },
   // 영문 음성 안내가 준비되면 아래처럼 한 줄씩 추가하세요. (비어 있으면 'Coming soon.' 으로 표시돼요)
