@@ -19,10 +19,10 @@ type ZStatus = 'idle' | 'running' | 'paused' | 'done'
 
 // 차 명상 4단계 (그림 파일 이름: /avatars/tea/{아바타}-{key}.webp)
 const TEA_STEPS = [
-  { key: 'look',  ko: '색 관찰',     en: 'Look',   koDo: '차나 커피의 색을 관찰해봐요.',   enDo: 'Look closely at the color of your tea or coffee.' },
-  { key: 'smell', ko: '향 맡기',     en: 'Smell',  koDo: '차나 커피의 향을 맡아봐요.',     enDo: 'Breathe in the aroma of your tea or coffee.' },
-  { key: 'sip',   ko: '맛 마시기',   en: 'Sip',    koDo: '차나 커피의 맛을 마셔봐요.',     enDo: 'Take a sip and taste it.' },
-  { key: 'savor', ko: '맛 음미하기', en: 'Savor',  koDo: '차나 커피의 맛을 음미해봐요.',   enDo: 'Savor the taste of your tea or coffee.' },
+  { key: 'look',  ko: '색 관찰',     en: 'Look',   koDo: '차나 커피의 색을 관찰해봐요',   enDo: 'Look closely at the color of your tea or coffee.' },
+  { key: 'smell', ko: '향 맡기',     en: 'Smell',  koDo: '차나 커피의 향을 맡아봐요',     enDo: 'Breathe in the aroma of your tea or coffee.' },
+  { key: 'sip',   ko: '차 마시기',   en: 'Sip',    koDo: '차나 커피를 마셔봐요',     enDo: 'Take a sip and taste it.' },
+  { key: 'savor', ko: '맛 음미하기', en: 'Savor',  koDo: '차나 커피의 맛을 음미해봐요',   enDo: 'Savor the taste of your tea or coffee.' },
 ]
 const TEA_SEC_KEY = 'ealowm_tea_sec'
 const TEA_PRESETS = [30, 60, 120, 180] // 한 단계당 시간(초)
@@ -403,7 +403,7 @@ export default function PracticeClient({ version }: Props) {
     { key: 'bodyscan', label: isEn ? 'Body Scan' : '바디스캔', tracks: set.bodyscan },
     { key: 'focus', label: isEn ? 'Focus' : '집중명상', tracks: set.focus },
     { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
-    { key: 'tea', label: isEn ? 'Tea' : '차 명상', tracks: [] },
+    { key: 'tea', label: isEn ? 'Tea' : '차명상', tracks: [] },
     { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
   ]
   const activeTab = tabs.find(t => t.key === tab) ?? tabs[0]
@@ -614,7 +614,7 @@ export default function PracticeClient({ version }: Props) {
                           : `${isEn ? 'Tea practice' : '차 명상'} · ${isEn ? teaStep.en : teaStep.ko}`)
                     : track
                       ? track.title
-                      : (isEn ? 'Choose a practice below' : '아래에서 수행을 선택해보세요')}
+                      : (isEn ? 'Choose a practice' : '수행을 선택해보세요')}
                 </p>
               </div>
               <button onClick={() => setChoosing(true)}
