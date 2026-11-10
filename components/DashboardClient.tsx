@@ -251,7 +251,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                     {isEn ? 'Mind Practice' : '마음 수행'}
                   </p>
                   <p className="text-xs text-stone-400 mt-0.5">
-                    {isEn ? 'Body scan, focus meditation & theme songs' : '바디스캔 · 집중명상 · 테마곡'}
+                    {isEn ? 'Body scan, Focus, Silent sit, Tea Practice & Theme Songs' : '바디스캔 · 주의집중 수행 · 좌선 · 한 잔 수행 · 테마곡 듣기'}
                   </p>
                 </div>
                 <span className="ml-auto text-stone-300">→</span>
