@@ -24,6 +24,8 @@ export default async function Home() {
         </p>
       </section>
 
+      <InstallGuide />
+
      <section className="max-w-2xl mx-auto px-4 mb-12 animate-fade-up" style={{ animationDelay: '0.05s' }}>
         <div className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
           <h2 className="text-base font-bold text-stone-800 mb-4" style={{ fontFamily: 'var(--font-gowun)' }}>
@@ -116,7 +118,6 @@ export default async function Home() {
           A 12-step addiction prevention & mind-healing program
         </p>
       </section>
-<InstallGuide />
     </main>
   )
 }
