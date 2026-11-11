@@ -407,7 +407,7 @@ export default function PracticeClient({ version }: Props) {
     { key: 'bodyscan', label: isEn ? 'Body Scan' : '바디스캔', tracks: set.bodyscan },
     { key: 'focus', label: isEn ? 'Focus' : '집중명상', tracks: set.focus },
     { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
-    { key: 'tea', label: isEn ? 'Tea' : '차 명상', tracks: [] },
+    { key: 'tea', label: isEn ? 'Tea' : '한 잔 수행', tracks: [] },
     { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
   ]
   const tabs = allTabs.filter(t => !HIDDEN_TABS.includes(t.key))
@@ -615,8 +615,8 @@ export default function PracticeClient({ version }: Props) {
                     ? `${isEn ? 'Silent sitting' : '좌선 중'} · ${fmt(zRemain)}`
                     : tab === 'tea'
                       ? (tStatus === 'idle'
-                          ? (isEn ? 'Tea practice' : '차 명상')
-                          : `${isEn ? 'Tea practice' : '차 명상'} · ${isEn ? teaStep.en : teaStep.ko}`)
+                          ? (isEn ? 'Tea practice' : '한 잔 수행')
+                          : `${isEn ? 'Tea practice' : '한 잔 수행'} · ${isEn ? teaStep.en : teaStep.ko}`)
                     : track
                       ? track.title
                       : (isEn ? 'Choose a practice below' : '아래에서 수행을 선택해보세요')}
@@ -894,7 +894,7 @@ export default function PracticeClient({ version }: Props) {
                     <button onClick={startTea}
                       className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                       style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
-                      {isEn ? 'Begin' : '차 명상 시작'}
+                      {isEn ? 'Begin' : '한 잔 수행 시작'}
                     </button>
 
                     <p className="text-xs text-stone-300 text-center">
