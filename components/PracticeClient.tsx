@@ -15,14 +15,18 @@ interface Props {
 }
 
 type Tab = 'bodyscan' | 'focus' | 'zazen' | 'tea' | 'theme'
+
+// 잠시 숨길 탭: 다시 보이게 하려면 해당 이름을 아래 목록에서 지우세요. (예: [] 로 비우면 모두 보여요)
+const HIDDEN_TABS: Tab[] = ['bodyscan', 'focus']
+const DEFAULT_TAB: Tab = (['bodyscan', 'focus', 'zazen', 'tea', 'theme'] as Tab[]).find(t => !HIDDEN_TABS.includes(t)) ?? 'zazen'
 type ZStatus = 'idle' | 'running' | 'paused' | 'done'
 
 // 차 명상 4단계 (그림 파일 이름: /avatars/tea/{아바타}-{key}.webp)
 const TEA_STEPS = [
-  { key: 'look',  ko: '색 관찰',     en: 'Look',   koDo: '차나 커피의 색을 관찰해봐요',   enDo: 'Look closely at the color of your tea or coffee.' },
-  { key: 'smell', ko: '향 맡기',     en: 'Smell',  koDo: '차나 커피의 향을 맡아봐요',     enDo: 'Breathe in the aroma of your tea or coffee.' },
-  { key: 'sip',   ko: '차 마시기',   en: 'Sip',    koDo: '차나 커피를 마셔봐요',     enDo: 'Take a sip of your tea or coffee.' },
-  { key: 'savor', ko: '맛 음미하기', en: 'Savor',  koDo: '차나 커피의 맛을 음미해봐요',   enDo: 'Savor the taste of your tea or coffee.' },
+  { key: 'look',  ko: '색 관찰',     en: 'Look',   koDo: '차나 커피의 색을 관찰해봐요.',   enDo: 'Look closely at the color of your tea or coffee.' },
+  { key: 'smell', ko: '향 맡기',     en: 'Smell',  koDo: '차나 커피의 향을 맡아봐요.',     enDo: 'Breathe in the aroma of your tea or coffee.' },
+  { key: 'sip',   ko: '맛 마시기',   en: 'Sip',    koDo: '차나 커피의 맛을 마셔봐요.',     enDo: 'Take a sip and taste it.' },
+  { key: 'savor', ko: '맛 음미하기', en: 'Savor',  koDo: '차나 커피의 맛을 음미해봐요.',   enDo: 'Savor the taste of your tea or coffee.' },
 ]
 const TEA_SEC_KEY = 'ealowm_tea_sec'
 const TEA_PRESETS = [30, 60, 120, 180] // 한 단계당 시간(초)
@@ -56,7 +60,7 @@ export default function PracticeClient({ version }: Props) {
   const [loaded, setLoaded] = useState(false)
   const [avatar, setAvatar] = useState<string | null>(null)
   const [choosing, setChoosing] = useState(false)
-  const [tab, setTab] = useState<Tab>('bodyscan')
+  const [tab, setTab] = useState<Tab>(DEFAULT_TAB)
   const [track, setTrack] = useState<PracticeTrack | null>(null)
   const [playing, setPlaying] = useState(false)
   const [cur, setCur] = useState(0)
@@ -399,13 +403,14 @@ export default function PracticeClient({ version }: Props) {
     }
   })
 
-  const tabs: { key: Tab; label: string; tracks: PracticeTrack[] }[] = [
+  const allTabs: { key: Tab; label: string; tracks: PracticeTrack[] }[] = [
     { key: 'bodyscan', label: isEn ? 'Body Scan' : '바디스캔', tracks: set.bodyscan },
-    { key: 'focus', label: isEn ? 'Focus' : '주의집중 수행', tracks: set.focus },
+    { key: 'focus', label: isEn ? 'Focus' : '집중명상', tracks: set.focus },
     { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
-    { key: 'tea', label: isEn ? 'Tea' : '한 잔 수행', tracks: [] },
+    { key: 'tea', label: isEn ? 'Tea' : '차 명상', tracks: [] },
     { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
   ]
+  const tabs = allTabs.filter(t => !HIDDEN_TABS.includes(t.key))
   const activeTab = tabs.find(t => t.key === tab) ?? tabs[0]
 
   // 반복 안 함 → 전곡 반복 → 한 곡 반복 → (처음으로)
@@ -610,11 +615,11 @@ export default function PracticeClient({ version }: Props) {
                     ? `${isEn ? 'Silent sitting' : '좌선 중'} · ${fmt(zRemain)}`
                     : tab === 'tea'
                       ? (tStatus === 'idle'
-                          ? (isEn ? 'Tea practice' : '한 잔 수행')
-                          : `${isEn ? 'Tea practice' : '한 잔 수행'} · ${isEn ? teaStep.en : teaStep.ko}`)
+                          ? (isEn ? 'Tea practice' : '차 명상')
+                          : `${isEn ? 'Tea practice' : '차 명상'} · ${isEn ? teaStep.en : teaStep.ko}`)
                     : track
                       ? track.title
-                      : (isEn ? 'Choose a practice' : '수행을 선택해보세요')}
+                      : (isEn ? 'Choose a practice below' : '아래에서 수행을 선택해보세요')}
                 </p>
               </div>
               <button onClick={() => setChoosing(true)}
@@ -889,7 +894,7 @@ export default function PracticeClient({ version }: Props) {
                     <button onClick={startTea}
                       className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                       style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
-                      {isEn ? 'Begin' : '한 잔 수행 시작'}
+                      {isEn ? 'Begin' : '차 명상 시작'}
                     </button>
 
                     <p className="text-xs text-stone-300 text-center">
