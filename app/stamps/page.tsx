@@ -57,8 +57,8 @@ export default function StampsPage() {
 
   const en = version === 'en'
   const t = en
-    ? { title: 'My attendance stamps', back: 'Back', days: 'days', need: 'Needed to complete', done: 'Completed', rule: 'A stamp is earned on a day you stay at least 20 minutes in a room (Eastern Time). Several rooms on the same day count as one stamp.', sun: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], full: 'Completed both halves', loading: 'Loading…', error: 'Could not load. Please try again.', login: 'Please log in first.', youth: 'Attendance stamps are not available for this version.', none: 'No program period has been set yet.', note: 'This is a record kept by the app, not an official certificate.' }
-    : { title: '내 출석 도장', back: '돌아가기', days: '일', need: '수료 기준', done: '수료', rule: '한국 날짜 기준으로, 그날 방에 20분 이상 머물면 도장이 찍혀요. 같은 날 여러 방에 참여해도 도장은 1개예요.', sun: ['월', '화', '수', '목', '금', '토', '일'], full: '12주 완주', loading: '불러오는 중…', error: '불러오지 못했어요. 다시 시도해주세요.', login: '먼저 로그인해주세요.', youth: '이 버전에서는 출석 도장을 사용하지 않아요.', none: '아직 프로그램 기간이 정해지지 않았어요.', note: '앱이 보관하는 참여 기록이며, 공식 증명서는 아니에요.' }
+    ? { title: 'My attendance stamps', back: 'Back', days: 'days', need: 'Needed to complete', done: 'Completed', rule: 'A stamp is earned on a day you stay at least 20 minutes in a room (Eastern Time). Several rooms on the same day count as one stamp.', sun: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], full: 'Completed both halves', loading: 'Loading…', error: 'Could not load. Please try again.', login: 'Please log in first.', youth: 'Attendance stamps are not available for this version.', none: 'No program period has been set yet.', note: 'This is a record kept by the app, not an official certificate.', cert: 'View certificate', certWait: 'Your certificate is available after this round ends.', fullCert: 'View 12-week certificate' }
+    : { title: '내 출석 도장', back: '돌아가기', days: '일', need: '수료 기준', done: '수료', rule: '한국 날짜 기준으로, 그날 방에 20분 이상 머물면 도장이 찍혀요. 같은 날 여러 방에 참여해도 도장은 1개예요.', sun: ['월', '화', '수', '목', '금', '토', '일'], full: '12주 완주', loading: '불러오는 중…', error: '불러오지 못했어요. 다시 시도해주세요.', login: '먼저 로그인해주세요.', youth: '이 버전에서는 출석 도장을 사용하지 않아요.', none: '아직 프로그램 기간이 정해지지 않았어요.', note: '앱이 보관하는 참여 기록이며, 공식 증명서는 아니에요.', cert: '수료증 보기', certWait: '기수가 끝나면 수료증을 받을 수 있어요.', fullCert: '12주 완주 증서 보기' }
 
   const today = todayIn(en ? 'America/New_York' : 'Asia/Seoul')
   const passed = cohorts.map(c => {
@@ -66,12 +66,14 @@ export default function StampsPage() {
     const need = Math.ceil((total * c.pass_percent) / 100)
     let count = 0
     for (let i = 0; i < total; i++) if (days.has(toIso(toMs(c.start_date) + i * DAY))) count++
-    return { total, need, count, ok: count >= need }
+    const end = toIso(toMs(c.start_date) + (total - 1) * DAY)
+    return { total, need, count, ok: count >= need, ended: today > end }
   })
   const addD = (iso: string, n: number) => toIso(toMs(iso) + n * DAY)
   const focusRow = [...focusRows].reverse().find(f => f.week_start <= today && today < addD(f.week_start, 7))
   const focusText = focusRow ? (en ? (focusRow.text_en ?? focusRow.text_ko) : focusRow.text_ko) : ''
   const allDone = cohorts.length > 1 && passed.every(p => p.ok)
+  const allEnded = passed.every(p => p.ended)
 
   return (
     <main className="max-w-md mx-auto px-4 py-6">
@@ -95,6 +97,9 @@ export default function StampsPage() {
             <div className="rounded-2xl bg-pink-50 border border-pink-200 p-4 text-center">
               <p className="text-base font-medium text-pink-700">🪷 {t.full}</p>
               {nickname && <p className="text-xs text-pink-600 mt-1">{nickname}</p>}
+              {allEnded
+                ? <Link href="/certificate?c=full" className="inline-block mt-2 text-xs text-white bg-pink-500 rounded-lg px-3 py-1.5">{t.fullCert}</Link>
+                : <p className="text-[11px] text-pink-500 mt-1">{t.certWait}</p>}
             </div>
           )}
 
@@ -114,6 +119,9 @@ export default function StampsPage() {
                   {p.count}/{p.total}{t.days} · {t.need} {p.need}{t.days} ({c.pass_percent}%)
                   {p.ok && <span className="ml-2 text-pink-600 font-medium">✓ {t.done}</span>}
                 </p>
+                {p.ok && (p.ended
+                  ? <Link href={`/certificate?c=${c.id}`} className="inline-block mb-2 text-xs text-white bg-pink-500 rounded-lg px-3 py-1.5">{t.cert}</Link>
+                  : <p className="text-[11px] text-pink-500 mb-2">{t.certWait}</p>)}
                 <div className="grid grid-cols-7 gap-1 text-center">
                   {t.sun.map((d, i) => <span key={i} className="text-[10px] text-stone-300">{d}</span>)}
                   {cells.map((d, i) => d === null ? <span key={`b${i}`} /> : (
