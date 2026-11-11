@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import TogetherProvider from '@/components/TogetherProvider'
 
 export const metadata: Metadata = {
   title: '이로움 · EALOWM',
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <TogetherProvider>{children}</TogetherProvider>
+      </body>
     </html>
   )
 }
