@@ -53,6 +53,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const joinedSessionRef = useRef<string | null>(null) // 지금 들어가 있는 일정
 
   const isEn = version === 'en'
+  const isYouth = version === 'youth' // 청소년 방은 닉네임을 받지도, 보여주지도 않고 아바타와 인원수만 보여요
   const L = isEn
     ? {
         title: 'Practice together', join: 'Join', notYet: `Opens ${JOIN_BEFORE_MIN} min before`,
@@ -178,28 +179,28 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
       const st = ch.presenceState<Meta>()
       const list: Person[] = Object.entries(st)
         .map(([key, metas]) => ({ key, nickname: metas[0]?.nickname ?? '', avatar: metas[0]?.avatar ?? 'girl' }))
-        .filter(p => p.nickname)
       setPeople(list)
     })
     ch.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         setNetErr(false)
-        await ch.track({ nickname: nick, avatar }) // 참여할 때 한 번만 보내요 (Presence 호출 한도 때문)
+        await ch.track({ nickname: isYouth ? '' : nick, avatar }) // 참여할 때 한 번만 보내요 (Presence 호출 한도 때문)
         setJoined(true)
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         setNetErr(true)
       }
     })
     try { localStorage.setItem(JOINED_KEY, `${userId}|${session.id}`) } catch {}
-  }, [session, userId])
+  }, [session, userId, isYouth])
 
   // 새로고침해도 약속 시간 안이면 자동으로 다시 들어와요
   useEffect(() => {
-    if (joined || channelRef.current || !canJoin || !nickname || !session) return
+    if (joined || channelRef.current || !canJoin || !session || !version) return
+    if (!isYouth && !nickname) return
     let flag = ''
     try { flag = localStorage.getItem(JOINED_KEY) ?? '' } catch {}
-    if (userId && flag === `${userId}|${session.id}`) void joinWith(nickname)
-  }, [canJoin, nickname, session, joined, joinWith, userId])
+    if (userId && flag === `${userId}|${session.id}`) void joinWith(isYouth ? '' : (nickname ?? ''))
+  }, [canJoin, nickname, session, joined, joinWith, userId, version, isYouth])
 
   // 참여 중인 방과 지금 보이는 일정이 달라지면(일정이 바뀌거나 사라지면) 나가요
   useEffect(() => {
@@ -220,7 +221,8 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
 
   function onJoinClick() {
     if (!canJoin) return
-    if (nickname) void joinWith(nickname)
+    if (isYouth) void joinWith('')
+    else if (nickname) void joinWith(nickname)
     else { setNickInput(''); setNickErr(''); setModal(true) }
   }
 
@@ -257,14 +259,24 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
           <div className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-md" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             {joined && panel && (
               <div className="mb-2 bg-white rounded-2xl border border-pink-100 shadow-lg p-3 max-h-60 overflow-y-auto">
-                <ul className="grid grid-cols-2 gap-2">
-                  {people.map(p => (
-                    <li key={p.key} className="flex items-center gap-2 min-w-0">
-                      <img src={`/avatars/${p.avatar}.png`} alt="" className="w-8 h-8 rounded-full object-cover object-top bg-pink-50 flex-shrink-0" />
-                      <span className="text-sm text-stone-600 truncate">{p.nickname}</span>
-                    </li>
-                  ))}
-                </ul>
+                {isYouth ? (
+                  <ul className="flex flex-wrap gap-2" aria-label={`${people.length}${L.peopleSuffix}`}>
+                    {people.map(p => (
+                      <li key={p.key}>
+                        <img src={`/avatars/${p.avatar}.png`} alt="" className="w-9 h-9 rounded-full object-cover object-top bg-pink-50" />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="grid grid-cols-2 gap-2">
+                    {people.map(p => (
+                      <li key={p.key} className="flex items-center gap-2 min-w-0">
+                        <img src={`/avatars/${p.avatar}.png`} alt="" className="w-8 h-8 rounded-full object-cover object-top bg-pink-50 flex-shrink-0" />
+                        <span className="text-sm text-stone-600 truncate">{p.nickname}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
