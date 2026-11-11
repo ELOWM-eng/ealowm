@@ -47,6 +47,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const [modal, setModal] = useState(false)
   const [nickInput, setNickInput] = useState('')
   const [nickErr, setNickErr] = useState('')
+  const [avatarChoice, setAvatarChoice] = useState('girl')
   const [busy, setBusy] = useState(false)
   const [netErr, setNetErr] = useState(false)
   const channelRef = useRef<RealtimeChannel | null>(null)
@@ -58,7 +59,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     ? {
         title: 'Practice together', join: 'Join', notYet: `Opens ${JOIN_BEFORE_MIN} min before`,
         peopleSuffix: '', inRoom: 'Practicing together', leave: 'Leave',
-        nickTitle: 'Choose a nickname', nickHint: 'Please do not use your real name. While you are in the room, others can see your nickname and avatar.',
+        nickTitle: 'Choose a nickname and avatar', avatarTitle: 'Choose your avatar', avatarHint: 'Others in the room can see your avatar.', nickLabel: 'Nickname', nickHint: 'Please do not use your real name. While you are in the room, others can see your nickname and avatar.',
         nickPlaceholder: 'Nickname', cancel: 'Cancel', ok: 'Join',
         saveFail: 'Could not save. Please try again.', net: 'Connection is unstable…',
         guide: `You can join from ${JOIN_BEFORE_MIN} minutes before the start.`,
@@ -66,7 +67,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     : {
         title: '함께 수행', join: '참여', notYet: `${JOIN_BEFORE_MIN}분 전부터`,
         peopleSuffix: '명', inRoom: '함께 수행 중', leave: '나가기',
-        nickTitle: '닉네임을 정해주세요', nickHint: '실명은 쓰지 말아주세요. 참여하는 동안 같은 방 사람들에게 닉네임과 아바타가 보여요.',
+        nickTitle: '닉네임과 아바타를 정해주세요', avatarTitle: '참여할 아바타를 골라주세요', avatarHint: '참여하는 동안 같은 방 사람들에게 아바타가 보여요.', nickLabel: '닉네임', nickHint: '실명은 쓰지 말아주세요. 참여하는 동안 같은 방 사람들에게 닉네임과 아바타가 보여요.',
         nickPlaceholder: '닉네임', cancel: '취소', ok: '참여하기',
         saveFail: '저장하지 못했어요. 다시 시도해주세요.', net: '연결이 불안정해요…',
         guide: `시작 ${JOIN_BEFORE_MIN}분 전부터 참여할 수 있어요.`,
@@ -168,10 +169,10 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const visible = !!session && !!userId && now >= start - SHOW_BEFORE_HOURS * 3600000 && now < end
 
   // ----- 참여 -----
-  const joinWith = useCallback(async (nick: string) => {
+  const joinWith = useCallback(async (nick: string, avatarId?: string) => {
     if (!session || !userId || channelRef.current) return
     const client = sb()
-    const avatar = readAvatar()
+    const avatar = avatarId && AVATAR_IDS.includes(avatarId) ? avatarId : readAvatar()
     const ch = client.channel(`together:${session.id}`, { config: { presence: { key: userId } } })
     channelRef.current = ch
     joinedSessionRef.current = session.id
@@ -221,23 +222,30 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
 
   function onJoinClick() {
     if (!canJoin) return
-    if (isYouth) void joinWith('')
-    else if (nickname) void joinWith(nickname)
-    else { setNickInput(''); setNickErr(''); setModal(true) }
+    setNickInput(nickname ?? '')
+    setNickErr('')
+    setAvatarChoice(readAvatar())
+    setModal(true)
   }
 
-  async function submitNickname() {
-    const err = validateNickname(nickInput, isEn)
-    if (err) { setNickErr(err); return }
+  async function submitJoin() {
     if (!userId) return
-    const n = normalizeNickname(nickInput)
-    setBusy(true)
-    const { error } = await sb().from('practice_profiles').upsert({ user_id: userId, nickname: n })
-    setBusy(false)
-    if (error) { setNickErr(L.saveFail); return }
-    setNickname(n)
+    let n = ''
+    if (!isYouth) {
+      const err = validateNickname(nickInput, isEn)
+      if (err) { setNickErr(err); return }
+      n = normalizeNickname(nickInput)
+      if (n !== nickname) {
+        setBusy(true)
+        const { error } = await sb().from('practice_profiles').upsert({ user_id: userId, nickname: n })
+        setBusy(false)
+        if (error) { setNickErr(L.saveFail); return }
+        setNickname(n)
+      }
+    }
+    try { localStorage.setItem(AVATAR_KEY, avatarChoice) } catch {} // 마음 수행의 아바타도 같이 바뀌어요
     setModal(false)
-    void joinWith(n)
+    void joinWith(n, avatarChoice)
   }
 
   const timeText = session
@@ -327,20 +335,35 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5" role="dialog" aria-modal="true">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm space-y-4">
-            <p className="text-base font-medium text-stone-700">{L.nickTitle}</p>
-            <p className="text-xs text-stone-400 leading-relaxed">{L.nickHint}</p>
-            <div>
-              <input value={nickInput} maxLength={NICK_MAX + 4}
-                onChange={e => { setNickInput(e.target.value); setNickErr('') }}
-                onKeyDown={e => { if (e.key === 'Enter' && !busy) void submitNickname() }}
-                placeholder={L.nickPlaceholder} autoFocus
-                className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-pink-300" />
-              {nickErr && <p className="text-xs text-red-500 mt-1.5">{nickErr}</p>}
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto">
+            <p className="text-base font-medium text-stone-700">{isYouth || nickname ? L.avatarTitle : L.nickTitle}</p>
+            <p className="text-xs text-stone-400 leading-relaxed">{isYouth ? L.avatarHint : L.nickHint}</p>
+
+            <div className="grid grid-cols-4 gap-2" role="radiogroup">
+              {AVATAR_IDS.map(id => (
+                <button key={id} type="button" role="radio" aria-checked={avatarChoice === id} data-avatar={id}
+                  onClick={() => setAvatarChoice(id)}
+                  className={`rounded-xl p-1 transition-all ${avatarChoice === id ? 'bg-pink-50 ring-2 ring-pink-400' : 'ring-1 ring-stone-100'}`}>
+                  <img src={`/avatars/${id}.png`} alt="" className="w-full aspect-square rounded-lg object-cover object-top" />
+                </button>
+              ))}
             </div>
+
+            {!isYouth && (
+              <div>
+                <label className="block text-xs text-stone-400 mb-1">{L.nickLabel}</label>
+                <input value={nickInput} maxLength={NICK_MAX + 4}
+                  onChange={e => { setNickInput(e.target.value); setNickErr('') }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !busy) void submitJoin() }}
+                  placeholder={L.nickPlaceholder} autoFocus={!nickname}
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-pink-300" />
+                {nickErr && <p className="text-xs text-red-500 mt-1.5">{nickErr}</p>}
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button onClick={() => setModal(false)} className="flex-1 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.cancel}</button>
-              <button onClick={() => void submitNickname()} disabled={busy}
+              <button onClick={() => void submitJoin()} disabled={busy}
                 className="flex-1 py-2.5 rounded-xl text-sm text-white bg-pink-500 disabled:opacity-60">{L.ok}</button>
             </div>
           </div>
