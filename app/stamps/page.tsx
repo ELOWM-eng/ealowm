@@ -57,7 +57,7 @@ export default function StampsPage() {
 
   const en = version === 'en'
   const t = en
-    ? { title: 'My attendance stamps', back: 'Back', days: 'days', need: 'Needed to complete', done: 'Completed', rule: 'A stamp is earned on a day you stay at least 20 minutes in a room (Eastern Time). Several rooms on the same day count as one stamp.', sun: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], full: 'Completed both halves', loading: 'Loading…', error: 'Could not load. Please try again.', login: 'Please log in first.', youth: 'Attendance stamps are not available for this version.', none: 'No program period has been set yet.', note: 'This is a record kept by the app, not an official certificate.', cert: 'View certificate', certWait: 'Your certificate is available after this round ends.', fullCert: 'View 12-week certificate' }
+    ? { title: 'My attendance stamps', back: 'Back', days: ' days', need: 'Needed to complete', done: 'Completed', rule: 'A stamp is earned on a day you stay at least 20 minutes in a room (Eastern Time). Several rooms on the same day count as one stamp.', sun: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], full: 'Completed both halves', loading: 'Loading…', error: 'Could not load. Please try again.', login: 'Please log in first.', youth: 'Attendance stamps are not available for this version.', none: 'No program period has been set yet.', note: 'This is a record kept by the app, not an official certificate.', cert: 'View certificate', certWait: 'Your certificate is available after this round ends.', fullCert: 'View 12-week certificate' }
     : { title: '내 출석 도장', back: '돌아가기', days: '일', need: '수료 기준', done: '수료', rule: '한국 날짜 기준으로, 그날 방에 20분 이상 머물면 도장이 찍혀요. 같은 날 여러 방에 참여해도 도장은 1개예요.', sun: ['월', '화', '수', '목', '금', '토', '일'], full: '12주 완주', loading: '불러오는 중…', error: '불러오지 못했어요. 다시 시도해주세요.', login: '먼저 로그인해주세요.', youth: '이 버전에서는 출석 도장을 사용하지 않아요.', none: '아직 프로그램 기간이 정해지지 않았어요.', note: '앱이 보관하는 참여 기록이며, 공식 증명서는 아니에요.', cert: '수료증 보기', certWait: '기수가 끝나면 수료증을 받을 수 있어요.', fullCert: '12주 완주 증서 보기' }
 
   const today = todayIn(en ? 'America/New_York' : 'Asia/Seoul')
@@ -129,7 +129,7 @@ export default function StampsPage() {
                       className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] ${
                         days.has(d) ? 'bg-pink-50 text-pink-600' : d > today ? 'text-stone-200' : 'text-stone-400 bg-stone-50'
                       } ${d === today ? 'ring-1 ring-pink-300' : ''}`}>
-                      <span>{Number(d.slice(8))}</span>
+                      <span>{Number(d.slice(8)) === 1 || i === lead ? `${Number(d.slice(5, 7))}/${Number(d.slice(8))}` : Number(d.slice(8))}</span>
                       {days.has(d) && <span className="text-sm leading-none">🪷</span>}
                     </div>
                   ))}

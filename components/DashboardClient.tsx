@@ -116,7 +116,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                   <p className="text-xs text-stone-400 leading-relaxed">
                     {isEn
                       ? "Read Workbook's the explanation of Session 1 Formless, complete the Reflecting activity, and record Day 1 of the Practicing section."
-                      : "'무상관'에 대한 워크북의 설명을 읽고, '생각해보기' 활동 후 '실천해보기' 1일 차를 기록합니다."}
+                      : "'무상관'에 대한 설명을 읽고, '생각해보기' 활동 후 '실천해보기' 1일 차를 기록합니다."}
                   </p>
                 </div>
               </div>
