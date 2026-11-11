@@ -5,6 +5,7 @@
 // app/layout.tsx 의 바깥 틀에 넣어서, 페이지를 옮겨 다녀도 접속이 유지돼요.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-client'
 import {
@@ -15,11 +16,16 @@ import {
 type Sess = { id: string; title: string; starts_at: string; duration_min: number }
 type Person = { key: string; nickname: string; avatar: string }
 type Meta = { nickname: string; avatar: string }
+type Focus = { week_start: string; text_ko: string; text_en: string | null }
 
 const AVATAR_KEY = 'ealowm_avatar'          // 마음 수행에서 고른 아바타
 const JOINED_KEY = 'ealowm_together_joined' // 참여 중이던 일정 (새로고침 후 자동으로 다시 들어오기 위해)
 const AVATAR_IDS = ['girl', 'boy-casual', 'boy-uniform', 'woman']
 const MAX_SESSION_MIN = 240
+
+// 해당 시간대의 오늘(YYYY-MM-DD)과, 그 날짜에서 n일 뒤
+const todayIn = (tz: string) => new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date())
+const addDays = (iso: string, n: number) => new Date(Date.parse(iso + 'T00:00:00Z') + n * 86400000).toISOString().slice(0, 10)
 
 function readAvatar(): string {
   try {
@@ -49,6 +55,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const [nickErr, setNickErr] = useState('')
   const [avatarChoice, setAvatarChoice] = useState('girl')
   const [busy, setBusy] = useState(false)
+  const [focusRows, setFocusRows] = useState<Focus[]>([])
   const [netErr, setNetErr] = useState(false)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const joinedSessionRef = useRef<string | null>(null) // 지금 들어가 있는 일정
@@ -85,8 +92,10 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   // ----- 나가기 -----
   const leave = useCallback(async () => {
     const ch = channelRef.current
+    const sid = joinedSessionRef.current
     channelRef.current = null
     joinedSessionRef.current = null
+    if (sid) { try { await sb().rpc('attend_ping', { p_session: sid }) } catch {} } // 나가기 직전 마지막 출석 확인
     setJoined(false)
     setPeople([])
     setPanel(false)
@@ -121,6 +130,14 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
   }, [userId, leave, loadProfile])
 
+  // ----- 이번 주 집중 문구 (몇 줄 안 되어서 한 번만 읽어요) -----
+  useEffect(() => {
+    if (!userId) return
+    void sb().from('practice_weekly_focus').select('week_start,text_ko,text_en').order('week_start').then(({ data, error }) => {
+      if (!error) setFocusRows((data ?? []) as Focus[])
+    })
+  }, [userId])
+
   // 버전이 바뀌면 이전 방에서 나가고 일정도 새로 읽어요
   const prevVersionRef = useRef<string | null>(null)
   useEffect(() => {
@@ -138,7 +155,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     const { data, error } = await sb()
       .from('practice_sessions')
       .select('id,title,starts_at,duration_min')
-      .eq('version', version)
+      .contains('versions', [version])
       .gte('starts_at', since)
       .order('starts_at', { ascending: true })
       .limit(10)
@@ -186,6 +203,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
       if (status === 'SUBSCRIBED') {
         setNetErr(false)
         await ch.track({ nickname: isYouth ? '' : nick, avatar }) // 참여할 때 한 번만 보내요 (Presence 호출 한도 때문)
+        try { await client.rpc('attend_join', { p_session: joinedSessionRef.current }) } catch {} // 출석 기록 (성인·영문만 서버에서 받아요)
         setJoined(true)
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         setNetErr(true)
@@ -193,6 +211,16 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     })
     try { localStorage.setItem(JOINED_KEY, `${userId}|${session.id}`) } catch {}
   }, [session, userId, isYouth])
+
+  // 참여 중에는 1분마다 "아직 있어요"를 서버에 알려요 (20분 머물기 확인용)
+  useEffect(() => {
+    if (!joined) return
+    const id = window.setInterval(() => {
+      const sid = joinedSessionRef.current
+      if (sid) void sb().rpc('attend_ping', { p_session: sid })
+    }, 60000)
+    return () => window.clearInterval(id)
+  }, [joined])
 
   // 새로고침해도 약속 시간 안이면 자동으로 다시 들어와요
   useEffect(() => {
@@ -256,6 +284,11 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     : ''
 
   const showBar = (visible || joined) && !!session
+
+  // 오늘 날짜(영문=미국 동부, 그 밖=한국) 기준으로 7일 안에 시작한 가장 최근 주의 문구
+  const todayStr = todayIn(isEn ? 'America/New_York' : 'Asia/Seoul')
+  const focusRow = [...focusRows].reverse().find(f => f.week_start <= todayStr && todayStr < addDays(f.week_start, 7))
+  const focusText = focusRow ? (isEn ? (focusRow.text_en ?? focusRow.text_ko) : focusRow.text_ko) : ''
 
   return (
     <>
@@ -325,7 +358,11 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                       {canJoin ? L.join : L.notYet}
                     </button>
                   </div>
+                  {focusText && <p className="text-xs text-pink-600 mt-2 leading-relaxed">🌿 {focusText}</p>}
                   {!canJoin && <p className="text-xs text-stone-300 mt-2">{L.guide}</p>}
+                  {!isYouth && (
+                    <Link href="/stamps" className="inline-block text-xs text-pink-500 mt-2">📅 {isEn ? 'My stamps' : '내 도장'}</Link>
+                  )}
                 </div>
               )}
             </div>
