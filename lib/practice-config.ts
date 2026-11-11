@@ -50,7 +50,7 @@ export const SESSION_NAMES: Record<string, { ko: string; en: string }> = {
   s4: { ko: '보시행', en: 'The Generosity' },
   s5: { ko: '지계행', en: 'The Ethical Conduct' },
   s6: { ko: '인욕행', en: 'The Forbearance' },
-  s7: { ko: '사상관', en: 'Four Stages of Form' },
+  s7: { ko: '사상관', en: 'The Four Stages of Form' },
   s8: { ko: '생멸관', en: 'The Arising and Ceasing' },
   s9: { ko: '무량관', en: 'The Infinite' },
   s10: { ko: '정진행', en: 'The Diligence' },

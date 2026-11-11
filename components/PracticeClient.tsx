@@ -21,7 +21,7 @@ type ZStatus = 'idle' | 'running' | 'paused' | 'done'
 const TEA_STEPS = [
   { key: 'look',  ko: '색 관찰',     en: 'Look',   koDo: '차나 커피의 색을 관찰해봐요',   enDo: 'Look closely at the color of your tea or coffee.' },
   { key: 'smell', ko: '향 맡기',     en: 'Smell',  koDo: '차나 커피의 향을 맡아봐요',     enDo: 'Breathe in the aroma of your tea or coffee.' },
-  { key: 'sip',   ko: '차 마시기',   en: 'Sip',    koDo: '차나 커피를 마셔봐요',     enDo: 'Take a sip and taste it.' },
+  { key: 'sip',   ko: '차 마시기',   en: 'Sip',    koDo: '차나 커피를 마셔봐요',     enDo: 'Take a sip of your tea or coffee.' },
   { key: 'savor', ko: '맛 음미하기', en: 'Savor',  koDo: '차나 커피의 맛을 음미해봐요',   enDo: 'Savor the taste of your tea or coffee.' },
 ]
 const TEA_SEC_KEY = 'ealowm_tea_sec'
@@ -889,7 +889,7 @@ export default function PracticeClient({ version }: Props) {
                     <button onClick={startTea}
                       className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                       style={{ background: 'linear-gradient(135deg, #5dcaa5, #1D9E75)' }}>
-                      {isEn ? 'Begin' : '차 명상 시작'}
+                      {isEn ? 'Begin' : '한 잔 수행 시작'}
                     </button>
 
                     <p className="text-xs text-stone-300 text-center">
