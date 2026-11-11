@@ -51,22 +51,22 @@ export default async function Home() {
 
       <section className="max-w-2xl mx-auto px-4 mb-12 animate-fade-up" style={{ animationDelay: '0.1s' }}>
         <h2 className="text-base font-bold text-stone-700 mb-4 px-1" style={{ fontFamily: 'var(--font-gowun)' }}>
-          워크북 구성 · Workbook Sessoon
+          워크북 구성 · Workbook Session
         </h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { num: '1회기 · Sesson1', title: '무상관 · The Formless', sub: '변화와 벗어남 · Change & Liberation', type: 'gwan' },
-            { num: '2회기 · Sesson2', title: '세속관 · The Secular', sub: '번뇌와 끊어냄 · Affliction & Release', type: 'gwan' },
-            { num: '3회기 · Sesson3', title: '자비관 · The Compassion', sub: '인정과 따뜻함 · Acceptance & Warmth', type: 'gwan' },
-            { num: '4회기 · Sesson4', title: '보시행 · The Generosity', sub: '나눔과 이타심 · Sharing & Altruism', type: 'haeng' },
-            { num: '5회기 · Sesson5', title: '지계행 · The Ethical Conduct', sub: '도덕과 절제함 · Virtue & Moderation', type: 'haeng' },
-            { num: '6회기 · Sesson6', title: '인욕행 · The Forbearance', sub: '인내와 평온함 · Patience & Serenity', type: 'haeng' },
-            { num: '7회기 · Sesson7', title: '사상관 · The Four stages of Forms', sub: '비움과 덧없음 · Detachment & Impermanence', type: 'gwan' },
-            { num: '8회기 · Sesson8', title: '생멸관 · The Arising and Ceasing', sub: '살핌과 자각함 · Mindfulness & Awareness', type: 'gwan' },
-            { num: '9회기 · Sesson9', title: '무량관 · The Infinite', sub: '믿음과 무한함 · Trust & Limitlessness', type: 'gwan' },
-            { num: '10회기 · Sesson10', title: '정진행 · The Diligence', sub: '노력과 성장함 · Effort & Growth', type: 'haeng' },
-            { num: '11회기 · Sesson11', title: '선정행 · The Concentration', sub: '집중과 고요함 · Focus & Stillness', type: 'haeng' },
-            { num: '12회기 · Sesson12', title: '지혜행 The Wisdom· ', sub: '통찰과 깨달음 · Insight & Awakening', type: 'haeng' },
+            { num: '1회기 · Session1', title: '무상관 · The Formless', sub: '변화와 벗어남 · Change & Liberation', type: 'gwan' },
+            { num: '2회기 · Session2', title: '세속관 · The Secular', sub: '번뇌와 끊어냄 · Affliction & Release', type: 'gwan' },
+            { num: '3회기 · Session3', title: '자비관 · The Compassion', sub: '인정과 따뜻함 · Acceptance & Warmth', type: 'gwan' },
+            { num: '4회기 · Session4', title: '보시행 · The Generosity', sub: '나눔과 이타심 · Sharing & Altruism', type: 'haeng' },
+            { num: '5회기 · Session5', title: '지계행 · The Ethical Conduct', sub: '도덕과 절제함 · Virtue & Moderation', type: 'haeng' },
+            { num: '6회기 · Session6', title: '인욕행 · The Forbearance', sub: '인내와 평온함 · Patience & Serenity', type: 'haeng' },
+            { num: '7회기 · Session7', title: '사상관 · The Four stages of Forms', sub: '비움과 덧없음 · Detachment & Impermanence', type: 'gwan' },
+            { num: '8회기 · Session8', title: '생멸관 · The Arising and Ceasing', sub: '살핌과 자각함 · Mindfulness & Awareness', type: 'gwan' },
+            { num: '9회기 · Session9', title: '무량관 · The Infinite', sub: '믿음과 무한함 · Trust & Limitlessness', type: 'gwan' },
+            { num: '10회기 · Session10', title: '정진행 · The Diligence', sub: '노력과 성장함 · Effort & Growth', type: 'haeng' },
+            { num: '11회기 · Session11', title: '선정행 · The Concentration', sub: '집중과 고요함 · Focus & Stillness', type: 'haeng' },
+            { num: '12회기 · Session12', title: '지혜행 · The Wisdom', sub: '통찰과 깨달음 · Insight & Awakening', type: 'haeng' },
           ].map((s, i) => (
             <div key={i} className="bg-white rounded-xl p-3 border border-stone-100">
               <p className="text-xs text-stone-400 mb-0.5">{s.num}</p>
