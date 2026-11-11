@@ -610,8 +610,8 @@ export default function PracticeClient({ version }: Props) {
                     ? `${isEn ? 'Silent sitting' : '좌선 중'} · ${fmt(zRemain)}`
                     : tab === 'tea'
                       ? (tStatus === 'idle'
-                          ? (isEn ? 'Tea practice' : '차 명상')
-                          : `${isEn ? 'Tea practice' : '차 명상'} · ${isEn ? teaStep.en : teaStep.ko}`)
+                          ? (isEn ? 'Tea practice' : '한 잔 수행')
+                          : `${isEn ? 'Tea practice' : '한 잔 수행'} · ${isEn ? teaStep.en : teaStep.ko}`)
                     : track
                       ? track.title
                       : (isEn ? 'Choose a practice' : '수행을 선택해보세요')}
