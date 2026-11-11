@@ -50,6 +50,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const [busy, setBusy] = useState(false)
   const [netErr, setNetErr] = useState(false)
   const channelRef = useRef<RealtimeChannel | null>(null)
+  const joinedSessionRef = useRef<string | null>(null) // 지금 들어가 있는 일정
 
   const isEn = version === 'en'
   const L = isEn
@@ -83,6 +84,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const leave = useCallback(async () => {
     const ch = channelRef.current
     channelRef.current = null
+    joinedSessionRef.current = null
     setJoined(false)
     setPeople([])
     setPanel(false)
@@ -94,7 +96,15 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     }
   }, [])
 
-  // ----- 내 버전·닉네임 불러오기 -----
+  // ----- 내 버전·닉네임 불러오기 (1분마다·화면에 돌아올 때 다시 읽어서, 버전을 바꾸면 따라가요) -----
+  const loadProfile = useCallback(async (uid: string) => {
+    const client = sb()
+    const g = await client.from('user_goals').select('version').eq('user_id', uid).maybeSingle()
+    const p = await client.from('practice_profiles').select('nickname').eq('user_id', uid).maybeSingle()
+    if (!g.error) setVersion((g.data?.version as string | undefined) ?? null)
+    if (!p.error) setNickname((p.data?.nickname as string | undefined) ?? null)
+  }, [])
+
   useEffect(() => {
     if (userId === undefined) return // 로그인 확인 전에는 아무것도 지우지 않아요 (새로고침 후 자동 재입장용)
     if (userId === null) {
@@ -102,29 +112,35 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
       void leave()
       return
     }
-    let alive = true
-    ;(async () => {
-      const client = sb()
-      const g = await client.from('user_goals').select('version').eq('user_id', userId).maybeSingle()
-      const p = await client.from('practice_profiles').select('nickname').eq('user_id', userId).maybeSingle()
-      if (!alive) return
-      setVersion((g.data?.version as string | undefined) ?? null)
-      setNickname((p.data?.nickname as string | undefined) ?? null)
-    })()
-    return () => { alive = false }
-  }, [userId, leave])
+    void loadProfile(userId)
+    const id = window.setInterval(() => void loadProfile(userId), 60000)
+    const onVis = () => { if (document.visibilityState === 'visible') void loadProfile(userId) }
+    document.addEventListener('visibilitychange', onVis)
+    return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
+  }, [userId, leave, loadProfile])
+
+  // 버전이 바뀌면 이전 방에서 나가고 일정도 새로 읽어요
+  const prevVersionRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (prevVersionRef.current !== null && prevVersionRef.current !== version) {
+      setSession(null)
+      void leave()
+    }
+    prevVersionRef.current = version
+  }, [version, leave])
 
   // ----- 진행 중이거나 다음 일정 불러오기 (1분마다) -----
   const loadSession = useCallback(async () => {
     if (!version) return
     const since = new Date(Date.now() - MAX_SESSION_MIN * 60000).toISOString()
-    const { data } = await sb()
+    const { data, error } = await sb()
       .from('practice_sessions')
       .select('id,title,starts_at,duration_min')
       .eq('version', version)
       .gte('starts_at', since)
       .order('starts_at', { ascending: true })
       .limit(10)
+    if (error) return // 일시적인 오류로 일정이 사라진 것처럼 처리하지 않아요
     const list = (data ?? []) as Sess[]
     const cur = list.find(s => Date.parse(s.starts_at) + s.duration_min * 60000 > Date.now()) ?? null
     setSession(cur)
@@ -157,6 +173,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     const avatar = readAvatar()
     const ch = client.channel(`together:${session.id}`, { config: { presence: { key: userId } } })
     channelRef.current = ch
+    joinedSessionRef.current = session.id
     ch.on('presence', { event: 'sync' }, () => {
       const st = ch.presenceState<Meta>()
       const list: Person[] = Object.entries(st)
@@ -183,6 +200,11 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     try { flag = localStorage.getItem(JOINED_KEY) ?? '' } catch {}
     if (userId && flag === `${userId}|${session.id}`) void joinWith(nickname)
   }, [canJoin, nickname, session, joined, joinWith, userId])
+
+  // 참여 중인 방과 지금 보이는 일정이 달라지면(일정이 바뀌거나 사라지면) 나가요
+  useEffect(() => {
+    if (joined && joinedSessionRef.current && session?.id !== joinedSessionRef.current) void leave()
+  }, [joined, session, leave])
 
   // 일정이 끝나면 자동으로 나가요
   useEffect(() => {
