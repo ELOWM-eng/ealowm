@@ -115,7 +115,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                   </p>
                   <p className="text-xs text-stone-400 leading-relaxed">
                     {isEn
-                      ? "Read Workbook's the explanation of Session 1 Formless, complete the Reflecting activity, and record Day 1 of the Practicing section."
+                      ? "Read the explanation of Session 1 Formless, complete the Reflecting activity, and record Day 1 of the Practicing section."
                       : "'무상관'에 대한 설명을 읽고, '생각해보기' 활동 후 '실천해보기' 1일 차를 기록합니다."}
                   </p>
                 </div>
@@ -153,19 +153,19 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
         <div className="mb-6 animate-fade-up">
           <div className="bg-white rounded-2xl border border-amber-100 p-5 shadow-sm">
             <p className="text-sm font-bold text-stone-700 mb-1" style={{ fontFamily: 'var(--font-gowun)' }}>
-              {isEn ? 'Habitual Addictive Behavior I Want to Overcome' : '벗어나고 싶은 습관화된 중독 행동'}
+              {isEn ? 'Habitual Behavior I Want to Overcome' : '벗어나고 싶은 습관화된 행동'}
             </p>
             <p className="text-xs text-stone-400 mb-3">
               {isEn
-                ? 'Please write down the addictive behavior you wish to overcome as you progress through the program.'
-                : '프로그램을 진행하면서 자신이 극복하고자 하는 중독 행동을 적어보세요.'}
+                ? 'Please write down the Habitual behavior you wish to overcome as you progress through the program.'
+                : '프로그램을 진행하면서 자신이 극복하고자 하는 습관화된 행동을 적어보세요.'}
             </p>
             <textarea
               value={goal}
               onChange={e => setGoal(e.target.value)}
               placeholder={isEn
                 ? 'e.g. smartphone addiction, overeating, gaming, alcohol...'
-                : '스마트폰, 과식, 게임, 음주 등 자신이 벗어나고 싶은 습관화된 중독 행동을 자유롭게 적어보세요.'}
+                : '스마트폰, 과식, 게임, 음주 등 자신이 벗어나고 싶은 습관화된 행동을 자유롭게 적어보세요.'}
               rows={3}
               className="w-full p-3 text-sm rounded-xl border border-stone-200 bg-stone-50
                 focus:outline-none focus:border-amber-300 resize-none transition-colors
