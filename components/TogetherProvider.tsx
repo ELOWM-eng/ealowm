@@ -66,7 +66,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     ? {
         title: 'Practice together', join: 'Join', notYet: `Opens ${JOIN_BEFORE_MIN} min before`,
         peopleSuffix: '', inRoom: 'Practicing together', leave: 'Leave',
-        nickTitle: 'Choose a nickname and avatar', avatarTitle: 'Choose your avatar', avatarHint: 'Others in the room can see your avatar.', nickLabel: 'Nickname', nickHint: 'Please do not use your real name. While you are in the room, others can see your nickname and avatar.',
+        nickTitle: 'Choose a nickname and companion', avatarTitle: 'Choose your companion', avatarHint: 'Others in the room can see your companion.', nickLabel: 'Nickname', nickHint: 'Please do not use your real name. While you are in the room, others can see your nickname and companion.',
         nickPlaceholder: 'Nickname', cancel: 'Cancel', ok: 'Join',
         saveFail: 'Could not save. Please try again.', net: 'Connection is unstable…',
         guide: `You can join from ${JOIN_BEFORE_MIN} minutes before the start.`,
@@ -74,7 +74,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     : {
         title: '함께 수행', join: '참여', notYet: `${JOIN_BEFORE_MIN}분 전부터`,
         peopleSuffix: '명', inRoom: '함께 수행 중', leave: '나가기',
-        nickTitle: '닉네임과 아바타를 정해주세요', avatarTitle: '참여할 아바타를 골라주세요', avatarHint: '참여하는 동안 같은 방 사람들에게 아바타가 보여요.', nickLabel: '닉네임', nickHint: '실명은 쓰지 말아주세요. 참여하는 동안 같은 방 사람들에게 닉네임과 아바타가 보여요.',
+        nickTitle: '닉네임과 도반을 정해주세요', avatarTitle: '참여할 도반을 골라주세요', avatarHint: '참여하는 동안 같은 방 사람들에게 도반이 보여요.', nickLabel: '닉네임', nickHint: '실명은 쓰지 말아주세요. 참여하는 동안 같은 방 사람들에게 닉네임과 도반이 보여요.',
         nickPlaceholder: '닉네임', cancel: '취소', ok: '참여하기',
         saveFail: '저장하지 못했어요. 다시 시도해주세요.', net: '연결이 불안정해요…',
         guide: `시작 ${JOIN_BEFORE_MIN}분 전부터 참여할 수 있어요.`,
@@ -360,9 +360,12 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                   </div>
                   {focusText && <p className="text-xs text-pink-600 mt-2 leading-relaxed">🌿 {focusText}</p>}
                   {!canJoin && <p className="text-xs text-stone-300 mt-2">{L.guide}</p>}
-                  {!isYouth && (
-                    <Link href="/stamps" className="inline-block text-xs text-pink-500 mt-2">📅 {isEn ? 'My stamps' : '내 도장'}</Link>
-                  )}
+                  <div className="flex gap-4 mt-2">
+                    <Link href="/schedule" className="text-xs text-pink-500">🗓 {isEn ? 'Schedule' : '일정 보기'}</Link>
+                    {!isYouth && (
+                      <Link href="/stamps" className="text-xs text-pink-500">📅 {isEn ? 'My stamps' : '내 도장'}</Link>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
