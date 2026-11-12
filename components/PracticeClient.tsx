@@ -644,7 +644,7 @@ export default function PracticeClient({ version }: Props) {
                 </p>
               </div>
               <button onClick={() => setChoosing(true)}
-                className="absolute top-3 right-3 text-xs px-3 py-1.5 rounded-full bg-white/15 text-white/90 hover:bg-white/25 transition-all">
+                className="absolute bottom-3 right-3 text-xs px-3 py-1.5 rounded-full bg-white/15 text-white/90 hover:bg-white/25 transition-all">
                 {isEn ? 'Change companion' : '도반 변경'}
               </button>
             </div>
