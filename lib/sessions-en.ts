@@ -235,7 +235,7 @@ export const EN_SESSIONS: PracticeSession[] = [
         'Reflect on your life and identify the emotion that appears most frequently. Organize your thoughts and write them down.',
         'Reflect on how that emotion has affected you. Analyze your thoughts and write down its impact on your life.',
       ],
-      declaration: '"We understand that our body and mind are within a flow of change, arising and ceasing in every moment, and we bring full attention to them, moment by moment."',
+      declaration: '"We understand that our body and mind are within a flow of change, arising and ceasing in every moment, and we bring full attention to it, moment by moment."',
     },
   },
   {
