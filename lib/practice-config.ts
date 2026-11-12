@@ -52,7 +52,7 @@ export const SESSION_NAMES: Record<string, { ko: string; en: string }> = {
   s6: { ko: '인욕행', en: 'The Forbearance' },
   s7: { ko: '사상관', en: 'Four Stages of Form' },
   s8: { ko: '생멸관', en: 'The Arising and Ceasing' },
-  s9: { ko: '무량관', en: 'The Infinite' },
+  s9: { ko: '무량관', en: 'Immeasurability' },
   s10: { ko: '정진행', en: 'The Diligence' },
   s11: { ko: '선정행', en: 'The Concentration' },
   s12: { ko: '지혜행', en: 'The Wisdom' },
