@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase-client'
 import { drawCertificate, type CertData } from '@/lib/certificate-draw'
 
-type Cohort = { id: number; name_ko: string; name_en: string; start_date: string; weeks: number; pass_percent: number }
+type Cohort = { id: number; name_ko: string; name_en: string; start_date: string; weeks: number; pass_percent: number; code: string | null }
 
 const DAY = 86400000
 const toMs = (iso: string) => Date.parse(iso + 'T00:00:00Z')
@@ -73,10 +73,10 @@ export default function CertificatePage() {
         const weeks = list.reduce((a, b) => a + b.weeks, 0)
         data = {
           lang: ko ? 'ko' : 'en', kind: 'full', nickname,
-          program: ko ? `${weeks}주 과정` : `the ${weeks}-week EALOWM Practice Together program`,
+          program: ko ? `1기 ${weeks}주 과정` : `the ${weeks}-week EALOWM Practice Together program (Cohort 1)`,
           period: `${fmt(list[0].start_date, ko)} ~ ${fmt(lastEnd, ko)}`,
           issued: fmt(toIso(toMs(lastEnd) + DAY), ko), // 마지막 기수가 끝난 다음 날
-          number: `EAL-FULL-${idPart}`,
+          number: `EAL-${(list[0].code ?? '1').replace(/[A-Za-z]+$/, '')}-FULL-${idPart}`,
         }
       } else {
         const co = list.find(x => String(x.id) === q)
@@ -89,7 +89,7 @@ export default function CertificatePage() {
           program: ko ? co.name_ko : co.name_en,
           period: `${fmt(co.start_date, ko)} ~ ${fmt(s.end, ko)}`,
           issued: fmt(toIso(toMs(s.end) + DAY), ko), // 기수가 끝난 다음 날
-          number: `EAL-C${co.id}-${idPart}`,
+          number: `EAL-${co.code ?? 'C' + co.id}-${idPart}`,
         }
       }
       if (alive) setRes({ state: 'ok', data })
