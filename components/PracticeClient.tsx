@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { companionOf } from '@/lib/companions'
 import {
   PRACTICE_TRACKS,
@@ -716,10 +715,6 @@ export default function PracticeClient({ version }: Props) {
                 )}
               </div>
             )}
-
-            <Link href="/schedule" className="block text-center text-xs text-pink-600 bg-pink-50 rounded-xl py-2.5">
-              🗓 {isEn ? 'Together practice schedule' : '함께 수행 일정 보기'}
-            </Link>
 
             {/* 탭 */}
             <div className="flex border-b border-stone-100">
