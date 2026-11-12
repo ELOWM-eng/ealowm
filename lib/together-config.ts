@@ -9,7 +9,7 @@ export const NICK_MAX = 12
 export const BANNED_WORDS: string[] = []
 
 // 통째로 똑같으면 막는 이름 (캐릭터·운영자 사칭 방지)
-const RESERVED_EXACT = ['본원', '이로', '우미', '이로움', 'ealowm']
+const RESERVED_EXACT = ['본원', '혜련', '이로', '우미', '이로움', 'Bonwon', 'Hyeryeon', 'Iro', 'Umi', 'ealowm']
 // 일부라도 들어가면 막는 단어
 const RESERVED_CONTAINS = ['운영자', '관리자', 'admin']
 
