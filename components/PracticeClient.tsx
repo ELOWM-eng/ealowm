@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { companionOf } from '@/lib/companions'
 import {
   PRACTICE_TRACKS,
   THEME_SESSIONS,
@@ -26,7 +27,7 @@ type ZStatus = 'idle' | 'running' | 'paused' | 'done'
 const TEA_STEPS = [
   { key: 'look',  ko: '색 관찰',     en: 'Look',   koDo: '차나 커피의 색을 관찰해봐요.',   enDo: 'Look closely at the color of your tea or coffee.' },
   { key: 'smell', ko: '향 맡기',     en: 'Smell',  koDo: '차나 커피의 향을 맡아봐요.',     enDo: 'Breathe in the aroma of your tea or coffee.' },
-  { key: 'sip',   ko: '맛 마시기',   en: 'Sip',    koDo: '차나 커피의 맛을 마셔봐요.',     enDo: 'Take a sip of your tea or coffee.' },
+  { key: 'sip',   ko: '맛 마시기',   en: 'Sip',    koDo: '차나 커피를 마셔봐요.',     enDo: 'Take a sip of your tea or coffee.' },
   { key: 'savor', ko: '맛 음미하기', en: 'Savor',  koDo: '차나 커피의 맛을 음미해봐요.',   enDo: 'Savor the taste of your tea or coffee.' },
 ]
 const TEA_REPS_KEY = 'ealowm_tea_reps'
@@ -550,6 +551,15 @@ export default function PracticeClient({ version }: Props) {
                   }`}>
                   <img src={a.src} alt={isEn ? `Companion ${i + 1}` : `도반 ${i + 1}`}
                     className="mx-auto" style={{ height: landscape ? '150px' : '190px', width: 'auto', objectFit: 'contain' }} />
+                  {(() => {
+                    const c = companionOf(a.id)
+                    return c ? (
+                      <span className="block mt-2 text-left">
+                        <span className="block text-sm font-medium text-stone-700 text-center">{isEn ? `${c.en} (${c.hanja})` : `${c.ko} (${c.hanja})`}</span>
+                        <span className="block text-[11px] text-stone-400 leading-relaxed mt-1">{isEn ? c.descEn : c.descKo}</span>
+                      </span>
+                    ) : null
+                  })()}
                 </button>
               ))}
             </div>

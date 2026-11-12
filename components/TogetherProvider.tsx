@@ -4,6 +4,7 @@
 // 같은 방에 있는 사람들의 닉네임과 아바타가 화면 아래에 보여요.
 // app/layout.tsx 의 바깥 틀에 넣어서, 페이지를 옮겨 다녀도 접속이 유지돼요.
 
+import { companionOf } from '@/lib/companions'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -379,14 +380,23 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
             <p className="text-base font-medium text-stone-700">{isYouth || nickname ? L.avatarTitle : L.nickTitle}</p>
             <p className="text-xs text-stone-400 leading-relaxed">{isYouth ? L.avatarHint : L.nickHint}</p>
 
-            <div className="grid grid-cols-4 gap-2" role="radiogroup">
-              {AVATAR_IDS.map(id => (
-                <button key={id} type="button" role="radio" aria-checked={avatarChoice === id} data-avatar={id}
-                  onClick={() => setAvatarChoice(id)}
-                  className={`rounded-xl p-1 transition-all ${avatarChoice === id ? 'bg-pink-50 ring-2 ring-pink-400' : 'ring-1 ring-stone-100'}`}>
-                  <img src={`/avatars/${id}.png`} alt="" className="w-full aspect-square rounded-lg object-cover object-top" />
-                </button>
-              ))}
+            <div className="grid grid-cols-2 gap-2" role="radiogroup">
+              {AVATAR_IDS.map(id => {
+                const c = companionOf(id)
+                return (
+                  <button key={id} type="button" role="radio" aria-checked={avatarChoice === id} data-avatar={id}
+                    onClick={() => setAvatarChoice(id)}
+                    className={`rounded-xl p-2 text-left transition-all ${avatarChoice === id ? 'bg-pink-50 ring-2 ring-pink-400' : 'ring-1 ring-stone-100'}`}>
+                    <img src={`/avatars/${id}.png`} alt="" className="w-full aspect-square rounded-lg object-cover object-top" />
+                    {c && (
+                      <>
+                        <span className="block text-sm font-medium text-stone-700 text-center mt-1">{isEn ? `${c.en} (${c.hanja})` : `${c.ko} (${c.hanja})`}</span>
+                        <span className="block text-[11px] text-stone-400 leading-relaxed mt-1">{isEn ? c.descEn : c.descKo}</span>
+                      </>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             {!isYouth && (
