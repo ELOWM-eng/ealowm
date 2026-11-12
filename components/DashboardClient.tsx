@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase-client'
 import type { PracticeSession } from '@/types'
 import clsx from 'clsx'
 import ScheduleCard from '@/components/ScheduleCard'
+import CertificateNotice from '@/components/CertificateNotice'
 
 interface Props {
   userEmail: string
@@ -243,6 +244,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
           
         {/* 함께 수행 일정 (마음 수행 위) */}
         <div className="mb-4 animate-fade-up">
+          <CertificateNotice version={version} />
           <ScheduleCard version={version} />
         </div>
 
