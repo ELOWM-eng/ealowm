@@ -65,7 +65,7 @@ export default async function Home() {
             { num: '6회기 · Session6', title: '인욕행 · The Forbearance', sub: '인내와 평온함 · Patience & Serenity', type: 'haeng' },
             { num: '7회기 · Session7', title: '사상관 · The Four stages of Forms', sub: '비움과 덧없음 · Detachment & Impermanence', type: 'gwan' },
             { num: '8회기 · Session8', title: '생멸관 · The Arising and Ceasing', sub: '살핌과 자각함 · Mindfulness & Awareness', type: 'gwan' },
-            { num: '9회기 · Session9', title: '무량관 · The Infinite', sub: '믿음과 무한함 · Trust & Limitlessness', type: 'gwan' },
+            { num: '9회기 · Session9', title: '무량관 · The Immeasurability', sub: '믿음과 무한함 · Trust & Limitlessness', type: 'gwan' },
             { num: '10회기 · Session10', title: '정진행 · The Diligence', sub: '노력과 성장함 · Effort & Growth', type: 'haeng' },
             { num: '11회기 · Session11', title: '선정행 · The Concentration', sub: '집중과 고요함 · Focus & Stillness', type: 'haeng' },
             { num: '12회기 · Session12', title: '지혜행 · The Wisdom', sub: '통찰과 깨달음 · Insight & Awakening', type: 'haeng' },

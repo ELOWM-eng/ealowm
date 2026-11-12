@@ -1180,7 +1180,7 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
                       { label: 'Learning & Growth', count: growthStrengths.length },
                       { label: 'Life Energy', count: lifeStrengths.length },
                     ].sort((a,b) => b.count - a.count)[0]
-                    if (count === 0) return 'It\'s okay if your strengths aren\'t visible right now. Boundless Contemplation begins with believing "I already have infinite potential within me." Let\'s find those seeds through this session.'
+                    if (count === 0) return 'It\'s okay if your strengths aren\'t visible right now. Boundless Contemplation begins with believing "I already have a potential within me that is beyond measure." Let\'s find those seeds through this session.'
                     if (count <= 3) return `${items[checkedIdxs[0]]} — you\'ve discovered a precious strength. Choosing fewer isn\'t a lack — it\'s honesty with yourself. These strengths will guide your 12-week journey.`
                     if (count <= 8) return `Your strengths stand out most in the area of ${dominant.label}. ${count} strengths — these are real resources you can actually use to break free from addictive patterns.`
                     return `You selected ${count} strengths! Among them, ${dominant.label} is your strongest area. These abundant strengths will be the solid foundation of your journey.`
@@ -1364,7 +1364,7 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 p-5 animate-fade-up">
                   <p className="text-xs text-purple-400 font-medium mb-2">
                     🪷 {isEn
-                      ? (session.id === 's1' ? 'Formless' : session.id === 's3' ? 'Compassion' : 'Infinite') + ' · My Mind Right Now'
+                      ? (session.id === 's1' ? 'Formless' : session.id === 's3' ? 'Compassion' : 'Immeasurability') + ' · My Mind Right Now'
                       : (session.id === 's1' ? '무상관' : session.id === 's3' ? '자비관' : '무량관') + ' · 지금 나의 마음'}
                   </p>
                   <p className="text-sm text-stone-700 leading-relaxed">{analysis}</p>
