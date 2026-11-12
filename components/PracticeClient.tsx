@@ -619,6 +619,15 @@ export default function PracticeClient({ version }: Props) {
                         style={{ objectFit: 'contain', opacity: i === teaIdx ? 1 : 0, transition: 'opacity 0.5s ease' }} />
                     ))}
                   </div>
+                ) : tab === 'theme' ? (
+                  // 테마곡: 헤드폰을 쓰고 음악을 듣는 모습
+                  <img src={`/avatars/theme/${currentAvatar.id}.webp`} alt="avatar"
+                    style={{
+                      height: 'calc(var(--sh) * 0.75)', width: 'auto', objectFit: 'contain',
+                      transformOrigin: '50% 100%',
+                      animation: 'ealowm-breathe 4s ease-in-out infinite',
+                      animationPlayState: alive ? 'running' : 'paused',
+                    }} />
                 ) : (
                   <img src={currentAvatar.src} alt="avatar"
                     style={{
