@@ -327,7 +327,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                 <button
                   onClick={() => router.push(`/content/${s.id}`)}
                   className="w-full py-2.5 rounded-xl text-xs font-medium text-pink-500 border border-pink-100 bg-pink-50 hover:bg-pink-100 transition-all">
-                  🗂️ 콘텐츠 보기
+                  🗂️ {s.title} 콘텐츠 보기
                 </button>
               )}
               </div>
@@ -470,6 +470,9 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
             {isEn
               ? 'Heal yourself with wisdom, illuminate the world with compassion.'
               : '지혜로 나를 치유하고, 자비로 세상을 밝힌다.'}
+          </p>
+          <p className="text-center text-[11px] text-stone-300 pb-8">
+            © 2026 Dowook Kim. All rights reserved
           </p>
         </div>
       </main>
