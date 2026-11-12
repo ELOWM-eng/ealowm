@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { PracticeSession } from '@/types'
 import clsx from 'clsx'
+import ScheduleCard from '@/components/ScheduleCard'
 
 interface Props {
   userEmail: string
@@ -240,6 +241,11 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
           )}
         </div>
           
+        {/* 함께 수행 일정 (마음 수행 위) */}
+        <div className="mb-4 animate-fade-up">
+          <ScheduleCard version={version} />
+        </div>
+
         {hasPractice(version) && (
           <div className="mb-6 animate-fade-up">
             <button onClick={() => router.push('/practice')}
@@ -449,7 +455,7 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
               @16bon_won33
             </a>
             <div className="mt-3">
-              <a href="mailto:kkkk@kkkkkk"
+              <a href="mailto:dowook0328@naver.com"
                 className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-700 font-medium transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
