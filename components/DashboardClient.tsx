@@ -318,8 +318,8 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                         ✓
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full border-2 border-stone-200 flex items-center justify-center text-stone-300 group-hover:border-pink-300 transition-colors">
-                        →
+                      <div className="px-3 py-1.5 rounded-full border border-pink-200 bg-pink-50 text-xs font-medium text-pink-600 whitespace-nowrap group-hover:bg-pink-100 transition-colors">
+                        {isEn ? 'Start ›' : '시작하기 ›'}
                       </div>
                     )}
                   </div>
