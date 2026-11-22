@@ -137,6 +137,14 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
   const cardFrontSrc = `/daycards/${versionPrefix}_${session.id}_day${cardDay}_front.png`
   const cardBackSrc = `/daycards/${versionPrefix}_${session.id}_day${cardDay}_back.png`
 
+  // 카드 닫기: 7일째 카드면 정리해보기로, DAY 1~6 카드면 (다음 날 이어서 하므로) 대시보드로
+  function closeCard() {
+    setShowCard(false)
+    setIsFlipped(false)
+    if (cardDay === 7) setActiveTab('reflect')
+    else router.push('/dashboard')
+  }
+
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% -30%, #fdf2f8 0%, #fdf8f0 70%)' }}>
 
@@ -146,12 +154,7 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ background: 'rgba(0,0,0,0.7)' }}
           onClick={() => {
-            if (isFlipped) {
-              setShowCard(false)
-              setIsFlipped(false)
-              if (cardDay === 7) setActiveTab('reflect')
-              else setActiveDay(prev => Math.min(prev + 1, 6))
-            }
+            if (isFlipped) closeCard()
           }}>
           <div
             className="relative max-w-sm w-full animate-fade-up"
@@ -170,12 +173,7 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
                 </p>
               </div>
               <button
-                onClick={() => {
-                  setShowCard(false)
-                  setIsFlipped(false)
-                  if (cardDay === 7) setActiveTab('reflect')
-                  else setActiveDay(prev => Math.min(prev + 1, 6))
-                }}
+                onClick={closeCard}
                 className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 hover:bg-stone-200 transition-all">
                 ✕
               </button>
@@ -245,17 +243,12 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
                 </button>
               ) : (
                 <button
-                  onClick={() => {
-                    setShowCard(false)
-                    setIsFlipped(false)
-                    if (cardDay === 7) setActiveTab('reflect')
-                    else setActiveDay(prev => Math.min(prev + 1, 6))
-                  }}
+                  onClick={closeCard}
                   className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all"
                   style={{ background: cardDay === 7 ? 'linear-gradient(135deg, #5dcaa5, #1D9E75)' : 'linear-gradient(135deg, #f6a94a, #e07b20)' }}>
                   {cardDay === 7
                     ? (isEn ? 'Go to Organizing →' : '정리해보기로 이동 →')
-                    : (isEn ? `Go to DAY ${cardDay + 1} →` : `DAY ${cardDay + 1}로 이동 →`)}
+                    : (isEn ? 'Go to Dashboard →' : '대시보드로 가기 →')}
                 </button>
               )}
             </div>
@@ -1478,7 +1471,7 @@ const versionPrefix = version === 'youth' ? 'youth' : version === 'en' ? 'en' : 
                   setShowCard(true)
                 }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 transition-all">
-                  Save & DAY {activeDay + 2} →
+                  {isEn ? 'Save →' : '저장하기 →'}
                 </button>
               ) : (
                 <button onClick={async () => {
