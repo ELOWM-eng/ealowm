@@ -363,8 +363,8 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
             </h3>
             <p className="text-xs text-stone-500 leading-relaxed">
               {isEn
-                ? <>Based on Woncheuk's <em>Muryanguigyeongso</em><br/>A 12-step addiction prevention & mind-healing self-care program</>
-                : <>신라 시대 원측(圓測, 613–696) 스님의 『무량의경소』 기반<br/>12단계 중독 예방 및 마음 치유 자기돌봄 프로그램</>}
+                ? <>Based on Woncheuk's <em>Muryanguigyeongso</em> and the Six Pāramitās<br/>A 12-step addiction prevention & mind-healing self-care program</>
+                : <>신라 시대 원측(圓測, 613–696) 스님의 『무량의경소』와 육바라밀 기반<br/>12단계 중독 예방 및 마음 치유 자기돌봄 프로그램</>}
             </p>
           </div>
 
