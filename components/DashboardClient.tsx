@@ -262,7 +262,9 @@ export default function DashboardClient({ userEmail, completedIds, totalComplete
                     {isEn ? 'Silent sit, Tea Practice & Theme Songs' : '좌선 · 한 잔 수행 · 테마곡 듣기'}
                   </p>
                 </div>
-                <span className="ml-auto text-stone-300">→</span>
+                <span className="ml-auto flex-shrink-0 px-3 py-1.5 rounded-full border border-pink-200 bg-pink-50 text-xs font-medium text-pink-600 whitespace-nowrap">
+                  {isEn ? 'Start ›' : '시작하기 ›'}
+                </span>
               </div>
             </button>
           </div>
