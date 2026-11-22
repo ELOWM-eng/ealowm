@@ -7,6 +7,7 @@ export type PracticeTrack = {
   id: string
   title: string
   desc?: string
+  theme?: string // 회기 초점 주제 (테마곡 목록에서 회기 이름 옆/아래에 표시)
   src: string
 }
 
@@ -56,6 +57,22 @@ export const SESSION_NAMES: Record<string, { ko: string; en: string }> = {
   s10: { ko: '정진행', en: 'The Diligence' },
   s11: { ko: '선정행', en: 'The Concentration' },
   s12: { ko: '지혜행', en: 'The Wisdom' },
+}
+
+// 회기별 초점 주제 — 워크북 '프로그램의 세부 내용' 표의 '초점 주제' (영문은 번역이라 원하는 표현으로 고쳐도 돼요)
+export const SESSION_THEMES: Record<string, { ko: string; en: string }> = {
+  s1: { ko: '변화와 벗어남', en: 'Change & Liberation' },
+  s2: { ko: '번뇌와 끊어냄', en: 'Affliction & Release' },
+  s3: { ko: '인정과 따뜻함', en: 'Acceptance & Warmth' },
+  s4: { ko: '나눔과 이타심', en: 'Sharing & Altruism' },
+  s5: { ko: '도덕과 절제함', en: 'Virtue & Moderation' },
+  s6: { ko: '인내와 평온함', en: 'Patience & Serenity' },
+  s7: { ko: '비움과 덧없음', en: 'Detachment & Impermanence' },
+  s8: { ko: '살핌과 자각함', en: 'Mindfulness & Awareness' },
+  s9: { ko: '믿음과 무한함', en: 'Trust & Limitlessness' },
+  s10: { ko: '노력과 성장함', en: 'Effort & Growth' },
+  s11: { ko: '집중과 고요함', en: 'Focus & Stillness' },
+  s12: { ko: '통찰과 깨달음', en: 'Insight & Awakening' },
 }
 
 // 대시보드의 '마음 수행' 메뉴를 보여줄지 결정 (지금은 모든 버전에서 표시)

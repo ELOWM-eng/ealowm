@@ -7,6 +7,7 @@ import {
   PRACTICE_TRACKS,
   THEME_SESSIONS,
   SESSION_NAMES,
+  SESSION_THEMES,
   type PracticeTrack,
   type PracticeVersion,
 } from '@/lib/practice-config'
@@ -411,6 +412,7 @@ export default function PracticeClient({ version }: Props) {
     return {
       id: `theme-${id}`,
       title: isEn ? `Session ${n} · ${name?.en ?? ''}` : `${n}회기 · ${name?.ko ?? ''}`,
+      theme: SESSION_THEMES[id]?.[isEn ? 'en' : 'ko'],
       src: isEn ? `/audio-en/${id}.mp3` : `/audio/${id}.mp3`,
     }
   })
@@ -1031,7 +1033,12 @@ export default function PracticeClient({ version }: Props) {
                         {active && playing ? '❚❚' : '▶'}
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-medium text-stone-700">{t.title}</span>
+                        <span className={`text-sm font-medium text-stone-700 ${isEn ? 'block' : ''}`}>{t.title}</span>
+                        {t.theme && (
+                          <span className={isEn ? 'block text-xs text-pink-500 mt-0.5' : 'text-xs text-pink-500 ml-2'}>
+                            {isEn ? t.theme : `· ${t.theme}`}
+                          </span>
+                        )}
                         {t.desc && <span className="block text-xs text-stone-400 mt-0.5">{t.desc}</span>}
                       </span>
                     </button>
