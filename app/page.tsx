@@ -33,7 +33,7 @@ export default async function Home() {
           </h2>
           <p className="text-sm text-stone-600 leading-relaxed mb-4">
             신라 시대 원측(圓測, 613–696) 스님의 『무량의경소』(無量義經疏)에서 제시된
-            여섯 가지 수행 단계를 바탕으로 개발된 <strong>12단계 중독 예방 및 마음 치유 자기돌봄 프로그램</strong>입니다.
+            여섯 가지 수행 단계와 육바라밀을 바탕으로 개발된 <strong>12단계 중독 예방 및 마음 치유 자기돌봄 프로그램</strong>입니다.
           </p>
           <p className="text-sm text-stone-600 leading-relaxed mb-6">
             음주, 약물, 흡연, 게임, SNS, 쇼핑, 인간관계 등
@@ -42,7 +42,7 @@ export default async function Home() {
           </p>
           <div className="border-t border-stone-100 pt-4">
             <p className="text-sm text-stone-500 leading-relaxed mb-3">
-              This is a <strong>12-step addiction prevention and mind-healing self-care program</strong> developed based on the six stages of practice presented in the <em>Muryanguigyeongso</em> (無量義經疏) by the Silla Dynasty monk Woncheuk (圓測, 613–696).
+              This is a <strong>12-step addiction prevention and mind-healing self-care program</strong> developed based on the six stages of practice presented in the <em>Muryanguigyeongso</em> (無量義經疏) by the Silla Dynasty monk Woncheuk (圓測, 613–696), and the Six Pāramitās.
             </p>
             <p className="text-sm text-stone-500 leading-relaxed">
               It is a practical journey to protect yourself from various addictions easily encountered in daily life, such as alcohol, drugs, smoking, gaming, SNS, shopping, and interpersonal relationships, and to cultivate the strength of a healthy mind.
@@ -111,10 +111,10 @@ export default async function Home() {
           <AuthForm />
         </div>
         <p className="mt-6 text-xs text-stone-400 text-center leading-relaxed">
-          원측(圓測, 613–696) 『무량의경소』(無量義經疏) 기반<br/>
+          원측(圓測, 613–696) 『무량의경소』(無量義經疏)와 육바라밀 기반<br/>
           중독 예방 및 마음 치유 프로그램<br/>
           <span className="text-stone-300">·</span><br/>
-          Based on Woncheuk's <em>Muryanguigyeongso</em><br/>
+          Based on Woncheuk's <em>Muryanguigyeongso</em> and the Six Pāramitās<br/>
           A 12-step addiction prevention & mind-healing program
         </p>
       </section>
