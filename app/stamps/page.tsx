@@ -112,8 +112,12 @@ export default function StampsPage() {
             return (
               <section key={c.id} className="bg-white rounded-2xl border border-pink-100 p-4">
                 <div className="flex items-baseline justify-between mb-1">
-                  <h2 className="text-sm font-medium text-stone-700">{en ? c.name_en : c.name_ko}</h2>
-                  <span className="text-xs text-stone-400">{c.start_date} ~ {toIso(startMs + (p.total - 1) * DAY)}</span>
+                  <h2 className="text-sm font-medium text-stone-700">
+                    {en && /^(.*?)\s*(\(.*\))$/.test(c.name_en)
+                      ? <>{c.name_en.replace(/\s*\(.*\)$/, '')}<br />{c.name_en.replace(/^.*?(\(.*\))$/, '$1')}</>
+                      : (en ? c.name_en : c.name_ko)}
+                  </h2>
+                  <span className="text-xs text-stone-400 whitespace-nowrap ml-2 shrink-0">{c.start_date} ~ {toIso(startMs + (p.total - 1) * DAY)}</span>
                 </div>
                 <p className="text-sm text-stone-600 mb-2">
                   {p.count}/{p.total}{t.days} · {t.need} {p.need}{t.days} ({c.pass_percent}%)
