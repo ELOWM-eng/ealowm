@@ -696,7 +696,7 @@ export default function PracticeClient({ version }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium text-stone-700 truncate">
-                        {track ? track.title : (isEn ? 'Nothing selected' : '선택된 수행이 없어요')}
+                        {track ? track.title : tab === 'theme' ? (isEn ? 'No song selected' : '선택된 노래가 없어요') : (isEn ? 'Nothing selected' : '선택된 수행이 없어요')}
                       </p>
                       <button onClick={cycleRepeat} aria-pressed={repeat !== 'off'}
                         className={`text-xs px-2.5 py-1 rounded-full border flex-shrink-0 transition-all ${
@@ -1035,8 +1035,8 @@ export default function PracticeClient({ version }: Props) {
                       <span className="flex-1 min-w-0">
                         <span className={`text-sm font-medium text-stone-700 ${isEn ? 'block' : ''}`}>{t.title}</span>
                         {t.theme && (
-                          <span className={isEn ? 'block text-xs text-pink-500 mt-0.5' : 'text-xs text-pink-500 ml-2'}>
-                            {isEn ? t.theme : `· ${t.theme}`}
+                          <span className={isEn ? 'block text-xs text-pink-500 mt-0.5' : 'text-sm font-medium text-stone-700'}>
+                            {isEn ? t.theme : ` · ${t.theme}`}
                           </span>
                         )}
                         {t.desc && <span className="block text-xs text-stone-400 mt-0.5">{t.desc}</span>}
