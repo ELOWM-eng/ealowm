@@ -645,11 +645,13 @@ export default function PracticeClient({ version }: Props) {
                     ? `${isEn ? 'Silent sitting' : '좌선 중'} · ${fmt(zRemain)}`
                     : tab === 'tea'
                       ? (tStatus === 'idle'
-                          ? (isEn ? 'Tea practice' : '한 잔 수행')
+                          ? (isEn ? 'Stay with the color, aroma, and taste of your cup' : '차 한 잔의 빛깔과 향, 맛에 머물러 보세요')
                           : `${isEn ? 'Tea practice' : '한 잔 수행'} · ${isEn ? teaStep.en : teaStep.ko}`)
                     : track
                       ? track.title
-                      : (isEn ? 'Choose a practice below' : '아래에서 수행을 선택해보세요')}
+                      : tab === 'theme'
+                        ? (isEn ? "Rest your mind in this session's song" : '회기의 노래를 들으며 마음을 쉬어 보세요')
+                        : (isEn ? 'Quietly turn your attention to yourself' : '조용히 자신에게 집중해 보세요')}
                 </p>
               </div>
               <button onClick={() => setChoosing(true)}
