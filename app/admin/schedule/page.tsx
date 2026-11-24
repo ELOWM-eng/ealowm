@@ -13,7 +13,7 @@ const VERSIONS: { key: string; label: string }[] = [
   { key: 'en', label: '영문' },
   { key: 'youth', label: '청소년' },
 ]
-type SecretRow = { id: string; versions: string[]; title: string; closes_at: string }
+type SecretRow = { id: string; versions: string[]; title: string; opens_at: string; closes_at: string }
 const vLabel = (v: string[]) => v.map(k => VERSIONS.find(x => x.key === k)?.label ?? k).join('·')
 
 export default function AdminSchedulePage() {
@@ -35,7 +35,10 @@ export default function AdminSchedulePage() {
   const [secRows, setSecRows] = useState<SecretRow[]>([])
   const [sTitle, setSTitle] = useState('')
   const [sPw, setSPw] = useState('')
-  const [sHours, setSHours] = useState(3)
+  const [sNow, setSNow] = useState(false) // 지금 바로 열기
+  const [sDate, setSDate] = useState(todayIn(KST))
+  const [sTime, setSTime] = useState('20:00')
+  const [sMins, setSMins] = useState(120)
   const [sVersions, setSVersions] = useState<string[]>(['adult'])
   const [sMsg, setSMsg] = useState('')
   const [pwEditId, setPwEditId] = useState<string | null>(null)
@@ -65,7 +68,7 @@ export default function AdminSchedulePage() {
 
   const loadSecret = useCallback(async () => {
     const sb = createClient()
-    const r = await sb.from('secret_rooms').select('id,versions,title,closes_at').order('closes_at', { ascending: false }).limit(20)
+    const r = await sb.from('secret_rooms').select('id,versions,title,opens_at,closes_at').order('closes_at', { ascending: false }).limit(20)
     if (r.error) { setSMsg('비밀방을 불러오지 못했어요 (secret-rooms-setup.sql 을 실행했는지 확인해주세요): ' + r.error.message); return }
     setSecRows((r.data ?? []) as SecretRow[])
   }, [])
@@ -76,13 +79,17 @@ export default function AdminSchedulePage() {
     if (!sTitle.trim()) { setSMsg('방 이름을 적어주세요.'); return }
     if (sPw.length < 4) { setSMsg('비밀번호는 4자 이상으로 해주세요.'); return }
     if (!sVersions.length) { setSMsg('열어줄 버전을 하나 이상 골라주세요.'); return }
-    if (!(sHours >= 1 && sHours <= 72)) { setSMsg('열어 두는 시간은 1~72시간으로 해주세요.'); return }
+    if (!(sMins >= 5 && sMins <= 4320)) { setSMsg('열어 두는 길이는 5분~72시간(4320분) 사이로 해주세요.'); return }
+    if (!sNow && (!sDate || !sTime)) { setSMsg('날짜와 시작 시각을 골라주세요.'); return }
+    const opens = sNow ? new Date() : wallToUtc(sDate, sTime, tz)
+    const closes = new Date(opens.getTime() + Math.round(sMins) * 60000)
+    if (closes.getTime() <= Date.now()) { setSMsg('닫히는 시각이 이미 지났어요. 날짜와 시각을 확인해주세요.'); return }
     setBusy(true)
     const sb = createClient()
-    const r = await sb.rpc('admin_create_secret_room', { p_versions: sVersions, p_title: sTitle.trim(), p_password: sPw, p_hours: Math.round(sHours) })
+    const r = await sb.rpc('admin_create_secret_room', { p_versions: sVersions, p_title: sTitle.trim(), p_password: sPw, p_opens_at: opens.toISOString(), p_closes_at: closes.toISOString() })
     setBusy(false)
     if (r.error) { setSMsg('만들지 못했어요: ' + r.error.message); return }
-    setSMsg(`비밀방을 열었어요. 비밀번호는 다시 볼 수 없으니 따로 적어 두세요: ${sPw}`)
+    setSMsg(`${sNow ? '비밀방을 열었어요.' : '비밀방을 만들었어요. 시작 시각부터 들어올 수 있어요.'} 비밀번호는 다시 볼 수 없으니 따로 적어 두세요: ${sPw}`)
     setSTitle(''); setSPw('')
     void loadSecret()
   }
@@ -234,7 +241,7 @@ export default function AdminSchedulePage() {
                       <div className="flex-1 min-w-0">
                         <p className={`truncate ${open ? 'text-stone-700' : 'text-stone-400'}`}>{r.title}</p>
                         <p className="text-[11px] text-stone-400">
-                          {open ? '열려 있음' : '닫힘'} · ~{wallOf(r.closes_at, tz).date} {wallOf(r.closes_at, tz).time} · {vLabel(r.versions)}
+                          {Date.parse(r.closes_at) <= Date.now() ? '닫힘' : Date.parse(r.opens_at) > Date.now() ? '열리기 전' : '열려 있음'} · {wallOf(r.opens_at, tz).date} {wallOf(r.opens_at, tz).time} ~ {wallOf(r.closes_at, tz).date === wallOf(r.opens_at, tz).date ? '' : wallOf(r.closes_at, tz).date + ' '}{wallOf(r.closes_at, tz).time} · {vLabel(r.versions)}
                         </p>
                       </div>
                       {open && (
@@ -256,14 +263,29 @@ export default function AdminSchedulePage() {
             )}
             <input value={sTitle} onChange={e => setSTitle(e.target.value)} placeholder="방 이름 (예: 이로움 벗들의 방)"
               className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm" />
-            <div className="flex gap-2">
-              <label className="flex-1 text-[11px] text-stone-400">비밀번호 (4자 이상)
-                <input value={sPw} onChange={e => setSPw(e.target.value)} autoComplete="off" className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
-              </label>
-              <label className="w-28 text-[11px] text-stone-400">열어 둘 시간
-                <input type="number" min={1} max={72} value={sHours} onChange={e => setSHours(Number(e.target.value))} className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
-              </label>
-            </div>
+            <label className="block text-[11px] text-stone-400">비밀번호 (4자 이상)
+              <input value={sPw} onChange={e => setSPw(e.target.value)} autoComplete="off" className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-stone-600">
+              <input type="checkbox" checked={sNow} onChange={e => setSNow(e.target.checked)} />
+              지금 바로 열기
+            </label>
+            {!sNow && (
+              <div className="flex gap-2">
+                <label className="flex-1 text-[11px] text-stone-400">시작 날짜
+                  <input type="date" value={sDate} onChange={e => setSDate(e.target.value)} className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
+                </label>
+                <label className="flex-1 text-[11px] text-stone-400">시작 시각
+                  <input type="time" value={sTime} onChange={e => setSTime(e.target.value)} className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
+                </label>
+              </div>
+            )}
+            <label className="block text-[11px] text-stone-400">열어 둘 길이(분) · 5~4320
+              <input type="number" min={5} max={4320} value={sMins} onChange={e => setSMins(Number(e.target.value))} className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
+            </label>
+            <p className="text-[11px] text-stone-400">
+              {sNow ? '지금부터' : `${sDate} ${sTime}부터`} {sMins}분 동안 열려요 ({tz === KST ? '한국 시간' : '미국 동부'} 기준 — 위쪽 시간대 선택과 같아요).
+            </p>
             <div className="flex gap-3 text-sm text-stone-600">
               {VERSIONS.filter(v => v.key !== 'youth').map(v => (
                 <label key={v.key} className="flex items-center gap-1">

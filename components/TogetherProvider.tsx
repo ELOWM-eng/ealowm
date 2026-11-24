@@ -18,7 +18,7 @@ import {
 type Sess = { id: string; title: string; starts_at: string; duration_min: number }
 type Person = { key: string; nickname: string; avatar: string }
 type Meta = { nickname: string; avatar: string; activity?: string }
-type SecretRoom = { id: string; title: string; closes_at: string }
+type SecretRoom = { id: string; title: string; opens_at: string; closes_at: string }
 type SPerson = Person & { activity: string }
 type Focus = { week_start: string; text_ko: string; text_en: string | null }
 
@@ -92,7 +92,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         saveFail: 'Could not save. Please try again.', net: 'Connection is unstable…',
         guide: `You can join from ${JOIN_BEFORE_MIN} minutes before the start.`,
         secBtn: '🔒 Private rooms', secTitle: 'Private rooms', secEmpty: 'No private rooms are open now.',
-        secUntil: 'Open until', secPw: 'Password', secPwPh: 'Enter the password', secEnter: 'Enter', secBack: 'Back', secClose: 'Close',
+        secUntil: 'Open', secSoon: 'Opens soon', secNotYet: 'This room has not opened yet.', secPw: 'Password', secPwPh: 'Enter the password', secEnter: 'Enter', secBack: 'Back', secClose: 'Close',
         secPwNeed: 'Please enter the password.', secWrong: 'That password is not correct.',
         secLocked: 'Too many wrong tries. Please try again in 10 minutes.', secClosed: 'This room has closed.',
         secDenied: 'You cannot enter this room.', secFail: 'Could not connect. Please try again.', secIn: 'Private room',
@@ -106,7 +106,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         saveFail: '저장하지 못했어요. 다시 시도해주세요.', net: '연결이 불안정해요…',
         guide: `시작 ${JOIN_BEFORE_MIN}분 전부터 참여할 수 있어요.`,
         secBtn: '🔒 비밀방', secTitle: '비밀방', secEmpty: '지금 열려 있는 비밀방이 없어요.',
-        secUntil: '열려 있는 시간', secPw: '비밀번호', secPwPh: '비밀번호를 입력해주세요', secEnter: '입장', secBack: '뒤로', secClose: '닫기',
+        secUntil: '열려 있는 시간', secSoon: '열리기 전', secNotYet: '아직 열리기 전이에요.', secPw: '비밀번호', secPwPh: '비밀번호를 입력해주세요', secEnter: '입장', secBack: '뒤로', secClose: '닫기',
         secPwNeed: '비밀번호를 입력해주세요.', secWrong: '비밀번호가 맞지 않아요.',
         secLocked: '여러 번 틀려서 잠시 막혔어요. 10분 뒤에 다시 해주세요.', secClosed: '닫힌 방이에요.',
         secDenied: '이 방에는 들어갈 수 없어요.', secFail: '연결하지 못했어요. 다시 시도해주세요.', secIn: '비밀방',
@@ -308,9 +308,9 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     if (!version || version === 'youth') { setSecretRooms([]); return }
     const { data, error } = await sb()
       .from('secret_rooms')
-      .select('id,title,closes_at')
+      .select('id,title,opens_at,closes_at')
       .gt('closes_at', new Date().toISOString())
-      .order('closes_at', { ascending: true })
+      .order('opens_at', { ascending: true })
     if (error) return
     setSecretRooms((data ?? []) as SecretRoom[])
   }, [version])
@@ -407,7 +407,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     if (error || !res) { setSecretBusy(false); setSecretErr(L.secFail); return }
     if (!res.ok || !res.token) {
       setSecretBusy(false)
-      setSecretErr(res.code === 'wrong' ? L.secWrong : res.code === 'locked' ? L.secLocked : res.code === 'closed' ? L.secClosed : res.code === 'denied' ? L.secDenied : L.secFail)
+      setSecretErr(res.code === 'wrong' ? L.secWrong : res.code === 'locked' ? L.secLocked : res.code === 'closed' ? L.secClosed : res.code === 'notyet' ? L.secNotYet : res.code === 'denied' ? L.secDenied : L.secFail)
       return
     }
     if (!nickname) {
@@ -612,15 +612,20 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                 {secretRooms.length === 0
                   ? <p className="text-sm text-stone-400">{L.secEmpty}</p>
                   : <ul className="space-y-2">
-                      {secretRooms.map(r => (
-                        <li key={r.id}>
-                          <button onClick={() => { setSecretPick(r); setSecretPw(''); setSecretErr('') }}
-                            className="w-full text-left border border-stone-100 rounded-xl px-4 py-3 hover:border-purple-200">
-                            <span className="block text-sm font-medium text-stone-700">{r.title}</span>
-                            <span className="block text-xs text-stone-400 mt-0.5">{L.secUntil} · ~ {fmtUntil(r.closes_at)}</span>
-                          </button>
-                        </li>
-                      ))}
+                      {secretRooms.map(r => {
+                        const notYet = now < Date.parse(r.opens_at)
+                        return (
+                          <li key={r.id}>
+                            <button onClick={() => { if (!notYet) { setSecretPick(r); setSecretPw(''); setSecretErr('') } }} disabled={notYet}
+                              className={`w-full text-left border rounded-xl px-4 py-3 ${notYet ? 'border-stone-100 bg-stone-50' : 'border-stone-100 hover:border-purple-200'}`}>
+                              <span className={`block text-sm font-medium ${notYet ? 'text-stone-400' : 'text-stone-700'}`}>{r.title}</span>
+                              <span className="block text-xs text-stone-400 mt-0.5">
+                                {notYet ? `${L.secSoon} · ` : `${L.secUntil} · `}{fmtUntil(r.opens_at)} ~ {fmtUntil(r.closes_at)}
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
                     </ul>}
                 <button onClick={() => setSecretList(false)} className="w-full py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.secClose}</button>
               </>
