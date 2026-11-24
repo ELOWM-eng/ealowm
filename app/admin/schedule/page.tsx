@@ -31,7 +31,7 @@ export default function AdminSchedulePage() {
   const [fDur, setFDur] = useState(120)
   const [editId, setEditId] = useState<string | null>(null)
 
-  // 비밀방 (출석·도장과 상관없이 따로 열리는 방 — 성인·영문만)
+  // 비공개 수행방 (출석·도장과 상관없이 따로 열리는 방 — 성인·영문만)
   const [secRows, setSecRows] = useState<SecretRow[]>([])
   const [sTitle, setSTitle] = useState('')
   const [sPw, setSPw] = useState('')
@@ -69,7 +69,7 @@ export default function AdminSchedulePage() {
   const loadSecret = useCallback(async () => {
     const sb = createClient()
     const r = await sb.from('secret_rooms').select('id,versions,title,opens_at,closes_at').order('closes_at', { ascending: false }).limit(20)
-    if (r.error) { setSMsg('비밀방을 불러오지 못했어요 (secret-rooms-setup.sql 을 실행했는지 확인해주세요): ' + r.error.message); return }
+    if (r.error) { setSMsg('비공개 수행방을 불러오지 못했어요 (secret-rooms-setup.sql 을 실행했는지 확인해주세요): ' + r.error.message); return }
     setSecRows((r.data ?? []) as SecretRow[])
   }, [])
   useEffect(() => { if (state === 'ok') void loadSecret() }, [state, loadSecret])
@@ -89,7 +89,7 @@ export default function AdminSchedulePage() {
     const r = await sb.rpc('admin_create_secret_room', { p_versions: sVersions, p_title: sTitle.trim(), p_password: sPw, p_opens_at: opens.toISOString(), p_closes_at: closes.toISOString() })
     setBusy(false)
     if (r.error) { setSMsg('만들지 못했어요: ' + r.error.message); return }
-    setSMsg(`${sNow ? '비밀방을 열었어요.' : '비밀방을 만들었어요. 시작 시각부터 들어올 수 있어요.'} 비밀번호는 다시 볼 수 없으니 따로 적어 두세요: ${sPw}`)
+    setSMsg(`${sNow ? '비공개 수행방을 열었어요.' : '비공개 수행방을 만들었어요. 시작 시각부터 들어올 수 있어요.'} 비밀번호는 다시 볼 수 없으니 따로 적어 두세요: ${sPw}`)
     setSTitle(''); setSPw('')
     void loadSecret()
   }
@@ -107,7 +107,7 @@ export default function AdminSchedulePage() {
   }
 
   async function removeSecret(r: SecretRow) {
-    if (!window.confirm(`비밀방 "${r.title}" 을(를) 지울까요? 안에 있는 사람은 다음 확인 때 나가져요.`)) return
+    if (!window.confirm(`비공개 수행방 "${r.title}" 을(를) 지울까요? 안에 있는 사람은 다음 확인 때 나가져요.`)) return
     setBusy(true)
     const sb = createClient()
     const res = await sb.from('secret_rooms').delete().eq('id', r.id)
@@ -227,7 +227,7 @@ export default function AdminSchedulePage() {
           </section>
 
           <section className="bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
-            <h2 className="text-sm font-medium text-stone-700">🔒 비밀방 열기</h2>
+            <h2 className="text-sm font-medium text-stone-700">🔒 비공개 수행방 열기</h2>
             <p className="text-[11px] text-stone-400 leading-relaxed">
               일정과 따로 열리는 방이에요. 출석·도장·수료에는 들어가지 않고, 비밀번호를 아는 사람만 들어올 수 있어요.
               방 안에서는 닉네임 옆에 지금 하는 수행이 보여요. (성인·영문만)
@@ -295,7 +295,7 @@ export default function AdminSchedulePage() {
                 </label>
               ))}
             </div>
-            <button disabled={busy} onClick={() => void createSecret()} className="w-full py-2.5 rounded-xl text-sm text-white bg-purple-500 disabled:opacity-50">비밀방 열기</button>
+            <button disabled={busy} onClick={() => void createSecret()} className="w-full py-2.5 rounded-xl text-sm text-white bg-purple-500 disabled:opacity-50">비공개 수행방 열기</button>
             {sMsg && <p className="text-xs text-stone-500 break-words">{sMsg}</p>}
           </section>
         </div>

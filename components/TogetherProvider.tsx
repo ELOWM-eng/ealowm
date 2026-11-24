@@ -25,7 +25,7 @@ type Focus = { week_start: string; text_ko: string; text_en: string | null }
 const AVATAR_KEY = 'ealowm_avatar'          // 마음 수행에서 고른 아바타
 const JOINED_KEY = 'ealowm_together_joined' // 참여 중이던 일정 (새로고침 후 자동으로 다시 들어오기 위해)
 const BAR_KEY = 'ealowm_together_bar_min'   // 아래 안내 막대를 접어 두었는지
-const SECRET_KEY = 'ealowm_secret_joined'   // 참여 중이던 비밀방 (새로고침 후 비밀번호를 다시 묻지 않기 위해)
+const SECRET_KEY = 'ealowm_secret_joined'   // 참여 중이던 비공개 수행방 (새로고침 후 비밀번호를 다시 묻지 않기 위해)
 const AVATAR_IDS = ['girl', 'boy-casual', 'boy-uniform', 'woman']
 const MAX_SESSION_MIN = 240
 
@@ -66,7 +66,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const channelRef = useRef<RealtimeChannel | null>(null)
   const joinedSessionRef = useRef<string | null>(null) // 지금 들어가 있는 일정
 
-  // ----- 비밀방 (출석·도장과 상관없이 따로 있는 방. 성인·영문만) -----
+  // ----- 비공개 수행방 (출석·도장과 상관없이 따로 있는 방. 성인·영문만) -----
   const [secretRooms, setSecretRooms] = useState<SecretRoom[]>([])
   const [secretList, setSecretList] = useState(false)
   const [secretPick, setSecretPick] = useState<SecretRoom | null>(null)
@@ -111,11 +111,11 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         saveFail: '저장하지 못했어요. 다시 시도해주세요.', net: '연결이 불안정해요…',
         guide: `시작 ${JOIN_BEFORE_MIN}분 전부터 참여할 수 있어요.`,
         barHide: '▾ 접기', barShow: '함께 수행 막대 펼치기', secView: '보기',
-        secBtn: '🔒 비밀방', secTitle: '비밀방', secEmpty: '지금 열려 있는 비밀방이 없어요.',
+        secBtn: '🔒 비공개 수행방', secTitle: '비공개 수행방', secEmpty: '지금 열려 있는 비공개 수행방이 없어요.',
         secUntil: '열려 있는 시간', secSoon: '열리기 전', secNotYet: '아직 열리기 전이에요.', secPw: '비밀번호', secPwPh: '비밀번호를 입력해주세요', secEnter: '입장', secBack: '뒤로', secClose: '닫기',
         secPwNeed: '비밀번호를 입력해주세요.', secWrong: '비밀번호가 맞지 않아요.',
         secLocked: '여러 번 틀려서 잠시 막혔어요. 10분 뒤에 다시 해주세요.', secClosed: '닫힌 방이에요.',
-        secDenied: '이 방에는 들어갈 수 없어요.', secFail: '연결하지 못했어요. 다시 시도해주세요.', secIn: '비밀방',
+        secDenied: '이 방에는 들어갈 수 없어요.', secFail: '연결하지 못했어요. 다시 시도해주세요.', secIn: '비공개 수행방',
         secNote: '일정에 있는 함께 수행과는 따로 있는 방이에요. 출석과 수료에는 들어가지 않아요.',
       }
 
@@ -146,7 +146,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     }
   }, [])
 
-  // ----- 비밀방 나가기 -----
+  // ----- 비공개 수행방 나가기 -----
   const leaveSecret = useCallback(async () => {
     const ch = secretChRef.current
     secretChRef.current = null
@@ -309,7 +309,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     if (sch) void sb().removeChannel(sch)
   }, [])
 
-  // ----- 열려 있는 비밀방 목록 (1분마다) — 성인·영문만. 아직 SQL 을 안 돌렸으면 조용히 비워 둬요 -----
+  // ----- 열려 있는 비공개 수행방 목록 (1분마다) — 성인·영문만. 아직 SQL 을 안 돌렸으면 조용히 비워 둬요 -----
   const loadSecret = useCallback(async () => {
     if (!version || version === 'youth') { setSecretRooms([]); return }
     const { data, error } = await sb()
@@ -330,7 +330,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
   }, [userId, version, loadSecret])
 
-  // 비밀방 입장 (비밀번호를 맞힌 사람이 받은 열쇠(token)가 방 이름에 들어가요)
+  // 비공개 수행방 입장 (비밀번호를 맞힌 사람이 받은 열쇠(token)가 방 이름에 들어가요)
   const joinSecret = useCallback(async (room: SecretRoom, token: string, nick: string, avatarId?: string) => {
     if (!userId) return
     if (secretChRef.current) await leaveSecret()
@@ -358,7 +358,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     try { localStorage.setItem(SECRET_KEY, JSON.stringify({ u: userId, r: room.id, t: token, n: nick })) } catch {}
   }, [userId, leaveSecret])
 
-  // 새로고침해도 비밀방이 열려 있으면 다시 들어와요
+  // 새로고침해도 비공개 수행방이 열려 있으면 다시 들어와요
   useEffect(() => {
     if (secretJoined || secretChRef.current || !userId || secretRooms.length === 0) return
     try {
@@ -375,7 +375,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     if (secretJoined && now >= Date.parse(secretJoined.closes_at)) void leaveSecret()
   }, [secretJoined, now, leaveSecret])
 
-  // 지금 하는 수행이 바뀌면 비밀방 사람들에게 알려요 (바뀐 뒤 0.8초 기다렸다가 한 번만)
+  // 지금 하는 수행이 바뀌면 비공개 수행방 사람들에게 알려요 (바뀐 뒤 0.8초 기다렸다가 한 번만)
   useEffect(() => {
     if (!secretJoined) return
     let timer: number | undefined
@@ -397,7 +397,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     setSecretList(true)
   }
 
-  // 비밀방 하나를 골라 바로 비밀번호·닉네임·도반 창으로
+  // 비공개 수행방 하나를 골라 바로 비밀번호·닉네임·도반 창으로
   function openSecretRoom(room: SecretRoom) {
     setSecretPick(room); setSecretPw(''); setSecretErr('')
     setSecretNick(nickname ?? '')
@@ -540,7 +540,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                   </div>
                 )}
 
-                {/* 하나의 카드 안에 일정 방과 비밀방을 함께 담아서 화면을 덜 가려요 */}
+                {/* 하나의 카드 안에 일정 방과 비공개 수행방을 함께 담아서 화면을 덜 가려요 */}
                 <div className="relative bg-white rounded-2xl border border-pink-100 shadow-lg">
                   <button onClick={() => toggleBar(true)}
                     className="absolute -top-3 right-4 h-6 px-3 rounded-full bg-white border border-pink-100 shadow-sm text-[11px] text-stone-400 hover:text-stone-600">
