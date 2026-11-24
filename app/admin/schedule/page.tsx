@@ -38,6 +38,8 @@ export default function AdminSchedulePage() {
   const [sHours, setSHours] = useState(3)
   const [sVersions, setSVersions] = useState<string[]>(['adult'])
   const [sMsg, setSMsg] = useState('')
+  const [pwEditId, setPwEditId] = useState<string | null>(null)
+  const [pwEditVal, setPwEditVal] = useState('')
 
   useEffect(() => {
     ;(async () => {
@@ -83,6 +85,18 @@ export default function AdminSchedulePage() {
     setSMsg(`비밀방을 열었어요. 비밀번호는 다시 볼 수 없으니 따로 적어 두세요: ${sPw}`)
     setSTitle(''); setSPw('')
     void loadSecret()
+  }
+
+  async function changeSecretPw(r: SecretRow) {
+    setSMsg('')
+    if (pwEditVal.length < 4) { setSMsg('새 비밀번호는 4자 이상으로 해주세요.'); return }
+    setBusy(true)
+    const sb = createClient()
+    const res = await sb.rpc('admin_set_secret_password', { p_room: r.id, p_password: pwEditVal })
+    setBusy(false)
+    if (res.error) { setSMsg('바꾸지 못했어요 (secret-rooms-setup.sql 을 다시 실행했는지 확인해주세요): ' + res.error.message); return }
+    setSMsg(`"${r.title}" 의 비밀번호를 바꿨어요. 새 비밀번호는 다시 볼 수 없으니 따로 적어 두세요: ${pwEditVal}`)
+    setPwEditId(null); setPwEditVal('')
   }
 
   async function removeSecret(r: SecretRow) {
@@ -216,14 +230,25 @@ export default function AdminSchedulePage() {
                 {secRows.map(r => {
                   const open = Date.parse(r.closes_at) > Date.now()
                   return (
-                    <li key={r.id} className="flex items-center gap-2 text-sm border border-stone-100 rounded-xl px-3 py-2">
+                    <li key={r.id} className="flex flex-wrap items-center gap-2 text-sm border border-stone-100 rounded-xl px-3 py-2">
                       <div className="flex-1 min-w-0">
                         <p className={`truncate ${open ? 'text-stone-700' : 'text-stone-400'}`}>{r.title}</p>
                         <p className="text-[11px] text-stone-400">
                           {open ? '열려 있음' : '닫힘'} · ~{wallOf(r.closes_at, tz).date} {wallOf(r.closes_at, tz).time} · {vLabel(r.versions)}
                         </p>
                       </div>
+                      {open && (
+                        <button disabled={busy} onClick={() => { setPwEditId(pwEditId === r.id ? null : r.id); setPwEditVal(''); setSMsg('') }}
+                          className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 whitespace-nowrap">비번 변경</button>
+                      )}
                       <button disabled={busy} onClick={() => void removeSecret(r)} className="text-xs text-red-400 border border-red-100 rounded-lg px-2 py-1">삭제</button>
+                      {pwEditId === r.id && (
+                        <div className="basis-full flex gap-2 pt-2">
+                          <input value={pwEditVal} onChange={e => setPwEditVal(e.target.value)} autoComplete="off" placeholder="새 비밀번호 (4자 이상)"
+                            className="flex-1 min-w-0 border border-stone-200 rounded-lg px-3 py-2 text-sm" />
+                          <button disabled={busy} onClick={() => void changeSecretPw(r)} className="text-xs text-white bg-purple-500 rounded-lg px-3 py-2 whitespace-nowrap disabled:opacity-50">바꾸기</button>
+                        </div>
+                      )}
                     </li>
                   )
                 })}
