@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { companionOf } from '@/lib/companions'
+import { setActivity, type Activity } from '@/lib/activity'
 import {
   PRACTICE_TRACKS,
   THEME_SESSIONS,
@@ -418,7 +419,7 @@ export default function PracticeClient({ version }: Props) {
   })
 
   const allTabs: { key: Tab; label: string; tracks: PracticeTrack[] }[] = [
-    { key: 'bodyscan', label: isEn ? 'Body Scan' : '바디스캔', tracks: set.bodyscan },
+    { key: 'bodyscan', label: isEn ? 'Body Observation' : '몸 관찰 수행', tracks: set.bodyscan },
     { key: 'focus', label: isEn ? 'Focus' : '주의집중 수행', tracks: set.focus },
     { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
     { key: 'tea', label: isEn ? 'Tea' : '한 잔 수행', tracks: [] },
@@ -490,6 +491,16 @@ export default function PracticeClient({ version }: Props) {
   const teaStep = TEA_STEPS[teaIdx]
   const showRotateHint = touch && !landscape && !hintDismissed
   const zActive = zStatus === 'running' || zStatus === 'paused'
+
+  // 비밀방에서 닉네임 옆에 보일 '지금 하는 수행' (좌선·한 잔 수행·음성 재생 중일 때만)
+  const trackKind: Activity | null = !track ? null
+    : track.id.startsWith('theme-') ? 'theme'
+    : set.bodyscan.some(x => x.id === track.id) ? 'body' : 'focus'
+  const nowActivity: Activity | null = zActive ? 'zazen'
+    : (tStatus === 'running' || tStatus === 'paused') ? 'tea'
+    : playing ? trackKind : null
+  useEffect(() => { setActivity(nowActivity) }, [nowActivity])
+  useEffect(() => () => setActivity(null), [])
   const unit = isEn ? 'min' : '분'
 
   return (

@@ -5,6 +5,7 @@
 // app/layout.tsx 의 바깥 틀에 넣어서, 페이지를 옮겨 다녀도 접속이 유지돼요.
 
 import { companionOf } from '@/lib/companions'
+import { ACTIVITY_EVENT, getActivity, activityLabel, isActivity } from '@/lib/activity'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -16,11 +17,14 @@ import {
 
 type Sess = { id: string; title: string; starts_at: string; duration_min: number }
 type Person = { key: string; nickname: string; avatar: string }
-type Meta = { nickname: string; avatar: string }
+type Meta = { nickname: string; avatar: string; activity?: string }
+type SecretRoom = { id: string; title: string; closes_at: string }
+type SPerson = Person & { activity: string }
 type Focus = { week_start: string; text_ko: string; text_en: string | null }
 
 const AVATAR_KEY = 'ealowm_avatar'          // 마음 수행에서 고른 아바타
 const JOINED_KEY = 'ealowm_together_joined' // 참여 중이던 일정 (새로고침 후 자동으로 다시 들어오기 위해)
+const SECRET_KEY = 'ealowm_secret_joined'   // 참여 중이던 비밀방 (새로고침 후 비밀번호를 다시 묻지 않기 위해)
 const AVATAR_IDS = ['girl', 'boy-casual', 'boy-uniform', 'woman']
 const MAX_SESSION_MIN = 240
 
@@ -61,6 +65,22 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const channelRef = useRef<RealtimeChannel | null>(null)
   const joinedSessionRef = useRef<string | null>(null) // 지금 들어가 있는 일정
 
+  // ----- 비밀방 (출석·도장과 상관없이 따로 있는 방. 성인·영문만) -----
+  const [secretRooms, setSecretRooms] = useState<SecretRoom[]>([])
+  const [secretList, setSecretList] = useState(false)
+  const [secretPick, setSecretPick] = useState<SecretRoom | null>(null)
+  const [secretPw, setSecretPw] = useState('')
+  const [secretNick, setSecretNick] = useState('')
+  const [secretErr, setSecretErr] = useState('')
+  const [secretBusy, setSecretBusy] = useState(false)
+  const [secretJoined, setSecretJoined] = useState<SecretRoom | null>(null)
+  const [secretPeople, setSecretPeople] = useState<SPerson[]>([])
+  const [secretPanel, setSecretPanel] = useState(false)
+  const [secretNet, setSecretNet] = useState(false)
+  const secretChRef = useRef<RealtimeChannel | null>(null)
+  const secretMetaRef = useRef<{ nickname: string; avatar: string }>({ nickname: '', avatar: 'girl' })
+  const lastActRef = useRef('')
+
   const isEn = version === 'en'
   const isYouth = version === 'youth' // 청소년 방은 닉네임을 받지도, 보여주지도 않고 아바타와 인원수만 보여요
   const L = isEn
@@ -71,6 +91,12 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         nickPlaceholder: 'Nickname', cancel: 'Cancel', ok: 'Join',
         saveFail: 'Could not save. Please try again.', net: 'Connection is unstable…',
         guide: `You can join from ${JOIN_BEFORE_MIN} minutes before the start.`,
+        secBtn: '🔒 Private rooms', secTitle: 'Private rooms', secEmpty: 'No private rooms are open now.',
+        secUntil: 'Open until', secPw: 'Password', secPwPh: 'Enter the password', secEnter: 'Enter', secBack: 'Back', secClose: 'Close',
+        secPwNeed: 'Please enter the password.', secWrong: 'That password is not correct.',
+        secLocked: 'Too many wrong tries. Please try again in 10 minutes.', secClosed: 'This room has closed.',
+        secDenied: 'You cannot enter this room.', secFail: 'Could not connect. Please try again.', secIn: 'Private room',
+        secNote: 'This room is separate from the scheduled sessions and is not counted in your attendance.',
       }
     : {
         title: '함께 수행', join: '참여', notYet: `${JOIN_BEFORE_MIN}분 전부터`,
@@ -79,6 +105,12 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         nickPlaceholder: '닉네임', cancel: '취소', ok: '참여하기',
         saveFail: '저장하지 못했어요. 다시 시도해주세요.', net: '연결이 불안정해요…',
         guide: `시작 ${JOIN_BEFORE_MIN}분 전부터 참여할 수 있어요.`,
+        secBtn: '🔒 비밀방', secTitle: '비밀방', secEmpty: '지금 열려 있는 비밀방이 없어요.',
+        secUntil: '열려 있는 시간', secPw: '비밀번호', secPwPh: '비밀번호를 입력해주세요', secEnter: '입장', secBack: '뒤로', secClose: '닫기',
+        secPwNeed: '비밀번호를 입력해주세요.', secWrong: '비밀번호가 맞지 않아요.',
+        secLocked: '여러 번 틀려서 잠시 막혔어요. 10분 뒤에 다시 해주세요.', secClosed: '닫힌 방이에요.',
+        secDenied: '이 방에는 들어갈 수 없어요.', secFail: '연결하지 못했어요. 다시 시도해주세요.', secIn: '비밀방',
+        secNote: '일정에 있는 함께 수행과는 따로 있는 방이에요. 출석과 수료에는 들어가지 않아요.',
       }
 
   // ----- 로그인 상태 -----
@@ -108,6 +140,22 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     }
   }, [])
 
+  // ----- 비밀방 나가기 -----
+  const leaveSecret = useCallback(async () => {
+    const ch = secretChRef.current
+    secretChRef.current = null
+    setSecretJoined(null)
+    setSecretPeople([])
+    setSecretPanel(false)
+    setSecretNet(false)
+    lastActRef.current = ''
+    try { localStorage.removeItem(SECRET_KEY) } catch {}
+    if (ch) {
+      try { await ch.untrack() } catch {}
+      try { await sb().removeChannel(ch) } catch {}
+    }
+  }, [])
+
   // ----- 내 버전·닉네임 불러오기 (1분마다·화면에 돌아올 때 다시 읽어서, 버전을 바꾸면 따라가요) -----
   const loadProfile = useCallback(async (uid: string) => {
     const client = sb()
@@ -120,8 +168,9 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     if (userId === undefined) return // 로그인 확인 전에는 아무것도 지우지 않아요 (새로고침 후 자동 재입장용)
     if (userId === null) {
-      setVersion(null); setNickname(null); setSession(null)
+      setVersion(null); setNickname(null); setSession(null); setSecretRooms([])
       void leave()
+      void leaveSecret()
       return
     }
     void loadProfile(userId)
@@ -129,7 +178,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     const onVis = () => { if (document.visibilityState === 'visible') void loadProfile(userId) }
     document.addEventListener('visibilitychange', onVis)
     return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-  }, [userId, leave, loadProfile])
+  }, [userId, leave, leaveSecret, loadProfile])
 
   // ----- 이번 주 집중 문구 (몇 줄 안 되어서 한 번만 읽어요) -----
   useEffect(() => {
@@ -144,10 +193,12 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     if (prevVersionRef.current !== null && prevVersionRef.current !== version) {
       setSession(null)
+      setSecretRooms([])
       void leave()
+      void leaveSecret()
     }
     prevVersionRef.current = version
-  }, [version, leave])
+  }, [version, leave, leaveSecret])
 
   // ----- 진행 중이거나 다음 일정 불러오기 (1분마다) -----
   const loadSession = useCallback(async () => {
@@ -247,7 +298,132 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     const ch = channelRef.current
     channelRef.current = null
     if (ch) void sb().removeChannel(ch)
+    const sch = secretChRef.current
+    secretChRef.current = null
+    if (sch) void sb().removeChannel(sch)
   }, [])
+
+  // ----- 열려 있는 비밀방 목록 (1분마다) — 성인·영문만. 아직 SQL 을 안 돌렸으면 조용히 비워 둬요 -----
+  const loadSecret = useCallback(async () => {
+    if (!version || version === 'youth') { setSecretRooms([]); return }
+    const { data, error } = await sb()
+      .from('secret_rooms')
+      .select('id,title,closes_at')
+      .gt('closes_at', new Date().toISOString())
+      .order('closes_at', { ascending: true })
+    if (error) return
+    setSecretRooms((data ?? []) as SecretRoom[])
+  }, [version])
+
+  useEffect(() => {
+    if (!userId || !version || version === 'youth') return
+    void loadSecret()
+    const id = window.setInterval(() => void loadSecret(), 60000)
+    const onVis = () => { if (document.visibilityState === 'visible') void loadSecret() }
+    document.addEventListener('visibilitychange', onVis)
+    return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
+  }, [userId, version, loadSecret])
+
+  // 비밀방 입장 (비밀번호를 맞힌 사람이 받은 열쇠(token)가 방 이름에 들어가요)
+  const joinSecret = useCallback(async (room: SecretRoom, token: string, nick: string) => {
+    if (!userId) return
+    if (secretChRef.current) await leaveSecret()
+    const avatar = readAvatar()
+    secretMetaRef.current = { nickname: nick, avatar }
+    const ch = sb().channel(`secret:${room.id}:${token}`, { config: { presence: { key: userId } } })
+    secretChRef.current = ch
+    ch.on('presence', { event: 'sync' }, () => {
+      const st = ch.presenceState<Meta>()
+      setSecretPeople(Object.entries(st).map(([key, metas]) => ({
+        key, nickname: metas[0]?.nickname ?? '', avatar: metas[0]?.avatar ?? 'girl', activity: metas[0]?.activity ?? '',
+      })))
+    })
+    ch.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        setSecretNet(false)
+        const a = getActivity() ?? ''
+        lastActRef.current = a
+        await ch.track({ nickname: nick, avatar, activity: a })
+        setSecretJoined(room)
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        setSecretNet(true)
+      }
+    })
+    try { localStorage.setItem(SECRET_KEY, JSON.stringify({ u: userId, r: room.id, t: token, n: nick })) } catch {}
+  }, [userId, leaveSecret])
+
+  // 새로고침해도 비밀방이 열려 있으면 다시 들어와요
+  useEffect(() => {
+    if (secretJoined || secretChRef.current || !userId || secretRooms.length === 0) return
+    try {
+      const raw = localStorage.getItem(SECRET_KEY)
+      if (!raw) return
+      const f = JSON.parse(raw) as { u: string; r: string; t: string; n: string }
+      const room = secretRooms.find(x => x.id === f.r)
+      if (f.u === userId && room && f.t && f.n) void joinSecret(room, f.t, f.n)
+    } catch {}
+  }, [secretRooms, secretJoined, userId, joinSecret])
+
+  // 닫히는 시각이 지나면 나가요
+  useEffect(() => {
+    if (secretJoined && now >= Date.parse(secretJoined.closes_at)) void leaveSecret()
+  }, [secretJoined, now, leaveSecret])
+
+  // 지금 하는 수행이 바뀌면 비밀방 사람들에게 알려요 (바뀐 뒤 0.8초 기다렸다가 한 번만)
+  useEffect(() => {
+    if (!secretJoined) return
+    let timer: number | undefined
+    const send = () => {
+      const ch = secretChRef.current
+      if (!ch) return
+      const a = getActivity() ?? ''
+      if (a === lastActRef.current) return
+      lastActRef.current = a
+      void ch.track({ ...secretMetaRef.current, activity: a })
+    }
+    const onAct = () => { window.clearTimeout(timer); timer = window.setTimeout(send, 800) }
+    window.addEventListener(ACTIVITY_EVENT, onAct)
+    return () => { window.removeEventListener(ACTIVITY_EVENT, onAct); window.clearTimeout(timer) }
+  }, [secretJoined])
+
+  function openSecretList() {
+    setSecretPick(null); setSecretPw(''); setSecretErr('')
+    setSecretNick(nickname ?? '')
+    setSecretList(true)
+  }
+
+  async function submitSecret() {
+    if (!secretPick || !userId || secretBusy) return
+    let n = nickname ?? ''
+    if (!n) {
+      const err = validateNickname(secretNick, isEn)
+      if (err) { setSecretErr(err); return }
+      n = normalizeNickname(secretNick)
+    }
+    if (!secretPw) { setSecretErr(L.secPwNeed); return }
+    setSecretBusy(true)
+    const { data, error } = await sb().rpc('secret_room_enter', { p_room: secretPick.id, p_password: secretPw })
+    const res = data as { ok?: boolean; code?: string; token?: string } | null
+    if (error || !res) { setSecretBusy(false); setSecretErr(L.secFail); return }
+    if (!res.ok || !res.token) {
+      setSecretBusy(false)
+      setSecretErr(res.code === 'wrong' ? L.secWrong : res.code === 'locked' ? L.secLocked : res.code === 'closed' ? L.secClosed : res.code === 'denied' ? L.secDenied : L.secFail)
+      return
+    }
+    if (!nickname) {
+      const up = await sb().from('practice_profiles').upsert({ user_id: userId, nickname: n })
+      if (up.error) { setSecretBusy(false); setSecretErr(L.saveFail); return }
+      setNickname(n)
+    }
+    setSecretBusy(false)
+    const room = secretPick
+    setSecretPick(null); setSecretPw(''); setSecretList(false)
+    await joinSecret(room, res.token, n)
+  }
+
+  const fmtUntil = (iso: string) => new Intl.DateTimeFormat(isEn ? 'en-US' : 'ko-KR', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', ...(isEn ? { timeZoneName: 'short' as const } : {}),
+  }).format(new Date(iso))
 
   function onJoinClick() {
     if (!canJoin) return
@@ -285,6 +461,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     : ''
 
   const showBar = (visible || joined) && !!session
+  const showSecret = !!userId && !isYouth && (secretRooms.length > 0 || !!secretJoined)
 
   // 오늘 날짜(영문=미국 동부, 그 밖=한국) 기준으로 7일 안에 시작한 가장 최근 주의 문구
   const todayStr = todayIn(isEn ? 'America/New_York' : 'Asia/Seoul')
@@ -295,10 +472,59 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     <>
       {children}
 
-      {showBar && session && (
+      {(showBar || showSecret) && (
         <>
-          <div aria-hidden className="h-24" />
+          <div aria-hidden className={showBar && showSecret ? 'h-36' : 'h-24'} />
           <div className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-md" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            {showSecret && (
+              <>
+                {secretJoined && secretPanel && (
+                  <div className="mb-2 bg-white rounded-2xl border border-purple-100 shadow-lg p-3 max-h-60 overflow-y-auto">
+                    <ul className="space-y-2">
+                      {secretPeople.map(p => (
+                        <li key={p.key} className="flex items-center gap-2 min-w-0">
+                          <img src={`/avatars/${p.avatar}.png`} alt="" className="w-8 h-8 rounded-full object-cover object-top bg-pink-50 flex-shrink-0" />
+                          <span className="min-w-0">
+                            <span className="block text-sm text-stone-600 truncate">{p.nickname}</span>
+                            {isActivity(p.activity) && (
+                              <span className="block text-xs text-purple-500 truncate">{activityLabel(p.activity, isEn)}</span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="mb-2 bg-white rounded-2xl border border-purple-100 shadow-lg">
+                  {secretJoined ? (
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      <button onClick={() => setSecretPanel(v => !v)} className="flex items-center gap-3 flex-1 min-w-0 text-left" aria-expanded={secretPanel}>
+                        <span className="flex -space-x-2 flex-shrink-0">
+                          {secretPeople.slice(0, 5).map(p => (
+                            <img key={p.key} src={`/avatars/${p.avatar}.png`} alt=""
+                              className="w-7 h-7 rounded-full object-cover object-top bg-pink-50 border-2 border-white" />
+                          ))}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-stone-700 truncate">🔒 {L.secIn} · {secretPeople.length}{L.peopleSuffix}</span>
+                          <span className="block text-xs text-stone-400 truncate">{secretNet ? L.net : secretJoined.title}</span>
+                        </span>
+                      </button>
+                      <button onClick={() => void leaveSecret()} className="text-xs text-stone-500 border border-stone-200 rounded-lg px-3 py-2 hover:bg-stone-50 flex-shrink-0">
+                        {L.leave}
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={openSecretList} className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-purple-600">
+                      <span>{L.secBtn}</span>
+                      <span className="text-xs bg-purple-50 text-purple-600 rounded-full px-2 py-0.5">{secretRooms.length}</span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+            {showBar && session && (
+              <>
             {joined && panel && (
               <div className="mb-2 bg-white rounded-2xl border border-pink-100 shadow-lg p-3 max-h-60 overflow-y-auto">
                 {isYouth ? (
@@ -370,8 +596,65 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                 </div>
               )}
             </div>
+              </>
+            )}
           </div>
         </>
+      )}
+
+      {secretList && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto">
+            <p className="text-base font-medium text-stone-700">🔒 {L.secTitle}</p>
+            {!secretPick ? (
+              <>
+                <p className="text-xs text-stone-400 leading-relaxed">{L.secNote}</p>
+                {secretRooms.length === 0
+                  ? <p className="text-sm text-stone-400">{L.secEmpty}</p>
+                  : <ul className="space-y-2">
+                      {secretRooms.map(r => (
+                        <li key={r.id}>
+                          <button onClick={() => { setSecretPick(r); setSecretPw(''); setSecretErr('') }}
+                            className="w-full text-left border border-stone-100 rounded-xl px-4 py-3 hover:border-purple-200">
+                            <span className="block text-sm font-medium text-stone-700">{r.title}</span>
+                            <span className="block text-xs text-stone-400 mt-0.5">{L.secUntil} · ~ {fmtUntil(r.closes_at)}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>}
+                <button onClick={() => setSecretList(false)} className="w-full py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.secClose}</button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-stone-600">{secretPick.title}</p>
+                {!nickname && (
+                  <div>
+                    <label className="block text-xs text-stone-400 mb-1">{L.nickLabel}</label>
+                    <input value={secretNick} maxLength={NICK_MAX + 4}
+                      onChange={e => { setSecretNick(e.target.value); setSecretErr('') }}
+                      placeholder={L.nickPlaceholder}
+                      className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-purple-300" />
+                    <p className="text-[11px] text-stone-400 leading-relaxed mt-1">{L.nickHint}</p>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs text-stone-400 mb-1">{L.secPw}</label>
+                  <input type="password" value={secretPw} autoFocus autoComplete="off"
+                    onChange={e => { setSecretPw(e.target.value); setSecretErr('') }}
+                    onKeyDown={e => { if (e.key === 'Enter') void submitSecret() }}
+                    placeholder={L.secPwPh}
+                    className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-purple-300" />
+                  {secretErr && <p className="text-xs text-red-500 mt-1.5">{secretErr}</p>}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => { setSecretPick(null); setSecretErr('') }} className="flex-1 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.secBack}</button>
+                  <button onClick={() => void submitSecret()} disabled={secretBusy}
+                    className="flex-1 py-2.5 rounded-xl text-sm text-white bg-purple-500 disabled:opacity-60">{L.secEnter}</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
       {modal && (

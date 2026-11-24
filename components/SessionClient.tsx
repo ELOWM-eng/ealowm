@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { PracticeSession, SessionData } from '@/types'
 import clsx from 'clsx'
+import { setActivity } from '@/lib/activity'
 
 interface Props {
   session: PracticeSession
@@ -29,6 +30,9 @@ const TAB_LABELS_EN: Record<Tab, string> = {
 export default function SessionClient({ session, userId, initialData }: Props) {
   const router = useRouter()
   const supabase = createClient()
+
+  // 1~12회기 워크북을 열어 둔 동안은 비밀방에서 '자기 성찰 중'으로 보여요
+  useEffect(() => { setActivity('reflect'); return () => setActivity(null) }, [])
 
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const hasThink = initialData.think_checks.some(v => v !== null && v !== undefined)

@@ -13,6 +13,7 @@ const VERSIONS: { key: string; label: string }[] = [
   { key: 'en', label: '영문' },
   { key: 'youth', label: '청소년' },
 ]
+type SecretRow = { id: string; versions: string[]; title: string; closes_at: string }
 const vLabel = (v: string[]) => v.map(k => VERSIONS.find(x => x.key === k)?.label ?? k).join('·')
 
 export default function AdminSchedulePage() {
@@ -29,6 +30,14 @@ export default function AdminSchedulePage() {
   const [fTime, setFTime] = useState('20:00')
   const [fDur, setFDur] = useState(120)
   const [editId, setEditId] = useState<string | null>(null)
+
+  // 비밀방 (출석·도장과 상관없이 따로 열리는 방 — 성인·영문만)
+  const [secRows, setSecRows] = useState<SecretRow[]>([])
+  const [sTitle, setSTitle] = useState('')
+  const [sPw, setSPw] = useState('')
+  const [sHours, setSHours] = useState(3)
+  const [sVersions, setSVersions] = useState<string[]>(['adult'])
+  const [sMsg, setSMsg] = useState('')
 
   useEffect(() => {
     ;(async () => {
@@ -51,6 +60,41 @@ export default function AdminSchedulePage() {
   }, [date, tz])
 
   useEffect(() => { if (state === 'ok') void load() }, [state, load])
+
+  const loadSecret = useCallback(async () => {
+    const sb = createClient()
+    const r = await sb.from('secret_rooms').select('id,versions,title,closes_at').order('closes_at', { ascending: false }).limit(20)
+    if (r.error) { setSMsg('비밀방을 불러오지 못했어요 (secret-rooms-setup.sql 을 실행했는지 확인해주세요): ' + r.error.message); return }
+    setSecRows((r.data ?? []) as SecretRow[])
+  }, [])
+  useEffect(() => { if (state === 'ok') void loadSecret() }, [state, loadSecret])
+
+  async function createSecret() {
+    setSMsg('')
+    if (!sTitle.trim()) { setSMsg('방 이름을 적어주세요.'); return }
+    if (sPw.length < 4) { setSMsg('비밀번호는 4자 이상으로 해주세요.'); return }
+    if (!sVersions.length) { setSMsg('열어줄 버전을 하나 이상 골라주세요.'); return }
+    if (!(sHours >= 1 && sHours <= 72)) { setSMsg('열어 두는 시간은 1~72시간으로 해주세요.'); return }
+    setBusy(true)
+    const sb = createClient()
+    const r = await sb.rpc('admin_create_secret_room', { p_versions: sVersions, p_title: sTitle.trim(), p_password: sPw, p_hours: Math.round(sHours) })
+    setBusy(false)
+    if (r.error) { setSMsg('만들지 못했어요: ' + r.error.message); return }
+    setSMsg(`비밀방을 열었어요. 비밀번호는 다시 볼 수 없으니 따로 적어 두세요: ${sPw}`)
+    setSTitle(''); setSPw('')
+    void loadSecret()
+  }
+
+  async function removeSecret(r: SecretRow) {
+    if (!window.confirm(`비밀방 "${r.title}" 을(를) 지울까요? 안에 있는 사람은 다음 확인 때 나가져요.`)) return
+    setBusy(true)
+    const sb = createClient()
+    const res = await sb.from('secret_rooms').delete().eq('id', r.id)
+    setBusy(false)
+    if (res.error) { setSMsg('지우지 못했어요: ' + res.error.message); return }
+    setSMsg('지웠어요.')
+    void loadSecret()
+  }
 
   function reset() { setEditId(null); setFTitle(''); setFTime('20:00'); setFDur(120); setFVersions(['adult']) }
 
@@ -159,6 +203,53 @@ export default function AdminSchedulePage() {
               {editId && <button onClick={reset} className="px-4 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">취소</button>}
             </div>
             {msg && <p className="text-xs text-stone-500">{msg}</p>}
+          </section>
+
+          <section className="bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
+            <h2 className="text-sm font-medium text-stone-700">🔒 비밀방 열기</h2>
+            <p className="text-[11px] text-stone-400 leading-relaxed">
+              일정과 따로 열리는 방이에요. 출석·도장·수료에는 들어가지 않고, 비밀번호를 아는 사람만 들어올 수 있어요.
+              방 안에서는 닉네임 옆에 지금 하는 수행이 보여요. (성인·영문만)
+            </p>
+            {secRows.length > 0 && (
+              <ul className="space-y-2">
+                {secRows.map(r => {
+                  const open = Date.parse(r.closes_at) > Date.now()
+                  return (
+                    <li key={r.id} className="flex items-center gap-2 text-sm border border-stone-100 rounded-xl px-3 py-2">
+                      <div className="flex-1 min-w-0">
+                        <p className={`truncate ${open ? 'text-stone-700' : 'text-stone-400'}`}>{r.title}</p>
+                        <p className="text-[11px] text-stone-400">
+                          {open ? '열려 있음' : '닫힘'} · ~{wallOf(r.closes_at, tz).date} {wallOf(r.closes_at, tz).time} · {vLabel(r.versions)}
+                        </p>
+                      </div>
+                      <button disabled={busy} onClick={() => void removeSecret(r)} className="text-xs text-red-400 border border-red-100 rounded-lg px-2 py-1">삭제</button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+            <input value={sTitle} onChange={e => setSTitle(e.target.value)} placeholder="방 이름 (예: 이로움 벗들의 방)"
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm" />
+            <div className="flex gap-2">
+              <label className="flex-1 text-[11px] text-stone-400">비밀번호 (4자 이상)
+                <input value={sPw} onChange={e => setSPw(e.target.value)} autoComplete="off" className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
+              </label>
+              <label className="w-28 text-[11px] text-stone-400">열어 둘 시간
+                <input type="number" min={1} max={72} value={sHours} onChange={e => setSHours(Number(e.target.value))} className="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700" />
+              </label>
+            </div>
+            <div className="flex gap-3 text-sm text-stone-600">
+              {VERSIONS.filter(v => v.key !== 'youth').map(v => (
+                <label key={v.key} className="flex items-center gap-1">
+                  <input type="checkbox" checked={sVersions.includes(v.key)}
+                    onChange={e => setSVersions(e.target.checked ? [...sVersions, v.key] : sVersions.filter(k => k !== v.key))} />
+                  {v.label}
+                </label>
+              ))}
+            </div>
+            <button disabled={busy} onClick={() => void createSecret()} className="w-full py-2.5 rounded-xl text-sm text-white bg-purple-500 disabled:opacity-50">비밀방 열기</button>
+            {sMsg && <p className="text-xs text-stone-500 break-words">{sMsg}</p>}
           </section>
         </div>
       )}
