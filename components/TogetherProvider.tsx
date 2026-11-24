@@ -24,6 +24,7 @@ type Focus = { week_start: string; text_ko: string; text_en: string | null }
 
 const AVATAR_KEY = 'ealowm_avatar'          // 마음 수행에서 고른 아바타
 const JOINED_KEY = 'ealowm_together_joined' // 참여 중이던 일정 (새로고침 후 자동으로 다시 들어오기 위해)
+const BAR_KEY = 'ealowm_together_bar_min'   // 아래 안내 막대를 접어 두었는지
 const SECRET_KEY = 'ealowm_secret_joined'   // 참여 중이던 비밀방 (새로고침 후 비밀번호를 다시 묻지 않기 위해)
 const AVATAR_IDS = ['girl', 'boy-casual', 'boy-uniform', 'woman']
 const MAX_SESSION_MIN = 240
@@ -80,6 +81,9 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const secretChRef = useRef<RealtimeChannel | null>(null)
   const secretMetaRef = useRef<{ nickname: string; avatar: string }>({ nickname: '', avatar: 'girl' })
   const lastActRef = useRef('')
+  const [barMin, setBarMin] = useState(false) // 아래 막대를 작은 알약으로 접어 둠
+  useEffect(() => { try { setBarMin(localStorage.getItem(BAR_KEY) === '1') } catch {} }, [])
+  function toggleBar(min: boolean) { setBarMin(min); try { localStorage.setItem(BAR_KEY, min ? '1' : '0') } catch {} }
 
   const isEn = version === 'en'
   const isYouth = version === 'youth' // 청소년 방은 닉네임을 받지도, 보여주지도 않고 아바타와 인원수만 보여요
@@ -91,6 +95,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         nickPlaceholder: 'Nickname', cancel: 'Cancel', ok: 'Join',
         saveFail: 'Could not save. Please try again.', net: 'Connection is unstable…',
         guide: `You can join from ${JOIN_BEFORE_MIN} minutes before the start.`,
+        barHide: '▾ Hide', barShow: 'Show practice bar', secView: 'View',
         secBtn: '🔒 Private rooms', secTitle: 'Private rooms', secEmpty: 'No private rooms are open now.',
         secUntil: 'Open', secSoon: 'Opens soon', secNotYet: 'This room has not opened yet.', secPw: 'Password', secPwPh: 'Enter the password', secEnter: 'Enter', secBack: 'Back', secClose: 'Close',
         secPwNeed: 'Please enter the password.', secWrong: 'That password is not correct.',
@@ -105,6 +110,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         nickPlaceholder: '닉네임', cancel: '취소', ok: '참여하기',
         saveFail: '저장하지 못했어요. 다시 시도해주세요.', net: '연결이 불안정해요…',
         guide: `시작 ${JOIN_BEFORE_MIN}분 전부터 참여할 수 있어요.`,
+        barHide: '▾ 접기', barShow: '함께 수행 막대 펼치기', secView: '보기',
         secBtn: '🔒 비밀방', secTitle: '비밀방', secEmpty: '지금 열려 있는 비밀방이 없어요.',
         secUntil: '열려 있는 시간', secSoon: '열리기 전', secNotYet: '아직 열리기 전이에요.', secPw: '비밀번호', secPwPh: '비밀번호를 입력해주세요', secEnter: '입장', secBack: '뒤로', secClose: '닫기',
         secPwNeed: '비밀번호를 입력해주세요.', secWrong: '비밀번호가 맞지 않아요.',
@@ -325,10 +331,10 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   }, [userId, version, loadSecret])
 
   // 비밀방 입장 (비밀번호를 맞힌 사람이 받은 열쇠(token)가 방 이름에 들어가요)
-  const joinSecret = useCallback(async (room: SecretRoom, token: string, nick: string) => {
+  const joinSecret = useCallback(async (room: SecretRoom, token: string, nick: string, avatarId?: string) => {
     if (!userId) return
     if (secretChRef.current) await leaveSecret()
-    const avatar = readAvatar()
+    const avatar = avatarId && AVATAR_IDS.includes(avatarId) ? avatarId : readAvatar()
     secretMetaRef.current = { nickname: nick, avatar }
     const ch = sb().channel(`secret:${room.id}:${token}`, { config: { presence: { key: userId } } })
     secretChRef.current = ch
@@ -388,18 +394,22 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
 
   function openSecretList() {
     setSecretPick(null); setSecretPw(''); setSecretErr('')
+    setSecretList(true)
+  }
+
+  // 비밀방 하나를 골라 바로 비밀번호·닉네임·도반 창으로
+  function openSecretRoom(room: SecretRoom) {
+    setSecretPick(room); setSecretPw(''); setSecretErr('')
     setSecretNick(nickname ?? '')
+    setAvatarChoice(readAvatar())
     setSecretList(true)
   }
 
   async function submitSecret() {
     if (!secretPick || !userId || secretBusy) return
-    let n = nickname ?? ''
-    if (!n) {
-      const err = validateNickname(secretNick, isEn)
-      if (err) { setSecretErr(err); return }
-      n = normalizeNickname(secretNick)
-    }
+    const err = validateNickname(secretNick, isEn)
+    if (err) { setSecretErr(err); return }
+    const n = normalizeNickname(secretNick)
     if (!secretPw) { setSecretErr(L.secPwNeed); return }
     setSecretBusy(true)
     const { data, error } = await sb().rpc('secret_room_enter', { p_room: secretPick.id, p_password: secretPw })
@@ -410,15 +420,16 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
       setSecretErr(res.code === 'wrong' ? L.secWrong : res.code === 'locked' ? L.secLocked : res.code === 'closed' ? L.secClosed : res.code === 'notyet' ? L.secNotYet : res.code === 'denied' ? L.secDenied : L.secFail)
       return
     }
-    if (!nickname) {
+    if (n !== nickname) {
       const up = await sb().from('practice_profiles').upsert({ user_id: userId, nickname: n })
       if (up.error) { setSecretBusy(false); setSecretErr(L.saveFail); return }
       setNickname(n)
     }
+    try { localStorage.setItem(AVATAR_KEY, avatarChoice) } catch {} // 마음 수행의 도반도 같이 바뀌어요
     setSecretBusy(false)
     const room = secretPick
     setSecretPick(null); setSecretPw(''); setSecretList(false)
-    await joinSecret(room, res.token, n)
+    await joinSecret(room, res.token, n, avatarChoice)
   }
 
   const fmtUntil = (iso: string) => new Intl.DateTimeFormat(isEn ? 'en-US' : 'ko-KR', {
@@ -474,12 +485,23 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
 
       {(showBar || showSecret) && (
         <>
-          <div aria-hidden className={showBar && showSecret ? 'h-36' : 'h-24'} />
+          <div aria-hidden className={barMin ? 'h-16' : showBar && showSecret ? 'h-36' : 'h-24'} />
           <div className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-md" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-            {showSecret && (
+            {barMin ? (
+              <div className="flex justify-end">
+                <button onClick={() => toggleBar(false)} aria-label={L.barShow}
+                  className="bg-white rounded-full border border-pink-100 shadow-lg px-4 py-2.5 text-xs text-stone-600 flex items-center gap-1.5">
+                  <span>🪷</span>
+                  <span>{L.title}{joined ? ` · ${people.length}${L.peopleSuffix}` : ''}</span>
+                  {showSecret && <span>🔒{secretJoined ? ` ${secretPeople.length}` : ''}</span>}
+                  {(joined || secretJoined) && <span className="w-1.5 h-1.5 rounded-full bg-green-400" />}
+                  <span className="text-stone-300">▴</span>
+                </button>
+              </div>
+            ) : (
               <>
                 {secretJoined && secretPanel && (
-                  <div className="mb-2 bg-white rounded-2xl border border-purple-100 shadow-lg p-3 max-h-60 overflow-y-auto">
+                  <div className="mb-5 bg-white rounded-2xl border border-purple-100 shadow-lg p-3 max-h-60 overflow-y-auto">
                     <ul className="space-y-2">
                       {secretPeople.map(p => (
                         <li key={p.key} className="flex items-center gap-2 min-w-0">
@@ -495,8 +517,86 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                     </ul>
                   </div>
                 )}
-                <div className="mb-2 bg-white rounded-2xl border border-purple-100 shadow-lg">
-                  {secretJoined ? (
+                {joined && panel && showBar && (
+                  <div className="mb-5 bg-white rounded-2xl border border-pink-100 shadow-lg p-3 max-h-60 overflow-y-auto">
+                    {isYouth ? (
+                      <ul className="flex flex-wrap gap-2" aria-label={`${people.length}${L.peopleSuffix}`}>
+                        {people.map(p => (
+                          <li key={p.key}>
+                            <img src={`/avatars/${p.avatar}.png`} alt="" className="w-9 h-9 rounded-full object-cover object-top bg-pink-50" />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <ul className="grid grid-cols-2 gap-2">
+                        {people.map(p => (
+                          <li key={p.key} className="flex items-center gap-2 min-w-0">
+                            <img src={`/avatars/${p.avatar}.png`} alt="" className="w-8 h-8 rounded-full object-cover object-top bg-pink-50 flex-shrink-0" />
+                            <span className="text-sm text-stone-600 truncate">{p.nickname}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {/* 하나의 카드 안에 일정 방과 비밀방을 함께 담아서 화면을 덜 가려요 */}
+                <div className="relative bg-white rounded-2xl border border-pink-100 shadow-lg">
+                  <button onClick={() => toggleBar(true)}
+                    className="absolute -top-3 right-4 h-6 px-3 rounded-full bg-white border border-pink-100 shadow-sm text-[11px] text-stone-400 hover:text-stone-600">
+                    {L.barHide}
+                  </button>
+
+                  {showBar && session && (joined ? (
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <button onClick={() => setPanel(v => !v)} className="flex items-center gap-3 flex-1 min-w-0 text-left" aria-expanded={panel}>
+                        <span className="flex -space-x-2 flex-shrink-0">
+                          {people.slice(0, 5).map(p => (
+                            <img key={p.key} src={`/avatars/${p.avatar}.png`} alt=""
+                              className="w-8 h-8 rounded-full object-cover object-top bg-pink-50 border-2 border-white" />
+                          ))}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-stone-700 truncate">
+                            {L.inRoom} · {people.length}{L.peopleSuffix}
+                          </span>
+                          <span className="block text-xs text-stone-400 truncate">
+                            {netErr ? L.net : session.title}
+                          </span>
+                        </span>
+                      </button>
+                      <button onClick={() => void leave()} className="text-xs text-stone-500 border border-stone-200 rounded-lg px-3 py-2 hover:bg-stone-50 flex-shrink-0">
+                        {L.leave}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-stone-700 truncate">🪷 {session.title}</p>
+                          <p className="text-xs text-stone-400 truncate">{timeText}</p>
+                        </div>
+                        <button onClick={onJoinClick} disabled={!canJoin}
+                          className={`text-sm rounded-xl px-4 py-2 flex-shrink-0 transition-all ${
+                            canJoin ? 'bg-pink-500 text-white' : 'bg-stone-100 text-stone-400'
+                          }`}>
+                          {canJoin ? L.join : L.notYet}
+                        </button>
+                      </div>
+                      {focusText && <p className="text-xs text-pink-600 mt-2 leading-relaxed">🌿 {focusText}</p>}
+                      {!canJoin && <p className="text-xs text-stone-300 mt-2">{L.guide}</p>}
+                      <div className="flex gap-4 mt-2">
+                        <Link href="/schedule" className="text-xs text-pink-500">🗓 {isEn ? 'Schedule' : '일정 보기'}</Link>
+                        {!isYouth && (
+                          <Link href="/stamps" className="text-xs text-pink-500">📅 {isEn ? 'My stamps' : '내 도장'}</Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {showBar && showSecret && <div className="border-t border-stone-100" />}
+
+                  {showSecret && (secretJoined ? (
                     <div className="flex items-center gap-3 px-4 py-2.5">
                       <button onClick={() => setSecretPanel(v => !v)} className="flex items-center gap-3 flex-1 min-w-0 text-left" aria-expanded={secretPanel}>
                         <span className="flex -space-x-2 flex-shrink-0">
@@ -514,88 +614,23 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                         {L.leave}
                       </button>
                     </div>
-                  ) : (
-                    <button onClick={openSecretList} className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-purple-600">
-                      <span>{L.secBtn}</span>
-                      <span className="text-xs bg-purple-50 text-purple-600 rounded-full px-2 py-0.5">{secretRooms.length}</span>
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-            {showBar && session && (
-              <>
-            {joined && panel && (
-              <div className="mb-2 bg-white rounded-2xl border border-pink-100 shadow-lg p-3 max-h-60 overflow-y-auto">
-                {isYouth ? (
-                  <ul className="flex flex-wrap gap-2" aria-label={`${people.length}${L.peopleSuffix}`}>
-                    {people.map(p => (
-                      <li key={p.key}>
-                        <img src={`/avatars/${p.avatar}.png`} alt="" className="w-9 h-9 rounded-full object-cover object-top bg-pink-50" />
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <ul className="grid grid-cols-2 gap-2">
-                    {people.map(p => (
-                      <li key={p.key} className="flex items-center gap-2 min-w-0">
-                        <img src={`/avatars/${p.avatar}.png`} alt="" className="w-8 h-8 rounded-full object-cover object-top bg-pink-50 flex-shrink-0" />
-                        <span className="text-sm text-stone-600 truncate">{p.nickname}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            <div className="bg-white rounded-2xl border border-pink-100 shadow-lg">
-              {joined ? (
-                <div className="flex items-center gap-3 px-4 py-3">
-                  <button onClick={() => setPanel(v => !v)} className="flex items-center gap-3 flex-1 min-w-0 text-left" aria-expanded={panel}>
-                    <span className="flex -space-x-2 flex-shrink-0">
-                      {people.slice(0, 5).map(p => (
-                        <img key={p.key} src={`/avatars/${p.avatar}.png`} alt=""
-                          className="w-8 h-8 rounded-full object-cover object-top bg-pink-50 border-2 border-white" />
-                      ))}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium text-stone-700 truncate">
-                        {L.inRoom} · {people.length}{L.peopleSuffix}
-                      </span>
-                      <span className="block text-xs text-stone-400 truncate">
-                        {netErr ? L.net : session.title}
-                      </span>
-                    </span>
-                  </button>
-                  <button onClick={() => void leave()} className="text-xs text-stone-500 border border-stone-200 rounded-lg px-3 py-2 hover:bg-stone-50 flex-shrink-0">
-                    {L.leave}
-                  </button>
-                </div>
-              ) : (
-                <div className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-700 truncate">🪷 {session.title}</p>
-                      <p className="text-xs text-stone-400 truncate">{timeText}</p>
+                  ) : secretRooms.length === 1 ? (
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-stone-700 truncate">🔒 {secretRooms[0].title}</p>
+                        <p className="text-xs text-stone-400 truncate">{fmtUntil(secretRooms[0].opens_at)} ~ {fmtUntil(secretRooms[0].closes_at)}</p>
+                      </div>
+                      {now < Date.parse(secretRooms[0].opens_at)
+                        ? <span className="text-xs rounded-xl px-3 py-2 bg-stone-100 text-stone-400 flex-shrink-0">{L.secSoon}</span>
+                        : <button onClick={() => openSecretRoom(secretRooms[0])} className="text-sm rounded-xl px-4 py-2 flex-shrink-0 bg-purple-500 text-white">{L.join}</button>}
                     </div>
-                    <button onClick={onJoinClick} disabled={!canJoin}
-                      className={`text-sm rounded-xl px-4 py-2 flex-shrink-0 transition-all ${
-                        canJoin ? 'bg-pink-500 text-white' : 'bg-stone-100 text-stone-400'
-                      }`}>
-                      {canJoin ? L.join : L.notYet}
-                    </button>
-                  </div>
-                  {focusText && <p className="text-xs text-pink-600 mt-2 leading-relaxed">🌿 {focusText}</p>}
-                  {!canJoin && <p className="text-xs text-stone-300 mt-2">{L.guide}</p>}
-                  <div className="flex gap-4 mt-2">
-                    <Link href="/schedule" className="text-xs text-pink-500">🗓 {isEn ? 'Schedule' : '일정 보기'}</Link>
-                    {!isYouth && (
-                      <Link href="/stamps" className="text-xs text-pink-500">📅 {isEn ? 'My stamps' : '내 도장'}</Link>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      <p className="flex-1 min-w-0 text-sm font-medium text-stone-700 truncate">{L.secBtn} · {secretRooms.length}</p>
+                      <button onClick={openSecretList} className="text-sm rounded-xl px-4 py-2 flex-shrink-0 bg-purple-500 text-white">{L.secView}</button>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
               </>
             )}
           </div>
@@ -615,14 +650,16 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                       {secretRooms.map(r => {
                         const notYet = now < Date.parse(r.opens_at)
                         return (
-                          <li key={r.id}>
-                            <button onClick={() => { if (!notYet) { setSecretPick(r); setSecretPw(''); setSecretErr('') } }} disabled={notYet}
-                              className={`w-full text-left border rounded-xl px-4 py-3 ${notYet ? 'border-stone-100 bg-stone-50' : 'border-stone-100 hover:border-purple-200'}`}>
-                              <span className={`block text-sm font-medium ${notYet ? 'text-stone-400' : 'text-stone-700'}`}>{r.title}</span>
+                          <li key={r.id} className={`flex items-center gap-3 border rounded-xl px-4 py-3 ${notYet ? 'border-stone-100 bg-stone-50' : 'border-stone-100'}`}>
+                            <div className="flex-1 min-w-0">
+                              <span className={`block text-sm font-medium truncate ${notYet ? 'text-stone-400' : 'text-stone-700'}`}>{r.title}</span>
                               <span className="block text-xs text-stone-400 mt-0.5">
                                 {notYet ? `${L.secSoon} · ` : `${L.secUntil} · `}{fmtUntil(r.opens_at)} ~ {fmtUntil(r.closes_at)}
                               </span>
-                            </button>
+                            </div>
+                            {notYet
+                              ? <span className="text-xs rounded-xl px-3 py-2 bg-stone-100 text-stone-400 flex-shrink-0">{L.secSoon}</span>
+                              : <button onClick={() => openSecretRoom(r)} className="text-sm rounded-xl px-4 py-2 flex-shrink-0 bg-purple-500 text-white">{L.join}</button>}
                           </li>
                         )
                       })}
@@ -632,19 +669,38 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
             ) : (
               <>
                 <p className="text-sm text-stone-600">{secretPick.title}</p>
-                {!nickname && (
-                  <div>
-                    <label className="block text-xs text-stone-400 mb-1">{L.nickLabel}</label>
-                    <input value={secretNick} maxLength={NICK_MAX + 4}
-                      onChange={e => { setSecretNick(e.target.value); setSecretErr('') }}
-                      placeholder={L.nickPlaceholder}
-                      className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-purple-300" />
-                    <p className="text-[11px] text-stone-400 leading-relaxed mt-1">{L.nickHint}</p>
-                  </div>
-                )}
+                <p className="text-xs text-stone-400 leading-relaxed">{L.avatarHint}</p>
+
+                <div className="grid grid-cols-2 gap-2" role="radiogroup">
+                  {AVATAR_IDS.map(id => {
+                    const c = companionOf(id)
+                    return (
+                      <button key={id} type="button" role="radio" aria-checked={avatarChoice === id} data-avatar={id}
+                        onClick={() => setAvatarChoice(id)}
+                        className={`rounded-xl p-2 text-left transition-all ${avatarChoice === id ? 'bg-pink-50 ring-2 ring-pink-400' : 'ring-1 ring-stone-100'}`}>
+                        <img src={`/avatars/${id}.png`} alt="" className="w-full aspect-square rounded-lg object-cover object-top" />
+                        {c && (
+                          <>
+                            <span className="block text-sm font-medium text-stone-700 text-center mt-1">{isEn ? `${c.en} (${c.hanja})` : `${c.ko} (${c.hanja})`}</span>
+                            <span className="block text-[11px] text-stone-400 leading-relaxed mt-1">{isEn ? c.descEn : c.descKo}</span>
+                          </>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div>
+                  <label className="block text-xs text-stone-400 mb-1">{L.nickLabel}</label>
+                  <input value={secretNick} maxLength={NICK_MAX + 4}
+                    onChange={e => { setSecretNick(e.target.value); setSecretErr('') }}
+                    placeholder={L.nickPlaceholder}
+                    className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-purple-300" />
+                  <p className="text-[11px] text-stone-400 leading-relaxed mt-1">{L.nickHint}</p>
+                </div>
                 <div>
                   <label className="block text-xs text-stone-400 mb-1">{L.secPw}</label>
-                  <input type="password" value={secretPw} autoFocus autoComplete="off"
+                  <input type="password" value={secretPw} autoComplete="off"
                     onChange={e => { setSecretPw(e.target.value); setSecretErr('') }}
                     onKeyDown={e => { if (e.key === 'Enter') void submitSecret() }}
                     placeholder={L.secPwPh}
@@ -652,7 +708,8 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
                   {secretErr && <p className="text-xs text-red-500 mt-1.5">{secretErr}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => { setSecretPick(null); setSecretErr('') }} className="flex-1 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.secBack}</button>
+                  <button onClick={() => { if (secretRooms.length > 1) { setSecretPick(null) } else { setSecretList(false); setSecretPick(null) } setSecretErr('') }}
+                    className="flex-1 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{secretRooms.length > 1 ? L.secBack : L.cancel}</button>
                   <button onClick={() => void submitSecret()} disabled={secretBusy}
                     className="flex-1 py-2.5 rounded-xl text-sm text-white bg-purple-500 disabled:opacity-60">{L.secEnter}</button>
                 </div>
