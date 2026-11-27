@@ -19,7 +19,7 @@ type PracticeSet = {
 export const PRACTICE_TRACKS: Record<PracticeVersion, PracticeSet> = {
   adult: {
     bodyscan: [
-      { id: 'a-bodyscan1', title: '몸 관찰 수행', desc: '몸 구석구석을 천천히 살피는 음성 안내', src: '/practice/adult/bodyscan1.mp3' },
+      { id: 'a-bodyscan1', title: '몸 관찰 수행', desc: '몸 전체를 천천히 살피는 음성 안내', src: '/practice/adult/bodyscan1.mp3' },
     ],
     focus: [
       { id: 'a-focus1', title: '주의집중 수행', desc: '몸·호흡·소리에 주의를 모으고, 마지막에 하나를 골라 마음을 모으는 음성 안내', src: '/practice/adult/focus1.mp3' },
@@ -27,7 +27,7 @@ export const PRACTICE_TRACKS: Record<PracticeVersion, PracticeSet> = {
   },
   youth: {
     bodyscan: [
-      { id: 'y-bodyscan1', title: '몸 관찰 수행', desc: '몸 구석구석을 천천히 살피는 음성 안내', src: '/practice/adult/bodyscan1.mp3' },
+      { id: 'y-bodyscan1', title: '몸 관찰 수행', desc: '몸 전체를 천천히 살피는 음성 안내', src: '/practice/adult/bodyscan1.mp3' },
     ],
     focus: [
       { id: 'y-focus1', title: '주의집중 수행', desc: '몸·호흡·소리에 주의를 모으고, 마지막에 하나를 골라 마음을 모으는 음성 안내', src: '/practice/adult/focus1.mp3' },
