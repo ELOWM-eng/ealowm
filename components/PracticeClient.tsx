@@ -19,9 +19,17 @@ interface Props {
 
 type Tab = 'bodyscan' | 'focus' | 'zazen' | 'tea' | 'theme'
 
-// 잠시 숨길 탭: 다시 보이게 하려면 해당 이름을 아래 목록에서 지우세요. (예: [] 로 비우면 모두 보여요)
-const HIDDEN_TABS: Tab[] = ['bodyscan', 'focus']
-const DEFAULT_TAB: Tab = (['bodyscan', 'focus', 'zazen', 'tea', 'theme'] as Tab[]).find(t => !HIDDEN_TABS.includes(t)) ?? 'zazen'
+// 새로 넣은 탭(몸 관찰 수행·주의집중 수행)은 아래 시각(한국 시간 2026-12-07 00:00)부터 보여요.
+// 시각을 바꾸려면 날짜만 고치세요. (+09:00 = 한국 시간) 이용자 기기의 시계를 기준으로 해요.
+const NEW_TABS: Tab[] = ['bodyscan', 'focus']
+const NEW_TABS_OPEN_AT = Date.parse('2026-12-07T00:00:00+09:00')
+function hiddenTabs(): Tab[] {
+  return Date.now() >= NEW_TABS_OPEN_AT ? [] : NEW_TABS
+}
+function defaultTab(): Tab {
+  const hidden = hiddenTabs()
+  return (['bodyscan', 'focus', 'zazen', 'tea', 'theme'] as Tab[]).find(t => !hidden.includes(t)) ?? 'zazen'
+}
 type ZStatus = 'idle' | 'running' | 'paused' | 'done'
 
 // 한 잔 수행 4단계 (그림 파일 이름: /avatars/tea/{아바타}-{key}.webp)
@@ -65,7 +73,7 @@ export default function PracticeClient({ version }: Props) {
   const [loaded, setLoaded] = useState(false)
   const [avatar, setAvatar] = useState<string | null>(null)
   const [choosing, setChoosing] = useState(false)
-  const [tab, setTab] = useState<Tab>(DEFAULT_TAB)
+  const [tab, setTab] = useState<Tab>(defaultTab)
   const [track, setTrack] = useState<PracticeTrack | null>(null)
   const [playing, setPlaying] = useState(false)
   const [cur, setCur] = useState(0)
@@ -425,7 +433,7 @@ export default function PracticeClient({ version }: Props) {
     { key: 'tea', label: isEn ? 'Tea' : '한 잔 수행', tracks: [] },
     { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
   ]
-  const tabs = allTabs.filter(t => !HIDDEN_TABS.includes(t.key))
+  const tabs = allTabs.filter(t => !hiddenTabs().includes(t.key))
   const activeTab = tabs.find(t => t.key === tab) ?? tabs[0]
 
   // 반복 안 함 → 전곡 반복 → 한 곡 반복 → (처음으로)
@@ -492,7 +500,7 @@ export default function PracticeClient({ version }: Props) {
   const showRotateHint = touch && !landscape && !hintDismissed
   const zActive = zStatus === 'running' || zStatus === 'paused'
 
-  // 비밀방에서 닉네임 옆에 보일 '지금 하는 수행' (좌선·한 잔 수행·음성 재생 중일 때만)
+  // 비공개 수행방에서 닉네임 옆에 보일 '지금 하는 수행' (좌선·한 잔 수행·음성 재생 중일 때만)
   const trackKind: Activity | null = !track ? null
     : track.id.startsWith('theme-') ? 'theme'
     : set.bodyscan.some(x => x.id === track.id) ? 'body' : 'focus'
