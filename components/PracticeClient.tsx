@@ -428,7 +428,7 @@ export default function PracticeClient({ version }: Props) {
 
   const allTabs: { key: Tab; label: string; tracks: PracticeTrack[] }[] = [
     { key: 'bodyscan', label: isEn ? 'Body Observation' : '몸 관찰 수행', tracks: set.bodyscan },
-    { key: 'focus', label: isEn ? 'Focus' : '주의집중 수행', tracks: set.focus },
+    { key: 'focus', label: isEn ? 'Focused Attention' : '주의집중 수행', tracks: set.focus },
     { key: 'zazen', label: isEn ? 'Silent Sit' : '좌선', tracks: [] },
     { key: 'tea', label: isEn ? 'Tea' : '한 잔 수행', tracks: [] },
     { key: 'theme', label: isEn ? 'Songs' : '테마곡', tracks: themeTracks },
@@ -752,7 +752,7 @@ export default function PracticeClient({ version }: Props) {
             <div className="flex border-b border-stone-100">
               {tabs.map(t => (
                 <button key={t.key} onClick={() => { if (t.key !== 'tea' && tStatus !== 'idle') stopTea(); setTab(t.key) }}
-                  className={`flex-1 py-2.5 text-xs sm:text-sm whitespace-nowrap transition-all ${
+                  className={`${isEn ? 'flex-auto px-1 text-[11px]' : 'flex-1 text-xs'} py-2.5 sm:text-sm whitespace-nowrap transition-all ${
                     tab === t.key
                       ? 'text-pink-600 border-b-2 border-pink-500 font-medium'
                       : 'text-stone-400 hover:text-stone-600'
