@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-client'
+import { letterFor, sundayWeek } from '@/lib/sunday-letters'
 import {
   JOIN_BEFORE_MIN, SHOW_BEFORE_HOURS, NICK_MAX,
   normalizeNickname, validateNickname,
@@ -62,6 +63,13 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const [avatarChoice, setAvatarChoice] = useState('girl')
   const [busy, setBusy] = useState(false)
   const [focusRows, setFocusRows] = useState<Focus[]>([])
+  // 일요일 '본원의 편지' (그 주차 번호가 들어 있으면 편지 창이 열려 있는 거예요)
+  const [letterWeek, setLetterWeek] = useState<number | null>(null)
+  const [letterText, setLetterText] = useState('')
+  const [letterBusy, setLetterBusy] = useState(false)
+  const [letterErr, setLetterErr] = useState('')
+  const [letterSent, setLetterSent] = useState(false)
+  const [repliedWeeks, setRepliedWeeks] = useState<number[]>([])
   const [netErr, setNetErr] = useState(false)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const joinedSessionRef = useRef<string | null>(null) // 지금 들어가 있는 일정
@@ -98,6 +106,9 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         barHide: '▾ Hide', barShow: 'Show practice bar', secView: 'View',
         secBtn: '🔒 Private rooms', secTitle: 'Private rooms', secEmpty: 'No private rooms are open now.',
         secUntil: 'Open', secSoon: 'Opens soon', secNotYet: 'This room has not opened yet.', secPw: 'Password', secPwPh: 'Enter the password', secEnter: 'Enter', secBack: 'Back', secClose: 'Close',
+        letterHead: 'A letter from Bonwon', letterSend: 'Send reply', letterSkip: 'Join without replying',
+        letterPh: 'Write your reply here (an emoji is fine)', letterNote: 'Your reply goes only to the program operator.',
+        letterFail: 'Could not send. Please try again.', letterThanks: 'Your reply was sent. Thank you 🪷',
         secPwNeed: 'Please enter the password.', secWrong: 'That password is not correct.',
         secLocked: 'Too many wrong tries. Please try again in 10 minutes.', secClosed: 'This room has closed.',
         secDenied: 'You cannot enter this room.', secFail: 'Could not connect. Please try again.', secIn: 'Private room',
@@ -113,6 +124,9 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         barHide: '▾ 접기', barShow: '함께 수행 막대 펼치기', secView: '보기',
         secBtn: '🔒 비공개 수행방', secTitle: '비공개 수행방', secEmpty: '지금 열려 있는 비공개 수행방이 없어요.',
         secUntil: '열려 있는 시간', secSoon: '열리기 전', secNotYet: '아직 열리기 전이에요.', secPw: '비밀번호', secPwPh: '비밀번호를 입력해주세요', secEnter: '입장', secBack: '뒤로', secClose: '닫기',
+        letterHead: '본원의 편지', letterSend: '답장 보내기', letterSkip: '답장 없이 참여하기',
+        letterPh: '여기에 답장을 적어 주세요 (이모티콘 하나도 좋아요)', letterNote: '답장은 프로그램 운영자에게만 전달돼요.',
+        letterFail: '보내지 못했어요. 다시 시도해주세요.', letterThanks: '답장이 전달되었어요. 고맙습니다 🪷',
         secPwNeed: '비밀번호를 입력해주세요.', secWrong: '비밀번호가 맞지 않아요.',
         secLocked: '여러 번 틀려서 잠시 막혔어요. 10분 뒤에 다시 해주세요.', secClosed: '닫힌 방이에요.',
         secDenied: '이 방에는 들어갈 수 없어요.', secFail: '연결하지 못했어요. 다시 시도해주세요.', secIn: '비공개 수행방',
@@ -205,6 +219,18 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     }
     prevVersionRef.current = version
   }, [version, leave, leaveSecret])
+
+  // ----- 이미 답장을 보낸 주차 (같은 주에는 편지를 다시 띄우지 않아요) -----
+  useEffect(() => {
+    if (!userId || (version !== 'adult' && version !== 'en')) { setRepliedWeeks([]); return }
+    let alive = true
+    void (async () => {
+      const { data, error } = await sb().from('sunday_replies').select('week_no')
+      if (!alive || error) return // 표가 아직 없거나 일시 오류면 편지를 그냥 보여줘요
+      setRepliedWeeks(((data ?? []) as { week_no: number }[]).map(r => r.week_no))
+    })()
+    return () => { alive = false }
+  }, [userId, version])
 
   // ----- 진행 중이거나 다음 일정 불러오기 (1분마다) -----
   const loadSession = useCallback(async () => {
@@ -438,11 +464,36 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
 
   function onJoinClick() {
     if (!canJoin) return
+    setLetterSent(false)
+    // 일요일(오전·오후·저녁 모두)이면 먼저 '본원의 편지'를 보여줘요. 이미 답장을 보낸 주에는 건너뛰어요.
+    const w = session ? sundayWeek(session.starts_at, version) : null
+    if (w && !repliedWeeks.includes(w) && letterFor(w, isEn)) {
+      setLetterText(''); setLetterErr(''); setLetterWeek(w)
+      return
+    }
+    openJoin()
+  }
+
+  function openJoin() {
     setNickInput(nickname ?? '')
     setNickErr('')
     setAvatarChoice(readAvatar())
     setModal(true)
   }
+
+  async function sendLetter() {
+    const body = letterText.trim()
+    if (!letterWeek || !body || letterBusy) return
+    setLetterBusy(true); setLetterErr('')
+    const { error } = await sb().from('sunday_replies').insert({ week_no: letterWeek, body })
+    setLetterBusy(false)
+    if (error && error.code !== '23505') { setLetterErr(L.letterFail); return } // 23505 = 이미 보낸 답장
+    setRepliedWeeks(w => (w.includes(letterWeek) ? w : [...w, letterWeek]))
+    setLetterWeek(null); setLetterSent(true)
+    openJoin()
+  }
+
+  function skipLetter() { setLetterWeek(null); openJoin() }
 
   async function submitJoin() {
     if (!userId) return
@@ -719,9 +770,42 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         </div>
       )}
 
+      {letterWeek && (() => {
+        const lt = letterFor(letterWeek, isEn)
+        if (!lt) return null
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5" role="dialog" aria-modal="true" data-testid="sunday-letter">
+            <div className="bg-white rounded-2xl p-5 w-full max-w-sm space-y-3 max-h-[90vh] overflow-y-auto">
+              <p className="text-xs text-pink-500">🪷 {L.letterHead}</p>
+              <p className="text-base font-medium text-stone-700 leading-snug break-keep">{lt.title}</p>
+              <div className="space-y-2.5">
+                {lt.paragraphs.map((t, i) => (
+                  <p key={i} className="text-sm text-stone-600 leading-relaxed whitespace-pre-line break-keep">{t}</p>
+                ))}
+                <p className="text-sm text-stone-500 text-right">{lt.sign}</p>
+              </div>
+              <textarea value={letterText} maxLength={500} rows={4}
+                onChange={e => { setLetterText(e.target.value); setLetterErr('') }}
+                placeholder={L.letterPh}
+                className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-pink-300 resize-none" />
+              <div className="flex justify-between text-[11px] text-stone-400">
+                <span>{L.letterNote}</span><span>{letterText.length}/500</span>
+              </div>
+              {letterErr && <p className="text-xs text-red-500">{letterErr}</p>}
+              <div className="flex gap-2">
+                <button onClick={skipLetter} className="flex-1 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.letterSkip}</button>
+                <button onClick={() => void sendLetter()} disabled={letterBusy || !letterText.trim()}
+                  className="flex-1 py-2.5 rounded-xl text-sm text-white bg-pink-500 disabled:opacity-50">{L.letterSend}</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5" role="dialog" aria-modal="true">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto">
+            {letterSent && <p className="text-xs text-pink-500">{L.letterThanks}</p>}
             <p className="text-base font-medium text-stone-700">{isYouth || nickname ? L.avatarTitle : L.nickTitle}</p>
             <p className="text-xs text-stone-400 leading-relaxed">{isYouth ? L.avatarHint : L.nickHint}</p>
 

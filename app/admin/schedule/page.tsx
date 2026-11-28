@@ -158,7 +158,10 @@ export default function AdminSchedulePage() {
     <main className="max-w-md mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-medium text-stone-700">⚙ 일정 관리</h1>
-        <Link href="/schedule" className="text-xs text-stone-500 border border-stone-200 rounded-lg px-3 py-1.5">일정 달력</Link>
+        <div className="flex gap-1.5">
+          <Link href="/admin/replies" className="text-xs text-stone-500 border border-stone-200 rounded-lg px-3 py-1.5">💌 답장 보기</Link>
+          <Link href="/schedule" className="text-xs text-stone-500 border border-stone-200 rounded-lg px-3 py-1.5">일정 달력</Link>
+        </div>
       </div>
 
       {state === 'loading' && <p className="text-sm text-stone-400">불러오는 중…</p>}
