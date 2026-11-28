@@ -69,6 +69,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
   const [letterBusy, setLetterBusy] = useState(false)
   const [letterErr, setLetterErr] = useState('')
   const [letterSent, setLetterSent] = useState(false)
+  const [letterFlipped, setLetterFlipped] = useState(false) // 편지 봉투 카드 → 뒷면(편지 내용)으로 뒤집혔는지
   const [repliedWeeks, setRepliedWeeks] = useState<number[]>([])
   const [netErr, setNetErr] = useState(false)
   const channelRef = useRef<RealtimeChannel | null>(null)
@@ -106,7 +107,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         barHide: '▾ Hide', barShow: 'Show practice bar', secView: 'View',
         secBtn: '🔒 Private rooms', secTitle: 'Private rooms', secEmpty: 'No private rooms are open now.',
         secUntil: 'Open', secSoon: 'Opens soon', secNotYet: 'This room has not opened yet.', secPw: 'Password', secPwPh: 'Enter the password', secEnter: 'Enter', secBack: 'Back', secClose: 'Close',
-        letterHead: 'A letter from Bonwon', letterSend: 'Send reply', letterSkip: 'Join without replying',
+        letterHead: 'A letter from Bonwon', letterArrived: 'A letter from Bonwon has arrived.', letterOpen: 'Open the letter', letterSend: 'Send reply', letterSkip: 'Join without replying',
         letterPh: 'Write your reply here (an emoji is fine)', letterNote: 'Your reply goes only to the program operator.',
         letterFail: 'Could not send. Please try again.', letterThanks: 'Your reply was sent. Thank you 🪷',
         secPwNeed: 'Please enter the password.', secWrong: 'That password is not correct.',
@@ -124,7 +125,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
         barHide: '▾ 접기', barShow: '함께 수행 막대 펼치기', secView: '보기',
         secBtn: '🔒 비공개 수행방', secTitle: '비공개 수행방', secEmpty: '지금 열려 있는 비공개 수행방이 없어요.',
         secUntil: '열려 있는 시간', secSoon: '열리기 전', secNotYet: '아직 열리기 전이에요.', secPw: '비밀번호', secPwPh: '비밀번호를 입력해주세요', secEnter: '입장', secBack: '뒤로', secClose: '닫기',
-        letterHead: '본원의 편지', letterSend: '답장 보내기', letterSkip: '답장 없이 참여하기',
+        letterHead: '본원의 편지', letterArrived: '본원의 편지가 도착했습니다.', letterOpen: '편지 보기', letterSend: '답장 보내기', letterSkip: '답장 없이 참여하기',
         letterPh: '여기에 답장을 적어 주세요 (이모티콘 하나도 좋아요)', letterNote: '답장은 프로그램 운영자에게만 전달돼요.',
         letterFail: '보내지 못했어요. 다시 시도해주세요.', letterThanks: '답장이 전달되었어요. 고맙습니다 🪷',
         secPwNeed: '비밀번호를 입력해주세요.', secWrong: '비밀번호가 맞지 않아요.',
@@ -468,7 +469,7 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
     // 일요일(오전·오후·저녁 모두)이면 먼저 '본원의 편지'를 보여줘요. 이미 답장을 보낸 주에는 건너뛰어요.
     const w = session ? sundayWeek(session.starts_at, version) : null
     if (w && !repliedWeeks.includes(w) && letterFor(w, isEn)) {
-      setLetterText(''); setLetterErr(''); setLetterWeek(w)
+      setLetterText(''); setLetterErr(''); setLetterFlipped(false); setLetterWeek(w)
       return
     }
     openJoin()
@@ -773,29 +774,46 @@ export default function TogetherProvider({ children }: { children: React.ReactNo
       {letterWeek && (() => {
         const lt = letterFor(letterWeek, isEn)
         if (!lt) return null
+        const face: React.CSSProperties = { position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5" role="dialog" aria-modal="true" data-testid="sunday-letter">
-            <div className="bg-white rounded-2xl p-5 w-full max-w-sm space-y-3 max-h-[90vh] overflow-y-auto">
-              <p className="text-xs text-pink-500">🪷 {L.letterHead}</p>
-              <p className="text-base font-medium text-stone-700 leading-snug break-keep">{lt.title}</p>
-              <div className="space-y-2.5">
-                {lt.paragraphs.map((t, i) => (
-                  <p key={i} className="text-sm text-stone-600 leading-relaxed whitespace-pre-line break-keep">{t}</p>
-                ))}
-                <p className="text-sm text-stone-500 text-right">{lt.sign}</p>
-              </div>
-              <textarea value={letterText} maxLength={500} rows={4}
-                onChange={e => { setLetterText(e.target.value); setLetterErr('') }}
-                placeholder={L.letterPh}
-                className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-pink-300 resize-none" />
-              <div className="flex justify-between text-[11px] text-stone-400">
-                <span>{L.letterNote}</span><span>{letterText.length}/500</span>
-              </div>
-              {letterErr && <p className="text-xs text-red-500">{letterErr}</p>}
-              <div className="flex gap-2">
-                <button onClick={skipLetter} className="flex-1 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.letterSkip}</button>
-                <button onClick={() => void sendLetter()} disabled={letterBusy || !letterText.trim()}
-                  className="flex-1 py-2.5 rounded-xl text-sm text-white bg-pink-500 disabled:opacity-50">{L.letterSend}</button>
+            <div className="w-full max-w-sm" style={{ perspective: 1400 }}>
+              <div className="relative transition-transform duration-700 ease-in-out motion-reduce:transition-none"
+                data-flipped={letterFlipped ? '1' : '0'}
+                style={{ height: 'min(88vh, 740px)', transformStyle: 'preserve-3d', transform: letterFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
+                {/* 앞면: 편지가 도착했어요 */}
+                <div style={face} aria-hidden={letterFlipped} data-testid="letter-front"
+                  className="rounded-2xl overflow-hidden shadow-xl bg-gradient-to-b from-pink-50 via-amber-50 to-white flex flex-col items-center px-5 pt-6 pb-5">
+                  <img src="/letter/bonwon-letter.webp" alt="" className="flex-1 min-h-0 w-auto max-w-full object-contain" />
+                  <p className="text-base font-medium text-stone-700 mt-3 text-center">{L.letterArrived}</p>
+                  <button onClick={() => setLetterFlipped(true)} tabIndex={letterFlipped ? -1 : undefined}
+                    className="mt-3 w-full py-3 rounded-xl text-sm text-white bg-pink-500 active:bg-pink-600">{L.letterOpen}</button>
+                </div>
+                {/* 뒷면: 편지 내용 + 답장 */}
+                <div style={{ ...face, transform: 'rotateY(180deg)' }} aria-hidden={!letterFlipped} data-testid="letter-back"
+                  className="rounded-2xl overflow-y-auto shadow-xl bg-white p-5 space-y-3">
+                  <p className="text-xs text-pink-500">🪷 {L.letterHead}</p>
+                  <p className="text-base font-medium text-stone-700 leading-snug break-keep">{lt.title}</p>
+                  <div className="space-y-2.5">
+                    {lt.paragraphs.map((t, i) => (
+                      <p key={i} className="text-sm text-stone-600 leading-relaxed whitespace-pre-line break-keep">{t}</p>
+                    ))}
+                    <p className="text-sm text-stone-500 text-right">{lt.sign}</p>
+                  </div>
+                  <textarea value={letterText} maxLength={500} rows={4} tabIndex={letterFlipped ? undefined : -1}
+                    onChange={e => { setLetterText(e.target.value); setLetterErr('') }}
+                    placeholder={L.letterPh}
+                    className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-pink-300 resize-none" />
+                  <div className="flex justify-between text-[11px] text-stone-400">
+                    <span>{L.letterNote}</span><span>{letterText.length}/500</span>
+                  </div>
+                  {letterErr && <p className="text-xs text-red-500">{letterErr}</p>}
+                  <div className="flex gap-2">
+                    <button onClick={skipLetter} tabIndex={letterFlipped ? undefined : -1} className="flex-1 py-2.5 rounded-xl text-sm border border-stone-200 text-stone-500">{L.letterSkip}</button>
+                    <button onClick={() => void sendLetter()} disabled={letterBusy || !letterText.trim()} tabIndex={letterFlipped ? undefined : -1}
+                      className="flex-1 py-2.5 rounded-xl text-sm text-white bg-pink-500 disabled:opacity-50">{L.letterSend}</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
